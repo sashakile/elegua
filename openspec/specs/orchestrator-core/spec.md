@@ -20,6 +20,22 @@ Eleguá SHALL ensure that each task is executed in an isolated environment to pr
 - **WHEN** a task is executed in the Wolfram Oracle
 - **THEN** it is wrapped in a unique `Context` to isolate variables and assignments.
 
+### Requirement: Large Object Handling (Blob Store)
+Eleguá SHALL store payloads exceeding 1MB in a dedicated "Blob Store" and reference them by hash in the token to prevent JSON/Pydantic recursion crashes.
+
+#### Scenario: Store large tensor contraction result
+- **WHEN** an adapter returns a token larger than 1MB
+- **THEN** it is stored using SHA-256 as the hashing algorithm
+- **AND** the directory structure MUST use the first two characters of the hash as a sub-directory (e.g., `.elegua/blobs/ab/cd...`).
+
+### Requirement: Standard Error Status Codes
+The orchestrator SHALL distinguish between environmental failures and mathematical discrepancies.
+
+#### Scenario: Catch a kernel crash
+- **WHEN** an adapter process crashes during execution
+- **THEN** it MUST return an `EXECUTION_ERROR` status
+- **AND** distinct from a `MATH_MISMATCH` where the results differ.
+
 ## Design Details
 
 ### 1. The Eleguá Task Lifecycle (`EleguaTask`)
@@ -90,6 +106,12 @@ The Normalizer is a pluggable strategy that transforms a **ValidationToken** int
 ### 6. Technical Architecture
 *   **Language**: Python 3.10+ (extension of the `sxact` runner).
 *   **Data Models**: Pydantic for strict schema enforcement. The `ValidationToken` utilizes a **MathJSON-compatible AST structure** to ensure cross-domain expressiveness (Tensors, Integrals, etc.).
-*   **Blob Store**: Implements a **Reference-by-Hash** pattern for large payloads (>1MB). This enables future storage deduplication and offline "Record & Replay" for CI/CD environments without active Oracle licenses.
+*   **Blob Store**: Implements a **Reference-by-Hash** pattern using SHA-256 for large payloads (>1MB). This enables future storage deduplication and offline "Record & Replay" for CI/CD environments without active Oracle licenses.
+*   **Status Codes**:
+    *   `OK`: Results match across all tiers.
+    *   `MATH_MISMATCH`: Kernels completed successfully but results are not equivalent.
+    *   `EXECUTION_ERROR`: Kernel or adapter process crashed.
+    *   `TIMEOUT`: Execution exceeded `timeout_per_task`.
+    *   `SCOPE_LEAK`: Post-task cleanup failed to reset the environment.
 *   **IPC**: Support for Subprocesses (standard) and ZMQ/TCP (high-performance persistent kernels).
 *   **Extensibility**: Designed to support non-tensor domains (e.g., **RUBI** for integration, **FeynCalc** for particle physics) by swapping the Normalizer and Adapter plugins.
