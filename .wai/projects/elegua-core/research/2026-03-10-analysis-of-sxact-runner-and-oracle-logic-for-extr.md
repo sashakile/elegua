@@ -9,9 +9,9 @@ The current `sxact` test runner and oracle client are tightly coupled to the ten
 
 ## Methodology
 Analyzed the following components in the `sxAct` repository:
-1. `src/sxact/runner/`: Identifies tight coupling between task execution and tensor-specific serialization.
-2. `src/sxact/oracle/`: Analyzes the `OracleClient` and its reliance on Mathematica-specific communication protocols.
-3. `src/sxact/compare/`: Reviews the comparison logic which currently relies on string-to-string translation (`_wl_to_jl`).
+1. `packages/sxact/src/sxact/runner/`: Identifies tight coupling between task execution and tensor-specific serialization.
+2. `packages/sxact/src/sxact/oracle/`: Analyzes the `OracleClient` and its reliance on Mathematica-specific communication protocols.
+3. `packages/sxact/src/sxact/compare/`: Reviews the comparison logic which currently relies on string-to-string translation (`_wl_to_jl`).
 
 ## Findings
 

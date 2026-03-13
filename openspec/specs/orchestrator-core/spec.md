@@ -104,7 +104,7 @@ The Normalizer is a pluggable strategy that transforms a **ValidationToken** int
 *   **Client-Assisted**: The IUT (e.g., Julia `XPerm`) can provide its own canonical representation as part of the `ValidationToken`.
 
 ### 6. Technical Architecture
-*   **Language**: Python 3.10+ (extension of the `sxact` runner).
+*   **Language**: Python 3.10+ (generalization of the `sxact` validation framework).
 *   **Data Models**: Pydantic for strict schema enforcement. The `ValidationToken` utilizes a **MathJSON-compatible AST structure** to ensure cross-domain expressiveness (Tensors, Integrals, etc.).
 *   **Blob Store**: Implements a **Reference-by-Hash** pattern using SHA-256 for large payloads (>1MB). This enables future storage deduplication and offline "Record & Replay" for CI/CD environments without active Oracle licenses.
 *   **Status Codes**:
