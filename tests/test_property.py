@@ -7,11 +7,11 @@ from pathlib import Path
 import pytest
 
 from elegua.property import (
-    PropertySpec,
-    PropertyRunner,
-    PropertyResult,
-    PropertyValidationError,
     GeneratorRegistry,
+    PropertyResult,
+    PropertyRunner,
+    PropertySpec,
+    PropertyValidationError,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -44,6 +44,18 @@ class TestPropertySpec:
         bad.write_text('name = "test"\nlayer = "unit"\nlaw = "x == x"\n')
         with pytest.raises(PropertyValidationError, match="layer"):
             PropertySpec.from_toml(bad)
+
+    def test_missing_layer_raises(self, tmp_path: Path):
+        bad = tmp_path / "bad.toml"
+        bad.write_text('name = "test"\nlaw = "x == x"\n')
+        with pytest.raises(PropertyValidationError, match="layer"):
+            PropertySpec.from_toml(bad)
+
+    def test_no_generators_defaults_to_empty(self, tmp_path: Path):
+        spec_file = tmp_path / "no_gen.toml"
+        spec_file.write_text('name = "trivial"\nlayer = "property"\nlaw = "true"\n')
+        spec = PropertySpec.from_toml(spec_file)
+        assert spec.generators == []
 
 
 class TestGeneratorRegistry:

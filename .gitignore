@@ -11,3 +11,6 @@ __pycache__/
 dist/
 build/
 uv.lock
+.pytest_cache/
+.coverage
+htmlcov/

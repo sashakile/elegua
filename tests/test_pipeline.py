@@ -5,8 +5,8 @@ from __future__ import annotations
 from elegua.comparison import (
     ComparisonResult,
     compare_identity,
-    compare_structural,
     compare_pipeline,
+    compare_structural,
 )
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
@@ -90,3 +90,34 @@ class TestPipeline:
         b = _token({"x": 1})
         result = compare_pipeline(a, b)
         assert isinstance(result, ComparisonResult)
+
+    def test_none_results_match_at_layer1(self):
+        a = _token(None)
+        b = _token(None)
+        result = compare_pipeline(a, b)
+        assert result.status == TaskStatus.OK
+        assert result.layer == 1
+
+
+class TestStructuralEdgeCases:
+    def test_none_results(self):
+        a = _token(None)
+        b = _token(None)
+        assert compare_structural(a, b) == TaskStatus.OK
+
+    def test_deeply_nested_trees(self):
+        a = _token({"fn": "Add", "args": [{"fn": "Mul", "args": [3, 4]}, 1]})
+        b = _token({"fn": "Add", "args": [1, {"fn": "Mul", "args": [4, 3]}]})
+        assert compare_structural(a, b) == TaskStatus.OK
+
+    def test_commutative_is_known_limitation(self):
+        """Layer 2 treats all list orderings as equivalent (sorted canonical form).
+
+        This means non-commutative operations like Sub(a,b) vs Sub(b,a) are
+        falsely considered equivalent at Layer 2. Layers 3-4 (domain-specific)
+        would catch this. Documented here as a known design limitation.
+        """
+        a = _token({"fn": "Sub", "args": [10, 3]})
+        b = _token({"fn": "Sub", "args": [3, 10]})
+        # Layer 2 treats these as equivalent (known false positive)
+        assert compare_structural(a, b) == TaskStatus.OK

@@ -36,10 +36,7 @@ def _canonicalize(value: Any) -> Any:
         return {k: _canonicalize(v) for k, v in sorted(value.items())}
     if isinstance(value, list):
         canonical = [_canonicalize(v) for v in value]
-        try:
-            return sorted(canonical, key=repr)
-        except TypeError:
-            return canonical
+        return sorted(canonical, key=repr)
     return value
 
 

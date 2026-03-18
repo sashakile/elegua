@@ -32,11 +32,9 @@ def test_tracer_bullet_end_to_end():
     assert all(t.status == TaskStatus.OK for t in iut_tokens)
 
     # 4. Layer 1 identity comparison: Oracle vs IUT
-    for oracle, iut in zip(oracle_tokens, iut_tokens):
+    for oracle, iut in zip(oracle_tokens, iut_tokens, strict=True):
         status = compare_identity(oracle, iut)
-        assert status == TaskStatus.OK, (
-            f"Layer 1 comparison failed: {status}"
-        )
+        assert status == TaskStatus.OK, f"Layer 1 comparison failed: {status}"
 
 
 def test_tracer_bullet_mismatch_detected():
@@ -47,7 +45,9 @@ def test_tracer_bullet_mismatch_detected():
     tokens = run_tasks(tasks)
 
     tampered = ValidationToken(
-        adapter_id="tampered", status=TaskStatus.OK, result={"tampered": True},
+        adapter_id="tampered",
+        status=TaskStatus.OK,
+        result={"tampered": True},
     )
     status = compare_identity(tokens[0], tampered)
     assert status == TaskStatus.MATH_MISMATCH

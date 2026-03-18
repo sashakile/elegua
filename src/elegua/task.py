@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import uuid
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class TaskStatus(str, Enum):
+class TaskStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     OK = "ok"
@@ -21,12 +21,14 @@ class TaskStatus(str, Enum):
 # Valid state transitions: current_status → set of allowed next statuses
 _TRANSITIONS: dict[TaskStatus, frozenset[TaskStatus]] = {
     TaskStatus.PENDING: frozenset({TaskStatus.RUNNING}),
-    TaskStatus.RUNNING: frozenset({
-        TaskStatus.OK,
-        TaskStatus.MATH_MISMATCH,
-        TaskStatus.EXECUTION_ERROR,
-        TaskStatus.TIMEOUT,
-    }),
+    TaskStatus.RUNNING: frozenset(
+        {
+            TaskStatus.OK,
+            TaskStatus.MATH_MISMATCH,
+            TaskStatus.EXECUTION_ERROR,
+            TaskStatus.TIMEOUT,
+        }
+    ),
     # Terminal states — no transitions out
     TaskStatus.OK: frozenset(),
     TaskStatus.MATH_MISMATCH: frozenset(),
@@ -54,7 +56,5 @@ class EleguaTask(BaseModel):
         """
         allowed = _TRANSITIONS.get(self.status, frozenset())
         if to not in allowed:
-            raise InvalidTransition(
-                f"Cannot transition from {self.status.name} to {to.name}"
-            )
+            raise InvalidTransition(f"Cannot transition from {self.status.name} to {to.name}")
         return self.model_copy(update={"status": to})

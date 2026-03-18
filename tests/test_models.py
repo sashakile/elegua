@@ -27,7 +27,7 @@ class TestActionPayload:
         assert ap.manifest == "manifest.toml"
 
     def test_action_required(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             ActionPayload(payload={"name": "T"})  # type: ignore[call-arg]
 
 
@@ -60,5 +60,5 @@ class TestValidationToken:
         assert token.metadata["duration_ms"] == 120
 
     def test_adapter_id_required(self):
-        with pytest.raises(Exception):
+        with pytest.raises(ValueError):
             ValidationToken(status=TaskStatus.OK)  # type: ignore[call-arg]

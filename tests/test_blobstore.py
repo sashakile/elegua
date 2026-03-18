@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -71,3 +70,13 @@ class TestBlobStore:
         ref = store.maybe_store(data)
         resolved = store.maybe_resolve(ref)
         assert resolved == data
+
+    def test_maybe_resolve_blob_key_plus_extra_keys_not_treated_as_ref(self, store: BlobStore):
+        """A dict with 'blob' plus other keys is NOT a blob reference."""
+        data = {"blob": "abc123", "extra": "data"}
+        assert store.maybe_resolve(data) == data
+
+    def test_maybe_resolve_non_string_blob_value_not_treated_as_ref(self, store: BlobStore):
+        """A dict with blob=<non-string> is NOT a blob reference."""
+        data = {"blob": 12345}
+        assert store.maybe_resolve(data) == data

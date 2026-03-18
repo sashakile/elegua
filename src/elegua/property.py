@@ -7,11 +7,12 @@ and validates laws against an evaluator function.
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
-from numpy.random import Generator, PCG64
+from numpy.random import PCG64, Generator
 from pydantic import BaseModel
 
 
@@ -38,9 +39,7 @@ class PropertySpec(BaseModel):
 
         for required in ("name", "law"):
             if required not in data:
-                raise PropertyValidationError(
-                    f"{path}: missing required field '{required}'"
-                )
+                raise PropertyValidationError(f"{path}: missing required field '{required}'")
 
         if data.get("layer") != "property":
             raise PropertyValidationError(

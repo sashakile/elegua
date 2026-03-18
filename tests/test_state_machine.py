@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from elegua.task import EleguaTask, TaskStatus, InvalidTransition
+from elegua.task import EleguaTask, InvalidTransition, TaskStatus
 
 
 def test_valid_transition_pending_to_running():
@@ -40,7 +40,7 @@ def test_valid_transition_running_to_timeout():
 
 def test_invalid_transition_pending_to_ok():
     task = EleguaTask(action="DefTensor", payload={})
-    with pytest.raises(InvalidTransition, match="PENDING.*OK"):
+    with pytest.raises(InvalidTransition, match=r"PENDING.*OK"):
         task.transition(TaskStatus.OK)
 
 
@@ -61,3 +61,20 @@ def test_transition_does_not_mutate():
     updated = task.transition(TaskStatus.RUNNING)
     assert updated is not task
     assert task.status == TaskStatus.PENDING
+
+
+@pytest.mark.parametrize(
+    "terminal",
+    [
+        TaskStatus.OK,
+        TaskStatus.MATH_MISMATCH,
+        TaskStatus.EXECUTION_ERROR,
+        TaskStatus.TIMEOUT,
+    ],
+)
+def test_terminal_states_reject_all_transitions(terminal: TaskStatus):
+    """All terminal states must reject every possible transition."""
+    task = EleguaTask(action="DefTensor", payload={}, status=terminal)
+    for target in TaskStatus:
+        with pytest.raises(InvalidTransition):
+            task.transition(target)

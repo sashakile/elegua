@@ -60,3 +60,21 @@ def test_load_toml_missing_action_field(tmp_path: Path):
     bad.write_text('[[tasks]]\n[tasks.payload]\nfoo = "bar"\n')
     with pytest.raises(ValueError, match="missing required field 'action'"):
         load_toml_tasks(bad)
+
+
+def test_run_tasks_empty_list():
+    assert run_tasks([]) == []
+
+
+def test_load_toml_empty_tasks_array(tmp_path: Path):
+    empty = tmp_path / "empty.toml"
+    empty.write_text("tasks = []\n")
+    tasks = load_toml_tasks(empty)
+    assert tasks == []
+
+
+def test_load_toml_empty_action_treated_as_missing(tmp_path: Path):
+    bad = tmp_path / "bad.toml"
+    bad.write_text('[[tasks]]\naction = ""\n')
+    with pytest.raises(ValueError, match="missing required field 'action'"):
+        load_toml_tasks(bad)
