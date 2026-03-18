@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 
+from elegua.models import ValidationToken
 from elegua.task import EleguaTask, TaskStatus
 
 
@@ -13,11 +14,10 @@ class Adapter(abc.ABC):
     def adapter_id(self) -> str: ...
 
     @abc.abstractmethod
-    def execute(self, task: EleguaTask) -> EleguaTask:
-        """Execute the task and return a new EleguaTask with status and result.
+    def execute(self, task: EleguaTask) -> ValidationToken:
+        """Execute the task and return a ValidationToken.
 
-        Implementations MUST NOT mutate the input task. Return a copy via
-        task.model_copy(update={...}).
+        Implementations MUST NOT mutate the input task.
         """
         ...
 
@@ -34,8 +34,9 @@ class WolframAdapter(Adapter):
     def adapter_id(self) -> str:
         return "wolfram"
 
-    def execute(self, task: EleguaTask) -> EleguaTask:
-        return task.model_copy(update={
-            "status": TaskStatus.OK,
-            "result": {"adapter": self.adapter_id, **task.payload},
-        })
+    def execute(self, task: EleguaTask) -> ValidationToken:
+        return ValidationToken(
+            adapter_id=self.adapter_id,
+            status=TaskStatus.OK,
+            result=task.payload,
+        )

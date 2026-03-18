@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from elegua.adapter import WolframAdapter
+from elegua.models import ValidationToken
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.task import EleguaTask, TaskStatus
 
@@ -26,24 +27,25 @@ def test_load_toml_meta():
     assert all(t.status == TaskStatus.PENDING for t in tasks)
 
 
-def test_run_tasks_all_ok():
+def test_run_tasks_returns_tokens():
     tasks = load_toml_tasks(FIXTURES / "tracer.toml")
-    results = run_tasks(tasks)
-    assert len(results) == 2
-    assert all(r.status == TaskStatus.OK for r in results)
+    tokens = run_tasks(tasks)
+    assert len(tokens) == 2
+    assert all(isinstance(t, ValidationToken) for t in tokens)
+    assert all(t.status == TaskStatus.OK for t in tokens)
 
 
 def test_run_tasks_produces_results():
     tasks = load_toml_tasks(FIXTURES / "tracer.toml")
-    results = run_tasks(tasks)
-    assert all(r.result is not None for r in results)
+    tokens = run_tasks(tasks)
+    assert all(t.result is not None for t in tokens)
 
 
 def test_run_tasks_accepts_explicit_adapter():
     tasks = load_toml_tasks(FIXTURES / "tracer.toml")
     adapter = WolframAdapter()
-    results = run_tasks(tasks, adapter=adapter)
-    assert all(r.status == TaskStatus.OK for r in results)
+    tokens = run_tasks(tasks, adapter=adapter)
+    assert all(t.status == TaskStatus.OK for t in tokens)
 
 
 def test_load_toml_missing_tasks_key(tmp_path: Path):

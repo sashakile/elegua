@@ -24,29 +24,30 @@ def test_tracer_bullet_end_to_end():
 
     # 2. Execute through adapter twice (simulating Oracle vs IUT)
     adapter = WolframAdapter()
-    oracle_results = run_tasks(tasks, adapter=adapter)
-    iut_results = run_tasks(tasks, adapter=adapter)
+    oracle_tokens = run_tasks(tasks, adapter=adapter)
+    iut_tokens = run_tasks(tasks, adapter=adapter)
 
     # 3. All tasks completed successfully
-    assert all(r.status == TaskStatus.OK for r in oracle_results)
-    assert all(r.status == TaskStatus.OK for r in iut_results)
+    assert all(t.status == TaskStatus.OK for t in oracle_tokens)
+    assert all(t.status == TaskStatus.OK for t in iut_tokens)
 
     # 4. Layer 1 identity comparison: Oracle vs IUT
-    for oracle, iut in zip(oracle_results, iut_results):
-        assert oracle.result is not None
-        assert iut.result is not None
-        status = compare_identity(oracle.result, iut.result)
+    for oracle, iut in zip(oracle_tokens, iut_tokens):
+        status = compare_identity(oracle, iut)
         assert status == TaskStatus.OK, (
-            f"Layer 1 comparison failed for {oracle.action}: {status}"
+            f"Layer 1 comparison failed: {status}"
         )
 
 
 def test_tracer_bullet_mismatch_detected():
     """Verify the pipeline detects a mismatch when results differ."""
-    tasks = load_toml_tasks(FIXTURES / "tracer.toml")
-    results = run_tasks(tasks)
+    from elegua.models import ValidationToken
 
-    # Tamper with one result to simulate a mismatch
-    tampered = {"tampered": True}
-    status = compare_identity(results[0].result, tampered)
+    tasks = load_toml_tasks(FIXTURES / "tracer.toml")
+    tokens = run_tasks(tasks)
+
+    tampered = ValidationToken(
+        adapter_id="tampered", status=TaskStatus.OK, result={"tampered": True},
+    )
+    status = compare_identity(tokens[0], tampered)
     assert status == TaskStatus.MATH_MISMATCH

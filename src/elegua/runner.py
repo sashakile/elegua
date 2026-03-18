@@ -6,6 +6,7 @@ import tomllib
 from pathlib import Path
 
 from elegua.adapter import Adapter, WolframAdapter
+from elegua.models import ValidationToken
 from elegua.task import EleguaTask
 
 
@@ -37,8 +38,8 @@ def _missing_field(path: Path, index: int, field: str) -> str:
 def run_tasks(
     tasks: list[EleguaTask],
     adapter: Adapter | None = None,
-) -> list[EleguaTask]:
-    """Execute tasks through an adapter and return results.
+) -> list[ValidationToken]:
+    """Execute tasks through an adapter and return ValidationTokens.
 
     If no adapter is provided, defaults to WolframAdapter (stub).
     """
