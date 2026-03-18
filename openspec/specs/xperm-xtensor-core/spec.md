@@ -1,7 +1,13 @@
 # Specification: XPerm.jl and XTensor.jl Design
 
+## Metadata
+- **Change-ID**: `REQ-CORE-001`
+- **Version**: `1.1.0`
+- **Status**: `PROPOSAL`
+- **Last Updated**: 2026-03-17
+
 ## Purpose
-This specification defines the design and implementation of the `XPerm.jl` and `XTensor.jl` Julia modules, which provide the core tensor algebra and permutation group canonicalization engines for the xAct migration project. These modules ensure that the Julia implementation achieves mathematical parity with the original Wolfram xAct suite.
+This specification defines the design and implementation of the `XPerm.jl` and `XTensor.jl` Julia modules, which provide the core tensor algebra and permutation group canonicalization engines. These modules ensure that the Julia implementation achieves mathematical parity with the original Wolfram xAct suite by passing the `verification-baseline` suite.
 
 ## Requirements
 
@@ -9,35 +15,54 @@ This specification defines the design and implementation of the `XPerm.jl` and `
 The system SHALL achieve 100% mathematical parity for tensor index canonicalization using the Butler-Portugal algorithm.
 
 #### Scenario: Canonicalize a symmetric tensor swap
-- **WHEN** an expression like `Cns[-cna, -cnb] - Cns[-cnb, -cna]` is canonicalized (where `Cns` is symmetric)
+- **GIVEN** a symmetric tensor `Cns`
+- **WHEN** the expression `Cns[-cna, -cnb] - Cns[-cnb, -cna]` is canonicalized
 - **THEN** it MUST simplify to `"0"`.
 
+#### Scenario: Negative - Redefinition Error
+- **GIVEN** an existing tensor `T`
+- **WHEN** `DefTensor` is called with the same name `T`
+- **THEN** the system MUST raise a `RedefinitionError`.
+
 ### Requirement: Automatic Curvature Tensor Creation
-The system SHALL automatically create related curvature tensors when a metric is defined.
+The system SHALL automatically create related curvature tensors (Riemann, Ricci, Einstein) when a metric is defined via `DefMetric`.
 
 #### Scenario: Auto-create Riemann tensor
-- **WHEN** a metric is defined using `DefMetric`
-- **THEN** the `Riemann`, `Ricci`, and `Einstein` tensors MUST be automatically registered.
+- **GIVEN** a manifold `M`
+- **WHEN** `DefMetric[-1, g[-a,-b], CD]` is called
+- **THEN** the `RiemannCD`, `RicciCD`, and `EinsteinCD` tensors MUST be automatically registered in the global state.
 
 ## Design Details
 
-### 1. XPerm.jl Design
-- **Permutation Representation**: 1-indexed image vectors, including signed permutations for antisymmetric groups.
-- **Algorithms**:
-    - **Schreier-Sims**: Builds a strong generating set for a permutation group.
-    - **Right Coset Representative**: Finds the lex-minimum element of a right coset.
-    - **Double Coset Representative**: Handles dummy index exchange group canonicalization (Tier 2).
-    - **Shortcuts**: Optimized sorting for symmetric and antisymmetric groups.
+### 1. Data Structures (Julia)
+```julia
+struct TensorObj
+    name::Symbol
+    indices::Vector{Symbol}
+    symmetry::SymmetrySpec
+    manifold::Symbol
+end
 
-### 2. XTensor.jl Design
-- **Data Structures**: `ManifoldObj`, `VBundleObj`, `TensorObj`, `MetricObj`, `IndexSpec`, and `SymmetrySpec`.
-- **Global State**: Managed using dictionaries and ordered lists (e.g., `_manifolds`, `Manifolds`).
-- **Action Implementations**: `DefManifold`, `DefTensor`, `DefMetric`, `ToCanonical`.
+struct SymmetrySpec
+    type::Symbol # :Symmetric, :Antisymmetric, :Riemann
+    permutation_group::PermGroup # Strong Generating Set
+end
+```
 
-### 3. Tensor Expression Parser and ToCanonical Pipeline
-- **Grammar**: Handles sums and products of tensor monomials with integer coefficients.
-- **Canonicalization Pipeline**: Applies symmetry shortcuts or Butler-Portugal to each tensor factor, then collects like terms.
+### 2. API Signatures (XTensor.jl)
+- `DefManifold(name::Symbol, dim::Int, indices::Vector{Symbol})`
+- `DefTensor(name::Symbol, indices::Vector{Symbol}, symmetry::Symbol)`
+- `DefMetric(signature::Int, tensor::Expression, connection::Symbol)`
+- `ToCanonical(expr::Expression)::Expression`
 
-### 4. Adapter Integration
-- **JuliaAdapter**: lazily loads `XPerm.jl` and `XTensor.jl`, dispatches actions, and manages symbol binding in `Main` scope.
-- **PythonAdapter**: Shares the same Julia XTensor state and dispatch logic as `JuliaAdapter`.
+### 3. XPerm.jl Algorithms
+- **Schreier-Sims**: Builds a strong generating set for a permutation group.
+- **Butler-Portugal**: Finds the lex-minimum element of a double coset for dummy index exchange.
+
+### 4. Non-Goals
+- Support for non-Riemannian geometries (e.g., torsion-full connections).
+- GPU acceleration (CPU-only for initial parity).
+
+### 5. Negative Scenarios
+- **Invalid Bundle**: Calling `DefTensor` on a manifold that has not been defined MUST raise a `ManifoldNotFoundError`.
+- **Index Mismatch**: Defining a tensor with 4 indices but providing a symmetry spec for 2 indices MUST raise an `IndexSymmetryMismatchError`.

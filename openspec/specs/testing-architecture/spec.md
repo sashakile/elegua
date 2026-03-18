@@ -1,50 +1,80 @@
 # Specification: Three-Layer Testing Architecture
 
+## Metadata
+- **Change-ID**: `REQ-TEST-001`
+- **Version**: `1.1.0`
+- **Status**: `PROPOSAL`
+- **Last Updated**: 2026-03-17
+
 ## Purpose
 This specification defines the three-layer testing architecture for the xAct migration project. It ensures that the migration from Wolfram Mathematica to Julia and Python is mathematically correct, performant, and serves as a foundation for language-agnostic mathematical property specifications.
 
 ## Requirements
 
 ### Requirement: Migration Validation
-The testing architecture SHALL validate the functional equivalence and performance of the migrated implementation (Julia/Python) against the Wolfram xAct oracle.
+The testing architecture SHALL validate the functional equivalence and performance of the migrated implementation against the Wolfram xAct oracle using a default numerical tolerance of `1e-12`.
 
 #### Scenario: Validate tensor contraction
-- **WHEN** a tensor contraction is executed in Julia
-- **THEN** the result MUST match the Wolfram xAct oracle within numerical tolerance.
+- **GIVEN** a tensor contraction task
+- **WHEN** it is executed in Julia (Tier 2/3)
+- **THEN** the result MUST match the Wolfram xAct oracle (Tier 1) within `1e-12` relative tolerance.
+
+#### Scenario: Negative - Verification Failure
+- **GIVEN** a task where the results diverge beyond `1e-12`
+- **WHEN** the comparison is performed
+- **THEN** the runner MUST report a `MATH_MISMATCH` and output the delta.
 
 ### Requirement: Language-Agnostic Property Specification
 The architecture SHALL support property-based tests that describe mathematical laws independent of the specific implementation language.
 
 #### Scenario: Verify associativity of tensor contraction
-- **WHEN** a property-based test for associativity is run
-- **THEN** it MUST hold across Wolfram, Julia, and Python implementations.
+- **GIVEN** a property test defining associativity
+- **WHEN** it is run across Wolfram, Julia, and Python
+- **THEN** it MUST hold for 100 random samples.
+
+### Requirement: Performance Regression Tracking
+The architecture SHALL track execution time and memory usage, flagging regressions exceeding 1.5x the baseline.
+
+#### Scenario: Negative - Performance Regression Detected
+- **GIVEN** a new version of XTensor.jl that is 2x slower than the previous version
+- **WHEN** the Layer 3 tests are run
+- **THEN** the runner MUST exit with code `1` and report a `PERFORMANCE_REGRESSION`.
 
 ## Design Details
 
 ### 1. Architecture Overview
-The framework uses **three testing layers** that serve both migration and research goals:
-- **Layer 1**: Unit tests (concrete examples, oracle validation)
-- **Layer 2**: Property-based tests (mathematical invariants, reusable specifications)
-- **Layer 3**: Performance regression tests (usability tracking)
+- **Layer 1**: Unit tests (Concrete JSON examples, Oracle validation).
+- **Layer 2**: Property-based tests (TOML specifications, Invariant validation).
+- **Layer 3**: Performance tests (CSV reports, Regression tracking).
 
-### 2. Layer 1: Unit Tests (Gold Standard Cases)
-Concrete examples with known inputs/outputs for debugging and validation.
-- Fixed inputs with exact expected outputs.
-- Oracle (Wolfram xAct) provides ground truth.
-- Extracted from documentation notebooks.
+### 2. CLI Interface
+**Command:** `xact-test run --layer [1|2|3]`
 
-### 3. Layer 2: Property-Based Tests (Mathematical Laws)
-Encode mathematical invariants as executable, language-agnostic specifications.
-- Randomly generated test inputs.
-- Describes mathematical laws (associativity, commutativity, distributivity, etc.).
-- Implementation-independent.
-- Explores edge cases automatically.
+**Flags:**
+- `--fail-fast`: Stop on first failure.
+- `--tolerance <float>`: Override numerical tolerance (default: `1e-12`).
+- `--baseline <file>`: CSV file for Layer 3 comparison.
 
-### 4. Layer 3: Performance Regression Tests
-Ensure implementations are usable through performance tracking and regression prevention.
-- Tracks execution time, memory, compilation overhead.
-- Compares against Wolfram baseline (usability threshold).
-- Compares against previous versions (regression detection).
+### 3. Data Formats
 
-### 5. Why Mutation Testing Is Not Needed
-Mutation testing is not required as the framework already provides stronger validation through oracle comparison (Layer 1) and mathematical law violations (Layer 2).
+#### 3.1 Layer 1: Unit Test (JSON)
+```json
+{
+  "name": "SymmetricSwap",
+  "action": "ToCanonical",
+  "input": { "fn": "Sub", "args": [...] },
+  "expected": "0"
+}
+```
+
+#### 3.2 Layer 3: Performance Report (CSV)
+`task_id, duration_ms, memory_mb, tier, timestamp`
+
+### 4. Non-Goals
+- Real-time profiling (Layer 3 is for coarse-grained regression only).
+- Mutation testing (superseded by Oracle/PBT validation).
+
+### 5. Task Readiness
+- [ ] Implement `xact-test` CLI wrapper.
+- [ ] Integrate `sampling.py` for Layer 2.
+- [ ] Create `perf_tracker.py` for Layer 3 telemetry.
