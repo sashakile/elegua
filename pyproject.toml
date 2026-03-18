@@ -5,6 +5,7 @@ description = "Domain-agnostic multi-tier test harness for validating mathematic
 requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2.0",
+    "numpy>=1.22",
 ]
 
 [build-system]

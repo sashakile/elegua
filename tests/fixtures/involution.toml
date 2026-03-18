@@ -1,0 +1,10 @@
+name = "negate_involution"
+layer = "property"
+law = "f(f($x)) == $x"
+
+[[generators]]
+name = "$x"
+type = "integer"
+
+[[setup]]
+action = "negate"
