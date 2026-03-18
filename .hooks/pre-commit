@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -e
+
+echo "pre-commit: ruff check + format"
+uv run ruff check src/ tests/
+uv run ruff format --check src/ tests/
+
+echo "pre-commit: pyright typecheck"
+uv run pyright src/
+
+echo "pre-commit: typos"
+typos
+
+echo "pre-commit: vale"
+vale src/ tests/ README.md
