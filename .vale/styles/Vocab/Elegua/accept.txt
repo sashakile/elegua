@@ -1,6 +1,7 @@
 args
 AST
 async
+Chacana
 current_status
 dicts
 Dockerized
@@ -13,9 +14,15 @@ MathJSON
 nums
 Pydantic
 pluggable
+pyright
+pytest
 repr
+ruff
 stdin
 stdout
 subprocess
 TOML
+typecheck
+uv
+xAct
 ZMQ
