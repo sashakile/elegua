@@ -23,6 +23,7 @@ This runs `uv sync`, `vale sync`, and configures `git config core.hooksPath .hoo
 | `just typecheck` | pyright only |
 | `just docs-serve` | Serve docs locally |
 | `just docs-build` | Build docs to `site/` |
+| `just docs-deploy` | Deploy docs to GitHub Pages |
 
 ## Git hooks
 

@@ -44,9 +44,10 @@ input = "hello"
 Load and run it from Python:
 
 ```python
+from pathlib import Path
 from elegua.runner import load_toml_tasks, run_tasks
 
-tasks = load_toml_tasks("my_test.toml")
+tasks = load_toml_tasks(Path("my_test.toml"))
 tokens = run_tasks(tasks)
 
 for token in tokens:
@@ -56,11 +57,12 @@ for token in tokens:
 ## Compare results across adapters
 
 ```python
+from pathlib import Path
 from elegua.adapter import WolframAdapter
 from elegua.comparison import compare_pipeline
 from elegua.runner import load_toml_tasks, run_tasks
 
-tasks = load_toml_tasks("my_test.toml")
+tasks = load_toml_tasks(Path("my_test.toml"))
 
 oracle_tokens = run_tasks(tasks, adapter=WolframAdapter())
 iut_tokens = run_tasks(tasks, adapter=WolframAdapter())  # replace with your adapter
