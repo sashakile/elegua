@@ -12,4 +12,4 @@ echo "pre-commit: typos"
 typos
 
 echo "pre-commit: vale"
-vale src/ tests/ README.md
+vale docs/ src/ tests/ README.md

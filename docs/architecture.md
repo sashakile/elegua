@@ -1,0 +1,65 @@
+# Architecture
+
+## Three-tier execution model
+
+Eleguá validates mathematical systems by comparing results across tiers of decreasing fidelity.
+
+| Tier | Role | Example |
+|------|------|---------|
+| **Tier 1** | High-fidelity Oracle (ground truth) | Wolfram xAct |
+| **Tier 2** | Literal port | xAct-jl |
+| **Tier 3** | Idiomatic target | Chacana-jl |
+
+Each tier implements the `Adapter` interface. The orchestrator sends the same `EleguaTask` to multiple adapters and compares the resulting `ValidationToken` objects.
+
+## Data flow
+
+```
+┌──────────┐     ┌─────────────┐     ┌───────────────┐     ┌────────────┐
+│ TOML     │────▶│ EleguaTask  │────▶│ Adapter       │────▶│ Validation │
+│ Fixture  │     │ (action +   │     │ .execute()    │     │ Token      │
+│          │     │  payload)   │     │               │     │            │
+└──────────┘     └─────────────┘     └───────────────┘     └────────────┘
+                                                                  │
+                                                                  ▼
+                                                          ┌────────────┐
+                                                          │ Comparison │
+                                                          │ Pipeline   │
+                                                          │ (4 layers) │
+                                                          └────────────┘
+```
+
+## 4-layer comparison pipeline
+
+The pipeline cascades through layers, stopping at the first that confirms equivalence.
+
+| Layer | Method | Goal | Success criteria |
+|-------|--------|------|------------------|
+| **1. Identity** | Structural equality | Instant validation | `result_a == result_b` |
+| **2. Structural** | Sorted canonical form | AST isomorphism | `canonical(a) == canonical(b)` |
+| **3. Canonical** | Normalizer rules | Semantic equivalence | `normalize(a) == normalize(b)` |
+| **4. Invariant** | Numerical / PBT | Mathematical proof | `f(a, args) ≈ f(b, args)` |
+
+Layers 1-2 are implemented in the core. Layers 3-4 are domain-specific extension points.
+
+!!! note "Known limitation"
+    Layer 2 treats all list orderings as equivalent via sorted canonical form. This means non-commutative operations (like subtraction) may produce false positives. Layers 3-4 catch these cases when domain-specific normalizers are registered.
+
+## Core modules
+
+| Module | Responsibility |
+|--------|---------------|
+| `task` | `EleguaTask` model, `TaskStatus` enum, state machine |
+| `models` | `ActionPayload` (input) and `ValidationToken` (output) |
+| `adapter` | `Adapter` ABC, `WolframAdapter` stub |
+| `comparison` | 4-layer comparison pipeline, `ComparisonResult` |
+| `runner` | TOML test loader, parameterized task executor |
+| `blobstore` | SHA-256 content-addressed storage for large payloads |
+| `property` | Property-based test runner with PCG64 seeds |
+
+## Design principles
+
+- **Domain-agnostic core** — the orchestrator has no knowledge of tensor calculus, integration rules, or any specific mathematical domain
+- **Immutability** — `Adapter.execute()` returns a new `ValidationToken` and must not mutate the input task
+- **State machine enforcement** — task transitions are validated; invalid transitions raise exceptions
+- **Isolation** — each adapter execution must be independent to prevent state leakage between tests

@@ -2,7 +2,7 @@
 
 # Install dependencies and set up git hooks
 setup:
-    uv sync
+    uv sync --group docs
     vale sync
     git config core.hooksPath .hooks
     @echo "✓ Dependencies installed, git hooks configured"
@@ -13,7 +13,7 @@ check:
     uv run ruff format --check src/ tests/
     uv run pyright src/
     typos
-    vale src/ tests/ README.md
+    vale docs/ src/ tests/ README.md
 
 # Auto-fix lint and format issues
 fix:
@@ -42,3 +42,15 @@ fmt:
 # Typecheck only (pyright)
 typecheck:
     uv run pyright src/
+
+# Serve docs locally
+docs-serve:
+    uv run --group docs mkdocs serve
+
+# Build docs to site/
+docs-build:
+    uv run --group docs mkdocs build --strict
+
+# Deploy docs to GitHub Pages
+docs-deploy:
+    uv run --group docs mkdocs gh-deploy --force

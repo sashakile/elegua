@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: errata-ai/vale-action@reviewdog
         with:
-          files: src/ tests/ README.md
+          files: docs/ src/ tests/ README.md
 
   test:
     runs-on: ubuntu-latest
