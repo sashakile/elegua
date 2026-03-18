@@ -2,3 +2,12 @@
 # Dolt database files (added by bd init)
 .dolt/
 *.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/
+build/
+uv.lock

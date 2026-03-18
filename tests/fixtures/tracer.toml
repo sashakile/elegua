@@ -1,0 +1,14 @@
+[meta]
+name = "DefTensor+Contract round-trip"
+description = "Define a rank-2 tensor and contract it"
+
+[[tasks]]
+action = "DefTensor"
+[tasks.payload]
+name = "T"
+indices = ["a", "b"]
+
+[[tasks]]
+action = "Contract"
+[tasks.payload]
+expr = "T[a, b] * g[-a, -b]"
