@@ -54,6 +54,12 @@ for token in tokens:
     print(f"{token.adapter_id}: {token.status}")
 ```
 
+Expected output:
+
+```
+wolfram: ok
+```
+
 ## Compare results across adapters
 
 ```python
@@ -70,4 +76,10 @@ iut_tokens = run_tasks(tasks, adapter=WolframAdapter())  # replace with your ada
 for oracle, iut in zip(oracle_tokens, iut_tokens, strict=True):
     result = compare_pipeline(oracle, iut)
     print(f"Layer {result.layer}: {result.status}")
+```
+
+Expected output:
+
+```
+Layer 1: ok
 ```

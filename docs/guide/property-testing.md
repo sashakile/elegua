@@ -38,7 +38,7 @@ Optional fields:
 from pathlib import Path
 from elegua.property import PropertySpec
 
-spec = PropertySpec.from_toml(Path("tests/properties/involution.toml"))
+spec = PropertySpec.from_toml(Path("tests/fixtures/involution.toml"))
 print(spec.name)        # "negate_involution"
 print(spec.law)         # "f(f($x)) == $x"
 print(spec.generators)  # [GeneratorSpec(name='$x', type='integer')]

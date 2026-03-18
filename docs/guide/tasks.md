@@ -60,29 +60,6 @@ token = ValidationToken(
 )
 ```
 
-## Writing an adapter
+## Next steps
 
-Subclass `Adapter` and implement `adapter_id` and `execute()`:
-
-```python
-from elegua.adapter import Adapter
-from elegua.models import ValidationToken
-from elegua.task import EleguaTask, TaskStatus
-
-class MyAdapter(Adapter):
-    @property
-    def adapter_id(self) -> str:
-        return "my-engine"
-
-    def execute(self, task: EleguaTask) -> ValidationToken:
-        # Send task.action and task.payload to your engine
-        result = my_engine.run(task.action, task.payload)
-        return ValidationToken(
-            adapter_id=self.adapter_id,
-            status=TaskStatus.OK,
-            result=result,
-        )
-```
-
-!!! warning
-    `execute()` must **not** mutate the input `EleguaTask`.
+See [Writing an adapter](adapters.md) to connect Eleguá to your own symbolic engine.

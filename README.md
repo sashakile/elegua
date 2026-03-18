@@ -127,4 +127,4 @@ Payloads exceeding 1 MB are stored by SHA-256 hash in a two-level directory: `.e
 
 ## License
 
-See LICENSE file.
+MIT

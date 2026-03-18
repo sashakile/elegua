@@ -22,7 +22,7 @@ from elegua.comparison import compare_identity
 status = compare_identity(token_a, token_b)  # OK or MATH_MISMATCH
 ```
 
-This is the fastest check. If both adapters produce byte-identical output, no further analysis is needed.
+This is the fastest check. If both adapters produce structurally identical output, no further analysis is needed.
 
 ## Layer 2 — Structural
 

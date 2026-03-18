@@ -63,6 +63,7 @@ nav:
   - Getting Started: getting-started.md
   - User Guide:
       - Task Lifecycle: guide/tasks.md
+      - Writing Adapters: guide/adapters.md
       - Comparison Pipeline: guide/comparison.md
       - Property Testing: guide/property-testing.md
       - Blob Store: guide/blob-store.md
