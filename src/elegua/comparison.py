@@ -2,7 +2,7 @@
 
 Layer 1 (Identity): Structural equality of result dicts.
 Layer 2 (Structural): AST isomorphism — sorted canonical form comparison.
-Layer 3 (Canonical): Pluggable normalizer rules (domain-specific, not yet implemented).
+Layer 3 (Canonical): pluggable normalizer rules (domain-specific, not yet implemented).
 Layer 4 (Invariant): Numerical/PBT validation (domain-specific, not yet implemented).
 """
 

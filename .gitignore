@@ -14,3 +14,7 @@ uv.lock
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Vale (downloaded styles, keep config + vocab)
+.vale/styles/Google/
+.vale/styles/config/vocabularies/
