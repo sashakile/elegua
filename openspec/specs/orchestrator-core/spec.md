@@ -2,12 +2,12 @@
 
 ## Metadata
 - **Change-ID**: `REQ-ORCH-001`
-- **Version**: `1.1.0`
+- **Version**: `1.2.0`
 - **Status**: `PROPOSAL`
 - **Last Updated**: 2026-03-17
 
 ## Purpose
-Eleguá is a domain-agnostic, multi-tier test harness designed to validate the mathematical equivalence of symbolic computing systems during migration (e.g., from Wolfram Mathematica to Julia/Python). It serves as the "Master of the Crossroads," providing an **infrastructure of trust** by orchestrating communication between an **Oracle** (Ground Truth) and one or more **Implementations Under Test (IUT)**.
+Eleguá is a domain-agnostic, multi-tier test harness designed to validate the mathematical equivalence of symbolic computing systems during migration or reimplementation. It serves as a generic **infrastructure of trust** by orchestrating communication between a **High-Fidelity Oracle** (Ground Truth) and one or more **Implementations Under Test (IUT)**.
 
 ## Requirements
 
@@ -15,33 +15,33 @@ Eleguá is a domain-agnostic, multi-tier test harness designed to validate the m
 Eleguá SHALL execute a symbolic task across multiple "Tiers" (Oracle and IUTs) to ensure mathematical parity.
 
 #### Scenario: Verify mathematical equivalence across tiers
-- **GIVEN** a task manifest defining Tier 1, 2, and 3
+- **GIVEN** a task manifest defining Tier 1 (Oracle) and Tier 2 (IUT)
 - **WHEN** a symbolic action is submitted to Eleguá
-- **THEN** it is executed on Tier 1 (Wolfram), Tier 2 (xAct-jl), and Tier 3 (Chacana-jl)
+- **THEN** it is executed on both tiers
 - **AND** the results are compared using the 4-Layer Comparison Pipeline.
 
 #### Scenario: Negative - Execution Error
-- **GIVEN** a task where Tier 2 crashes
+- **GIVEN** a task where an IUT crashes
 - **WHEN** the action is executed
-- **THEN** Eleguá MUST return an `EXECUTION_ERROR` for Tier 2 and continue if configured.
+- **THEN** Eleguá MUST return an `EXECUTION_ERROR` for that tier and continue if configured.
 
 ### Requirement: Isolated Execution Kernels
 Eleguá SHALL ensure that each task is executed in an isolated environment to prevent state leakage.
 
-#### Scenario: Isolated task execution in Wolfram
-- **GIVEN** a Wolfram adapter
+#### Scenario: Isolated task execution via Scope/Context
+- **GIVEN** an adapter supporting logical isolation
 - **WHEN** a task is executed
-- **THEN** it is wrapped in a unique `Context` to isolate variables and assignments.
+- **THEN** it is wrapped in a unique logical context to isolate variables and assignments.
 
-#### Scenario: Isolated task execution in Julia
-- **GIVEN** a Julia adapter
+#### Scenario: Isolated task execution via Subprocess
+- **GIVEN** an adapter supporting process isolation
 - **WHEN** a task is executed
 - **THEN** it is run in a fresh subprocess worker.
 
 ### Requirement: Large Object Handling (Blob Store)
 Eleguá SHALL store payloads exceeding 1MB in a dedicated "Blob Store" and reference them by hash in the token.
 
-#### Scenario: Store large tensor contraction result
+#### Scenario: Store large symbolic result
 - **GIVEN** a result exceeding 1MB
 - **WHEN** the adapter returns the token
 - **THEN** the payload is stored using SHA-256 in `.elegua/blobs/[ab]/[cd...]`
@@ -60,11 +60,11 @@ Eleguá SHALL store payloads exceeding 1MB in a dedicated "Blob Store" and refer
 The input to an adapter.
 ```json
 {
-  "action": "ToCanonical",
-  "domain": "Tensor",
+  "action": "TransformationName",
+  "domain": "SymbolicDomain",
   "manifest": "manifest.toml",
   "payload": {
-    "expression": { "fn": "Add", "args": [...] }
+    "expression": { "fn": "Operator", "args": [...] }
   }
 }
 ```
@@ -73,11 +73,11 @@ The input to an adapter.
 The output from an adapter.
 ```json
 {
-  "adapter_id": "wolfram-tier1",
+  "adapter_id": "adapter-tier1",
   "status": "OK",
   "result": {
-    "fn": "Power",
-    "args": [{"sym": "x"}, 2]
+    "fn": "Operator",
+    "args": [...]
   },
   "metadata": { "duration_ms": 120 }
 }
@@ -106,8 +106,8 @@ The output from an adapter.
 | :--- | :--- | :--- | :--- |
 | **Layer 1: Identity** | Bitwise / Hash | Instant validation. | `hash(A) == hash(B)` |
 | **Layer 2: Structural** | AST Comparison | Detects isomorphism. | `Tree(A) ≅ Tree(B)` |
-| **Layer 3: Canonical** | **Normalizer** | Semantic equivalence. | `Norm(A) == Norm(B)` |
-| **Layer 4: Invariant** | **Numerical / PBT** | Mathematical proof. | `f(A, args) ≈ f(B, args)` |
+| **Layer 3: Canonical** | **Normalizer** | Semantic equivalence via pluggable rules. | `Norm(A) == Norm(B)` |
+| **Layer 4: Invariant** | **Numerical / PBT** | Mathematical proof via domain-specific invariants. | `f(A, args) ≈ f(B, args)` |
 
 ### 4. Non-Goals
 - Real-time interactive execution (designed for batch validation).

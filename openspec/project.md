@@ -1,20 +1,22 @@
-# Project Context: Eleguá
+# Project Context: Eleguá and Chacana
 
-## Purpose
-**Eleguá** (Master of the Crossroads) is a domain-agnostic, multi-tier test harness designed to validate the mathematical equivalence of symbolic computing systems during migration (e.g., from Wolfram Mathematica to Julia/Python). It provides an **infrastructure of trust** by orchestrating communication between an **Oracle** (Ground Truth) and one or more **Implementations Under Test (IUT)**.
+## Vision
+The project provides an **infrastructure of trust** for the migration of complex mathematical systems. It is divided into two primary pillars:
 
-## Core Concepts
-- **The Orchestrator**: Manages the lifecycle of validation tasks.
+- **Eleguá (The Orchestrator)**: A domain-agnostic, multi-tier test harness. It manages the lifecycle of validation tasks and proves functional equivalence between a high-fidelity Oracle and multiple implementations.
+- **Chacana (The Language)**: A tensor calculus domain implemented using Eleguá's generic framework.
+
+## Key Concepts
 - **Three-Tier Execution**:
-    - **Tier 1**: Wolfram xAct (The "Gold Standard" Oracle).
-    - **Tier 2**: xAct-jl (Literal Julia Port / "High-Speed Oracle").
-    - **Tier 3**: Chacana-jl (Idiomatic Julia / The Performance Future).
-- **EleguaTask**: The atomic unit of validation, including manifest loading, multi-tier execution, and comparison.
+    - **Tier 1**: High-Fidelity Oracle (e.g., Wolfram xAct).
+    - **Tier 2**: Literal Port (e.g., xAct-jl).
+    - **Tier 3**: Idiomatic Target (e.g., Chacana-jl).
+- **EleguaTask**: The atomic unit of validation, including manifest loading, multi-tier execution, and 4-layer comparison.
 - **4-Layer Comparison Pipeline**:
     1. **Identity**: Bitwise/Hash.
     2. **Structural**: AST isomorphism.
-    3. **Canonical**: Normalizer-based semantic equivalence.
-    4. **Invariant**: Numerical sampling and Property-Based Testing (PBT).
+    3. **Canonical**: Normalizer-based semantic equivalence (Domain-Specific).
+    4. **Invariant**: Numerical sampling and Property-Based Testing (Domain-Specific).
 
 ## Tech Stack
 - **Python 3.10+**: Core orchestration logic.
@@ -24,10 +26,6 @@
 - **Dolt/Beads**: Issue tracking and version-controlled metadata.
 
 ## Project Conventions
-- **Isolation First**: Kernels must be isolated to prevent "ghost state" leakage (Mathematica Contexts, Julia Subprocesses).
+- **Domain-Agnostic Core**: The core runner (Eleguá) MUST remain separate from domain-specific logic (Chacana).
+- **Isolation First**: Kernels must be isolated to prevent "ghost state" leakage.
 - **Verification-Driven**: All architectural changes must be verifiable through the multi-tier pipeline.
-- **Domain-Agnostic Core**: Keep the core runner separate from domain-specific plugins (like Chacana).
-
-## Domain Context
-- **Symbolic Migration**: The high-stakes process of porting mathematical libraries where "almost correct" is failure.
-- **Tensor Calculus**: The primary initial domain, though the system is designed for general symbolic algebra (e.g., RUBI, FeynCalc).

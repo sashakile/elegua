@@ -2,22 +2,22 @@
 
 ## Metadata
 - **Change-ID**: `REQ-TEST-001`
-- **Version**: `1.1.0`
+- **Version**: `1.2.0`
 - **Status**: `PROPOSAL`
 - **Last Updated**: 2026-03-17
 
 ## Purpose
-This specification defines the three-layer testing architecture for the xAct migration project. It ensures that the migration from Wolfram Mathematica to Julia and Python is mathematically correct, performant, and serves as a foundation for language-agnostic mathematical property specifications.
+This specification defines the three-layer testing architecture for Eleguá. It ensures that symbolic systems are mathematically correct and performant by providing a language-agnostic framework for validation across multiple tiers.
 
 ## Requirements
 
-### Requirement: Migration Validation
-The testing architecture SHALL validate the functional equivalence and performance of the migrated implementation against the Wolfram xAct oracle using a default numerical tolerance of `1e-12`.
+### Requirement: Functional Validation
+The testing architecture SHALL validate the functional equivalence of an implementation against a high-fidelity oracle using a default numerical tolerance of `1e-12`.
 
-#### Scenario: Validate tensor contraction
-- **GIVEN** a tensor contraction task
-- **WHEN** it is executed in Julia (Tier 2/3)
-- **THEN** the result MUST match the Wolfram xAct oracle (Tier 1) within `1e-12` relative tolerance.
+#### Scenario: Validate symbolic transformation
+- **GIVEN** a symbolic transformation task
+- **WHEN** it is executed in an IUT (Tier 2/3)
+- **THEN** the result MUST match the Oracle (Tier 1) within `1e-12` relative tolerance.
 
 #### Scenario: Negative - Verification Failure
 - **GIVEN** a task where the results diverge beyond `1e-12`
@@ -27,16 +27,16 @@ The testing architecture SHALL validate the functional equivalence and performan
 ### Requirement: Language-Agnostic Property Specification
 The architecture SHALL support property-based tests that describe mathematical laws independent of the specific implementation language.
 
-#### Scenario: Verify associativity of tensor contraction
-- **GIVEN** a property test defining associativity
-- **WHEN** it is run across Wolfram, Julia, and Python
-- **THEN** it MUST hold for 100 random samples.
+#### Scenario: Verify identity law
+- **GIVEN** a property test defining an identity law
+- **WHEN** it is run across multiple adapters
+- **THEN** it MUST hold for the specified number of random samples.
 
 ### Requirement: Performance Regression Tracking
-The architecture SHALL track execution time and memory usage, flagging regressions exceeding 1.5x the baseline.
+The architecture SHALL track execution time and memory usage, flagging regressions exceeding a defined threshold (default: 1.5x baseline).
 
 #### Scenario: Negative - Performance Regression Detected
-- **GIVEN** a new version of XTensor.jl that is 2x slower than the previous version
+- **GIVEN** a new version of an implementation that is significantly slower than the previous version
 - **WHEN** the Layer 3 tests are run
 - **THEN** the runner MUST exit with code `1` and report a `PERFORMANCE_REGRESSION`.
 
@@ -48,7 +48,7 @@ The architecture SHALL track execution time and memory usage, flagging regressio
 - **Layer 3**: Performance tests (CSV reports, Regression tracking).
 
 ### 2. CLI Interface
-**Command:** `xact-test run --layer [1|2|3]`
+**Command:** `elegua-test run --layer [1|2|3]`
 
 **Flags:**
 - `--fail-fast`: Stop on first failure.
@@ -60,10 +60,10 @@ The architecture SHALL track execution time and memory usage, flagging regressio
 #### 3.1 Layer 1: Unit Test (JSON)
 ```json
 {
-  "name": "SymmetricSwap",
-  "action": "ToCanonical",
-  "input": { "fn": "Sub", "args": [...] },
-  "expected": "0"
+  "name": "TransformationTest",
+  "action": "Transform",
+  "input": { "fn": "Operator", "args": [...] },
+  "expected": { "fn": "Result", "args": [...] }
 }
 ```
 
@@ -72,9 +72,9 @@ The architecture SHALL track execution time and memory usage, flagging regressio
 
 ### 4. Non-Goals
 - Real-time profiling (Layer 3 is for coarse-grained regression only).
-- Mutation testing (superseded by Oracle/PBT validation).
+- Direct code modification or automated fixing.
 
 ### 5. Task Readiness
-- [ ] Implement `xact-test` CLI wrapper.
+- [ ] Implement `elegua-test` CLI wrapper.
 - [ ] Integrate `sampling.py` for Layer 2.
 - [ ] Create `perf_tracker.py` for Layer 3 telemetry.

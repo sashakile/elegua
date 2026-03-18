@@ -2,12 +2,12 @@
 
 ## Metadata
 - **Change-ID**: `REQ-PBT-001`
-- **Version**: `1.1.0`
+- **Version**: `1.2.0`
 - **Status**: `PROPOSAL`
 - **Last Updated**: 2026-03-17
 
 ## Purpose
-This specification defines the format and runner integration for Layer 2 property-based testing in Eleguá. It enables language-agnostic mathematical property validation across different implementations (Wolfram, Julia, Python) by specifying invariants as declarative "for all X, P(X)" properties.
+This specification defines the format and runner integration for Layer 2 property-based testing in Eleguá. It enables language-agnostic mathematical property validation across different implementations by specifying invariants as declarative "for all X, P(X)" properties.
 
 ## Requirements
 
@@ -15,9 +15,9 @@ This specification defines the format and runner integration for Layer 2 propert
 The system SHALL parse a declarative TOML-based format for specifying mathematical properties, including generators and expected laws.
 
 #### Scenario: Specify an involution property
-- **GIVEN** a property TOML file with a `dagger_involution` property
+- **GIVEN** a property TOML file with an `involution` property
 - **WHEN** the runner loads the property
-- **THEN** it MUST include a generator for symbols and a law stating that `MakeDaggerSymbol[MakeDaggerSymbol[$s]] == $s`.
+- **THEN** it MUST include a generator for input objects and a law stating that `f(f($x)) == $x`.
 
 #### Scenario: Negative - Invalid TOML Schema
 - **GIVEN** a property TOML file missing the required `law` field
@@ -55,7 +55,7 @@ Properties are stored in `tests/properties/` with a `layer = "property"` field.
         "type": "object",
         "properties": {
           "name": { "type": "string" },
-          "type": { "enum": ["Symbol", "Tensor", "Scalar"] }
+          "type": { "type": "string", "description": "Domain-specific generator name" }
         },
         "required": ["name", "type"]
       }
@@ -85,7 +85,7 @@ A new `xact-test property` CLI subcommand is introduced.
 
 ### 3. Backend: Custom Sampling
 Uses a custom sampling backend (`sampling.py`) using the **PCG64** algorithm for cross-platform reproducibility.
-- Supports scalar variable substitution and tensor component array generation.
+- Supports variable substitution and domain-specific object generation via plugins.
 
 ### 4. Property Validation Modes
 - **Single-adapter self-validation**: Validates that an adapter satisfies a mathematical law internally.
