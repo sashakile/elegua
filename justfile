@@ -13,7 +13,7 @@ check:
     uv run ruff format --check src/ tests/
     uv run pyright src/
     typos
-    vale docs/ src/ tests/ README.md
+    vale docs/ src/ tests/ .wai/ openspec/ README.md
 
 # Auto-fix lint and format issues
 fix:

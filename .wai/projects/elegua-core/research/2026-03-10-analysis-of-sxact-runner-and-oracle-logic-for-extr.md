@@ -22,7 +22,7 @@ Analyzed the following components in the `sxAct` repository:
 
 ### 2. Extraction Strategy
 To transform this into a domain-agnostic orchestrator (**Eleguá**), we must:
-1. **Genericize the Task Model**: Move to an `EleguaTask` that accepts arbitrary JSON payloads.
+1. **genericize the Task Model**: Move to an `EleguaTask` that accepts arbitrary JSON payloads.
 2. **Formalize the Protocol**: Define a `ValidationToken` using a MathJSON-compatible structure to eliminate string-translation dependency.
 3. **Implement Adapter Interface**: Decouple the orchestrator from the specific kernel by defining a standard `Adapter` contract for `initialize`, `execute`, and `teardown`.
 

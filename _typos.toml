@@ -1,2 +1,2 @@
 [files]
-extend-exclude = [".git", ".venv", ".dolt", ".beads", ".wai", ".vale"]
+extend-exclude = [".git", ".venv", ".dolt", ".beads", ".vale"]
