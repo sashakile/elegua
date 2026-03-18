@@ -23,6 +23,7 @@ dev = [
     "pytest>=8.0",
     "pytest-cov>=7.0.0",
     "ruff>=0.11",
+    "pyright>=1.1",
 ]
 
 [tool.ruff]
@@ -44,3 +45,9 @@ select = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["elegua"]
+
+[tool.pyright]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"
