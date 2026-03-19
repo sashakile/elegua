@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Change-ID**: `REQ-PBT-001`
-- **Version**: `1.3.0`
+- **Version**: `1.4.0`
 - **Status**: `IMPLEMENTED`
 - **Last Updated**: 2026-03-19
 
@@ -67,21 +67,26 @@ Properties are stored in `tests/properties/` with a `layer = "property"` field.
 }
 ```
 
-### 2. Runner Integration (CLI)
-A new `xact-test property` CLI subcommand is introduced.
+### 2. Runner Integration (Python API)
+The primary interface is the `PropertyRunner` class:
 
-**Command:**
-`xact-test property [PATH_TO_TOML] [FLAGS]`
+```python
+from elegua.property import PropertySpec, PropertyRunner, GeneratorRegistry
 
-**Flags:**
-- `--samples <int>`: Number of samples (default: 100).
-- `--seed <int>`: Random seed (64-bit).
-- `--tag <string>`: Filter by tag.
+spec = PropertySpec.from_toml(Path("tests/properties/involution.toml"))
+registry = GeneratorRegistry()
+registry.register("integer", lambda rng: int(rng.integers(-1000, 1000)))
 
-**Exit Codes:**
-- `0`: All properties passed.
-- `1`: One or more properties failed.
-- `2`: Configuration or schema error.
+runner = PropertyRunner(registry=registry)
+result = runner.run(spec, evaluator=my_evaluator, seed=42, samples=100)
+```
+
+**Parameters:**
+- `samples`: Number of random inputs (default: 100).
+- `seed`: 64-bit integer for PCG64 reproducibility.
+- `evaluator`: Callable that checks if the property holds for given bindings.
+
+**CLI:** Not yet implemented. Planned as `elegua-test run --layer 2`.
 
 ### 3. Backend: Custom Sampling
 Uses a custom sampling backend (`sampling.py`) using the **PCG64** algorithm for cross-platform reproducibility.

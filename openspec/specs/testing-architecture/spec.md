@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Change-ID**: `REQ-TEST-001`
-- **Version**: `1.3.0`
+- **Version**: `1.4.0`
 - **Status**: `PARTIAL`
 - **Last Updated**: 2026-03-19
 
@@ -57,17 +57,20 @@ The architecture SHALL track execution time and memory usage, flagging regressio
 
 ### 3. Data Formats
 
-#### 3.1 Layer 1: Unit Test (JSON)
-```json
-{
-  "name": "TransformationTest",
-  "action": "Transform",
-  "input": { "fn": "Operator", "args": [...] },
-  "expected": { "fn": "Result", "args": [...] }
-}
+#### 3.1 Layer 1: Unit Test (TOML)
+```toml
+[meta]
+name = "TransformationTest"
+
+[[tasks]]
+action = "Transform"
+[tasks.payload]
+expression = "input_expression"
 ```
 
-#### 3.2 Layer 3: Performance Report (CSV)
+Test files also support the sxAct extended format with `[[tests]]`, `[[tests.operations]]`, and `[tests.expected]` sections via the bridge loader.
+
+#### 3.2 Layer 3: Performance Report (CSV) — planned
 `task_id, duration_ms, memory_mb, tier, timestamp`
 
 ### 4. Implementation Status

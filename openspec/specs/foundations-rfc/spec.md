@@ -2,7 +2,7 @@
 
 ## Metadata
 - **Change-ID**: `REQ-FOUND-001`
-- **Version**: `1.2.0`
+- **Version**: `1.3.0`
 - **Status**: `IMPLEMENTED`
 - **Last Updated**: 2026-03-19
 
@@ -19,10 +19,10 @@ The system SHALL separate the tensor calculus DSL (Chacana) from the test orches
 - **WHEN** the RUBI adapter is registered with Eleguá
 - **THEN** it MUST be possible to execute RUBI verification tasks using the same Eleguá orchestrator.
 
-#### Scenario: Negative - Invalid Adapter Registration
+#### Scenario: Negative - Invalid Adapter Implementation
 - **GIVEN** an adapter that does not implement the required `execute` method
-- **WHEN** it is registered with Eleguá
-- **THEN** Eleguá MUST raise an `AdapterInterfaceError`.
+- **WHEN** it is instantiated
+- **THEN** Python's ABC enforcement MUST raise a `TypeError` preventing instantiation.
 
 ### Requirement: Three-Tier Verification
 The system SHALL support verification across three distinct execution tiers to prove mathematical equivalence.
@@ -32,10 +32,10 @@ The system SHALL support verification across three distinct execution tiers to p
 - **WHEN** a result from the Chacana-jl engine (Tier 3) is compared
 - **THEN** it MUST be verified against the Wolfram xAct "Gold Standard" (Tier 1).
 
-#### Scenario: Negative - Tier Mismatch
+#### Scenario: Negative - Tier Initialization Failure
 - **GIVEN** a manifest requiring 3 tiers
 - **WHEN** one tier fails to initialize
-- **THEN** the orchestrator MUST abort the task and return an `INITIALIZATION_ERROR`.
+- **THEN** the orchestrator MUST return an `EXECUTION_ERROR` for that tier and continue with remaining tiers if configured.
 
 ## Design Details
 
