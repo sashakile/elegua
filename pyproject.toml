@@ -8,6 +8,12 @@ dependencies = [
     "numpy>=1.22",
 ]
 
+[project.optional-dependencies]
+wolfram = [
+    "flask>=3.0",
+    "wolframclient>=1.1",
+]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from elegua.task import EleguaTask, TaskStatus
-from elegua.wolfram import WolframOracleAdapter
+from elegua.wolfram.adapter import WolframOracleAdapter
 from tests.xact_builder import build_xact_expr
 
 # --- Fake oracle for unit tests ---

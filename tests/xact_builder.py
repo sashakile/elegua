@@ -6,7 +6,7 @@ calculus project and lives here as a test example, not in the elegua core.
 
 Usage::
 
-    from elegua.wolfram import WolframOracleAdapter
+    from elegua.wolfram.adapter import WolframOracleAdapter
     from xact_builder import build_xact_expr
 
     adapter = WolframOracleAdapter(expr_builder=build_xact_expr)
