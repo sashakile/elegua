@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Change-ID**: `REQ-FOUND-001`
-- **Version**: `1.1.0`
-- **Status**: `PROPOSAL`
-- **Last Updated**: 2026-03-17
+- **Version**: `1.2.0`
+- **Status**: `IMPLEMENTED`
+- **Last Updated**: 2026-03-19
 
 ## Purpose
 This RFC defines the architectural pivot to decouple the `sxAct` project into two primary pillars: **Eleguá** (The Orchestrator) and **Chacana** (The Language). It establishes the three-tier execution strategy and the use of a common intermediate representation (CIR) for universal symbolic interchange.
@@ -45,27 +45,25 @@ The system SHALL support verification across three distinct execution tiers to p
 - **Tier 3 (Chacana-jl)**: Idiomatic, high-performance Julia using `Symbolics.jl`.
 
 ### 2. Common Intermediate Representation (CIR)
-The CIR follows the **MathJSON (v1.0)** specification for symbolic interchange. All adapters MUST return results in this format.
+Adapters return results as plain dict payloads within `ValidationToken`. The format is domain-specific — Eleguá's comparison pipeline operates on structural equality, sorted canonical form, and pluggable normalizers without requiring a fixed AST schema.
 
-```json
-{
-  "fn": "Add",
-  "args": [
-    {"sym": "a"},
-    {"sym": "b"}
-  ]
-}
-```
+### 3. Extension Model
+Domain-specific oracle servers are shipped as optional extras rather than built into the core. This preserves domain-agnosticism while providing ready-made integrations:
 
-### 3. Implementation Roadmap
-- **Phase 1: Eleguá Core**: Generalization of the runner into a domain-agnostic orchestrator.
+- `pip install elegua[wolfram]` — Wolfram kernel oracle server with configurable init scripts and cleanup expressions. Downstream projects (e.g., sxAct) inject domain-specific setup via environment variables.
+- Future extras follow the same pattern for Julia, Sage, or other CAS engines.
+
+### 4. Implementation Roadmap
+- **Phase 1: Eleguá Core**: Generalization of the runner into a domain-agnostic orchestrator. **IMPLEMENTED** (v0.1.0, 2026-03-19). Includes: task state machine, 4-layer comparison pipeline, property-based testing, adapter lifecycle, IsolatedRunner, MultiTierRunner, snapshot record/replay, blob store, domain exception hierarchy. 336 tests, 100% coverage.
+- **Phase 1b: elegua[wolfram]**: Port the Wolfram oracle HTTP server from sxAct into an optional extra. Generic kernel wrapper with configurable init/cleanup. **IN PROGRESS**.
 - **Phase 2: Chacana-Spec**: Implementation of the standalone DSL and static type system.
 - **Phase 3: xAct-jl**: Completion of the literal functional port.
 - **Phase 4: Chacana-jl**: Development of the idiomatic Julia engine.
 
-### 4. Non-Goals
+### 5. Non-Goals
 - Support for non-symbolic numerical simulation.
 - Direct integration with non-Python orchestrators.
+- Domain-specific logic in the core (injected via adapters, expression builders, and init scripts).
 
-### 5. Scientific Impact
+### 6. Scientific Impact
 Eleguá and Chacana represent a shift from porting code to verifying mathematics, providing an infrastructure of trust and a machine-parseable notation for physicists.

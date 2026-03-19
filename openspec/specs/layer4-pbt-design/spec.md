@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Change-ID**: `REQ-PBT-001`
-- **Version**: `1.2.0`
-- **Status**: `PROPOSAL`
-- **Last Updated**: 2026-03-17
+- **Version**: `1.3.0`
+- **Status**: `IMPLEMENTED`
+- **Last Updated**: 2026-03-19
 
 ## Purpose
 This specification defines the format and runner integration for Layer 2 property-based testing in Eleguá. It enables language-agnostic mathematical property validation across different implementations by specifying invariants as declarative "for all X, P(X)" properties.
@@ -98,6 +98,14 @@ When a property fails, the runner outputs:
 - The evaluated LHS and RHS.
 - The discrepancy (delta or representation strings).
 
-### 6. Non-Goals
+### 6. Implementation Status
+Implemented in `src/elegua/property.py`:
+- `PropertySpec` with `from_toml()` loader and `PropertyValidationError` for invalid schemas.
+- `GeneratorRegistry` for domain-specific generator registration.
+- `PropertyRunner` with `run()` and `generate_samples()`, PCG64-backed.
+- `Failure` dataclass with `sample_index` and `bindings`.
+- CLI (`xact-test property`) is NOT implemented. All functionality is Python API only.
+
+### 7. Non-Goals
 - Exhaustive symbolic proof (PBT is for sampling only).
 - Direct performance benchmarking during PBT runs.

@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Change-ID**: `REQ-TEST-001`
-- **Version**: `1.2.0`
-- **Status**: `PROPOSAL`
-- **Last Updated**: 2026-03-17
+- **Version**: `1.3.0`
+- **Status**: `PARTIAL`
+- **Last Updated**: 2026-03-19
 
 ## Purpose
 This specification defines the three-layer testing architecture for Eleguá. It ensures that symbolic systems are mathematically correct and performant by providing a language-agnostic framework for validation across multiple tiers.
@@ -70,11 +70,16 @@ The architecture SHALL track execution time and memory usage, flagging regressio
 #### 3.2 Layer 3: Performance Report (CSV)
 `task_id, duration_ms, memory_mb, tier, timestamp`
 
-### 4. Non-Goals
+### 4. Implementation Status
+- **Layer 1 (Unit tests)**: IMPLEMENTED. TOML-based test definitions via `load_toml_tasks()`, `IsolatedRunner`, `MultiTierRunner`. Uses TOML format, not JSON.
+- **Layer 2 (Property tests)**: IMPLEMENTED. `PropertyRunner` with PCG64 seeds, `GeneratorRegistry`, TOML spec format. Python API only (no CLI yet).
+- **Layer 3 (Performance tests)**: NOT YET IMPLEMENTED. CSV reporting and regression tracking remain future work.
+- **CLI (`elegua-test`)**: NOT YET IMPLEMENTED. All functionality is available via Python API.
+
+### 5. Non-Goals
 - Real-time profiling (Layer 3 is for coarse-grained regression only).
 - Direct code modification or automated fixing.
 
-### 5. Task Readiness
+### 6. Remaining Work
 - [ ] Implement `elegua-test` CLI wrapper.
-- [ ] Integrate `sampling.py` for Layer 2.
 - [ ] Create `perf_tracker.py` for Layer 3 telemetry.
