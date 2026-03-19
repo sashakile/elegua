@@ -57,9 +57,12 @@ class OffsetAdapter(Adapter):
 class FailingAdapter(Adapter):
     """Always returns an execution error."""
 
+    def __init__(self, name: str = "failing") -> None:
+        self._name = name
+
     @property
     def adapter_id(self) -> str:
-        return "failing"
+        return self._name
 
     def execute(self, task: EleguaTask) -> ValidationToken:
         raise RuntimeError("IUT crashed")
@@ -208,3 +211,99 @@ def test_verify_skipped_test(tmp_path: Path):
     with runner:
         results = runner.verify(tf)
     assert results[0].skipped is True
+
+
+# --- Dual-error and no-token status (M8) ---
+
+
+def test_dual_error_uses_execution_error_status():
+    """When both adapters error, comparison status should be EXECUTION_ERROR, not MATH_MISMATCH."""
+    runner = MultiTierRunner(
+        oracle=FailingAdapter("oracle-fail"),
+        iut=FailingAdapter("iut-fail"),
+    )
+    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    with runner:
+        results = runner.verify(tf)
+    assert len(results) == 2
+    for r in results:
+        assert r.comparison.status == TaskStatus.EXECUTION_ERROR
+        assert r.oracle_error is not None
+        assert r.iut_error is not None
+
+
+def test_single_iut_error_uses_execution_error_status():
+    """When only IUT errors, comparison status should be EXECUTION_ERROR."""
+    runner = MultiTierRunner(
+        oracle=EchoAdapter("oracle"),
+        iut=FailingAdapter(),
+    )
+    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    with runner:
+        results = runner.verify(tf)
+    for r in results:
+        assert r.comparison.status == TaskStatus.EXECUTION_ERROR
+        assert r.iut_error is not None
+
+
+def test_no_tokens_uses_execution_error_status(tmp_path: Path):
+    """When neither side produces tokens, comparison status should be EXECUTION_ERROR."""
+
+    class EmptyAdapter(Adapter):
+        """Returns OK but with no result (token has no useful data)."""
+
+        @property
+        def adapter_id(self) -> str:
+            return "empty"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=None,
+            )
+
+    # Need a test file whose tests have setup that produces no tokens
+    # The key: IsolatedRunner extracts tokens from operations, but if
+    # the adapter returns tokens with result=None, the multitier picks
+    # last token. The "no token" path triggers when tokens list is empty,
+    # which happens when setup fails (error path) or no operations.
+    # Actually the no-token path in multitier is when oracle_r.tokens is empty.
+    # That happens when an error occurs during execution within IsolatedRunner.
+    # Let's create a scenario where setup errors cause empty token lists.
+    f = tmp_path / "setup_fail.toml"
+    f.write_text(
+        '[meta]\nid = "sf"\ndescription = "d"\n\n'
+        '[[setup]]\naction = "BadSetup"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "Foo"\n'
+    )
+
+    class SetupFailAdapter(Adapter):
+        """Fails on setup action, succeeds on others."""
+
+        @property
+        def adapter_id(self) -> str:
+            return "setup-fail"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            if task.action == "BadSetup":
+                raise RuntimeError("setup failed")
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result={"repr": "ok"},
+            )
+
+    runner = MultiTierRunner(
+        oracle=SetupFailAdapter(),
+        iut=SetupFailAdapter(),
+    )
+    tf = load_sxact_toml(f)
+    with runner:
+        results = runner.verify(tf)
+    # Setup failure → error on all tests → no tokens
+    # When both error, multitier should return EXECUTION_ERROR
+    assert len(results) == 1
+    r = results[0]
+    assert r.comparison.status == TaskStatus.EXECUTION_ERROR

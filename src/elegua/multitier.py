@@ -102,6 +102,7 @@ class MultiTierRunner:
                 test_id=oracle_r.test_id,
                 oracle_token=oracle_token,
                 iut_token=iut_token,
+                comparison=ComparisonResult(status=TaskStatus.EXECUTION_ERROR, layer=0),
                 oracle_error=oracle_r.error,
                 iut_error=iut_r.error,
             )
@@ -112,6 +113,7 @@ class MultiTierRunner:
                 test_id=oracle_r.test_id,
                 oracle_token=oracle_token,
                 iut_token=iut_token,
+                comparison=ComparisonResult(status=TaskStatus.EXECUTION_ERROR, layer=0),
             )
 
         # Compare via pipeline
