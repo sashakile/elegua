@@ -24,6 +24,10 @@ fix:
 test *args:
     uv run pytest {{ args }}
 
+# Run integration tests (starts echo oracle, tests HTTP transport)
+test-integration:
+    uv run pytest -m integration -v
+
 # Run tests with coverage
 cov:
     uv run pytest --cov=elegua --cov-report=term-missing

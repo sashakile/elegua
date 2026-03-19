@@ -23,6 +23,8 @@ packages = ["src/elegua"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: tests requiring a running HTTP server"]
+addopts = "-m 'not integration'"
 
 [dependency-groups]
 dev = [
