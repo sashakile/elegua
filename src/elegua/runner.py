@@ -17,7 +17,10 @@ def load_toml_tasks(path: Path) -> list[EleguaTask]:
     Raises ValueError if the TOML file has no 'tasks' key.
     """
     with open(path, "rb") as f:
-        data = tomllib.load(f)
+        try:
+            data = tomllib.load(f)
+        except tomllib.TOMLDecodeError as exc:
+            raise SchemaError(f"{path}: invalid TOML: {exc}") from exc
 
     if "tasks" not in data:
         raise SchemaError(f"{path}: missing required 'tasks' array")

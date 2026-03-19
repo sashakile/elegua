@@ -151,7 +151,10 @@ def load_sxact_toml(path: Path) -> TestFile:
     Raises ValueError if the file is missing required fields.
     """
     with open(path, "rb") as f:
-        data = tomllib.load(f)
+        try:
+            data = tomllib.load(f)
+        except tomllib.TOMLDecodeError as exc:
+            raise SchemaError(f"{path}: invalid TOML: {exc}") from exc
 
     if "meta" not in data:
         raise SchemaError(f"{path}: missing required 'meta' section")

@@ -12,6 +12,7 @@ from elegua.bridge import (
     TestFileMeta,
     load_sxact_toml,
 )
+from elegua.errors import SchemaError
 from elegua.task import EleguaTask
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -262,3 +263,13 @@ def test_expected_is_frozen():
     exp = Expected(is_zero=True)
     with pytest.raises(AttributeError):
         exp.is_zero = False  # type: ignore[misc]
+
+
+# --- Malformed TOML ---
+
+
+def test_load_malformed_toml(tmp_path):
+    f = tmp_path / "bad.toml"
+    f.write_text("this is not valid [[[ toml")
+    with pytest.raises(SchemaError, match="invalid TOML"):
+        load_sxact_toml(f)

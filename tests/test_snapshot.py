@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from elegua.adapter import WolframAdapter
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.task import EleguaTask, TaskStatus
@@ -180,3 +183,20 @@ def test_record_then_replay(tmp_path: Path):
     for orig, replayed in zip(recorded_tokens, replayed_tokens, strict=True):
         assert orig.status == replayed.status
         assert orig.result == replayed.result
+
+
+# --- Corrupt JSON ---
+
+
+def test_read_corrupt_json(tmp_path):
+    f = tmp_path / "bad.json"
+    f.write_text("{truncated")
+    with pytest.raises(SchemaError, match="corrupt snapshot JSON"):
+        SnapshotStore.read(f)
+
+
+def test_read_non_dict_json(tmp_path):
+    f = tmp_path / "arr.json"
+    f.write_text("[1, 2, 3]")
+    with pytest.raises(SchemaError, match="expected JSON object"):
+        SnapshotStore.read(f)

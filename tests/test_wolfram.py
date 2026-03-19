@@ -385,7 +385,7 @@ def test_initialize_unhealthy_no_network_error():
 
 
 def test_evaluate_with_xact_handles_json_decode_error():
-    """JSONDecodeError from a malformed response should be caught."""
+    """Malformed JSON response should be caught as a decode error."""
     from unittest.mock import MagicMock, patch
 
     from elegua.oracle import OracleClient

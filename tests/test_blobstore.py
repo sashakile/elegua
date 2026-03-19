@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from elegua.blobstore import BlobStore
+from elegua.errors import SchemaError
 
 ONE_MB = 1024 * 1024
 
@@ -80,3 +81,13 @@ class TestBlobStore:
         """A dict with blob=<non-string> is NOT a blob reference."""
         data = {"blob": 12345}
         assert store.maybe_resolve(data) == data
+
+    def test_get_corrupt_blob(self, tmp_path: Path):
+        store = BlobStore(tmp_path)
+        # Write a corrupt blob manually
+        sha = "a" * 64
+        blob_path = tmp_path / sha[:2] / sha[2:]
+        blob_path.parent.mkdir(parents=True)
+        blob_path.write_bytes(b"not json{{{")
+        with pytest.raises(SchemaError, match="Corrupt blob"):
+            store.get(sha)

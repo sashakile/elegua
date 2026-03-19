@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from elegua.errors import SchemaError
+
 ONE_MB = 1024 * 1024
 
 
@@ -41,7 +43,10 @@ class BlobStore:
         """Retrieve payload by SHA-256 hash. Raises FileNotFoundError if missing."""
         path = self._blob_path(sha)
         data = path.read_bytes()
-        return json.loads(data)
+        try:
+            return json.loads(data)
+        except json.JSONDecodeError as exc:
+            raise SchemaError(f"Corrupt blob {sha[:12]}... at {path}: {exc}") from exc
 
     def should_store(self, payload: dict[str, Any]) -> bool:
         """Return True if payload exceeds the 1MB threshold."""

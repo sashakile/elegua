@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from elegua.adapter import Adapter
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask, TaskStatus
 
@@ -57,7 +58,12 @@ class SnapshotStore:
         """Load a snapshot store from disk. Returns empty store if file missing."""
         store = cls(path)
         if path.exists():
-            raw = json.loads(path.read_text())
+            try:
+                raw = json.loads(path.read_text())
+            except json.JSONDecodeError as exc:
+                raise SchemaError(f"{path}: corrupt snapshot JSON: {exc}") from exc
+            if not isinstance(raw, dict):
+                raise SchemaError(f"{path}: expected JSON object, got {type(raw).__name__}")
             store._data = raw.get("snapshots", {})
         return store
 

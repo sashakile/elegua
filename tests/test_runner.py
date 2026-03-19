@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from elegua.adapter import Adapter, WolframAdapter
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.task import EleguaTask, TaskStatus
@@ -112,3 +113,10 @@ def test_run_tasks_calls_adapter_lifecycle():
     ]
     run_tasks(tasks, adapter=adapter)
     assert adapter.calls == ["initialize", "execute:A", "execute:B", "teardown"]
+
+
+def test_load_malformed_toml(tmp_path):
+    f = tmp_path / "bad.toml"
+    f.write_text("this is not valid [[[ toml")
+    with pytest.raises(SchemaError, match="invalid TOML"):
+        load_toml_tasks(f)
