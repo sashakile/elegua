@@ -23,6 +23,7 @@ from elegua.models import ActionPayload, ValidationToken
 from elegua.oracle import OracleClient
 from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, PropertySpec
 from elegua.runner import load_toml_tasks, run_tasks
+from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.task import EleguaTask, InvalidTransition, TaskStatus
 from elegua.wolfram import WolframOracleAdapter
 
@@ -43,6 +44,9 @@ __all__ = [
     "PropertyResult",
     "PropertyRunner",
     "PropertySpec",
+    "RecordingAdapter",
+    "ReplayAdapter",
+    "SnapshotStore",
     "TaskStatus",
     "TestCase",
     "TestFile",
