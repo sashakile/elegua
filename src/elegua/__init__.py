@@ -16,6 +16,7 @@ from elegua.comparison import (
     compare_pipeline,
     compare_structural,
 )
+from elegua.context import ExecutionContext
 from elegua.models import ActionPayload, ValidationToken
 from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, PropertySpec
 from elegua.runner import load_toml_tasks, run_tasks
@@ -27,6 +28,7 @@ __all__ = [
     "BlobStore",
     "ComparisonResult",
     "EleguaTask",
+    "ExecutionContext",
     "Expected",
     "GeneratorRegistry",
     "InvalidTransition",
