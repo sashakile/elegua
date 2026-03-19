@@ -1,5 +1,7 @@
 # TOML test format
 
+Test cases and property specs are defined in TOML. Task files describe actions to execute; property files describe mathematical laws to validate by sampling.
+
 ## Task files
 
 Task files define a sequence of actions to execute through an adapter.
@@ -41,9 +43,11 @@ for task in tasks:
 
 ### Validation
 
-- Missing `tasks` key raises `ValueError`
-- Missing `action` field on any task raises `ValueError` with the task index
+- Missing `tasks` key raises `SchemaError`
+- Missing `action` field on any task raises `SchemaError` with the task index
 - Empty `action` string is treated as missing
+
+`SchemaError` is a subclass of both `EleguaError` and `ValueError`, so `except ValueError` catches it too.
 
 ## Property files
 

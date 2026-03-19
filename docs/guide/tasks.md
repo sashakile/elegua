@@ -1,5 +1,7 @@
 # Task lifecycle
 
+`EleguaTask` carries an action through a state machine from `PENDING` to a terminal verdict. `ValidationToken` is what adapters return after execution.
+
 ## EleguaTask
 
 The `EleguaTask` is the atomic unit of validation. It carries an action name, a payload dict, and tracks its execution status.

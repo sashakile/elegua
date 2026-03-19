@@ -1,5 +1,7 @@
 # Blob store
 
+Payloads over 1 MB are automatically stored on disk by SHA-256 hash, keeping tokens lightweight. Use `maybe_store()` and `maybe_resolve()` for transparent handling.
+
 ## Overview
 
 Symbolic expressions in computational mathematics can exceed 1 MB in serialized form. The blob store handles large payloads by storing them on disk, referenced by SHA-256 hash.

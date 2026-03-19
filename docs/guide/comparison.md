@@ -1,15 +1,19 @@
 # Comparison pipeline
 
-## Overview
+The comparison pipeline determines whether two `ValidationToken` results are mathematically equivalent. It cascades through up to 4 layers, stopping at the first that confirms a match.
 
-The comparison pipeline determines whether two `ValidationToken` results are mathematically equivalent. It cascades through layers, stopping at the first that confirms a match.
+**Prerequisite:** you need two `ValidationToken` objects — one from the Oracle adapter and one from the IUT adapter. See [Writing an adapter](adapters.md) for how to produce them, or [Task lifecycle](tasks.md) for the data model.
+
+## Usage
 
 ```python
-from elegua.comparison import compare_pipeline
+from elegua.comparison import ComparisonPipeline
 
-result = compare_pipeline(oracle_token, iut_token)
-print(result.status)  # TaskStatus.OK or TaskStatus.MATH_MISMATCH
-print(result.layer)   # which layer resolved the comparison (1-4)
+pipeline = ComparisonPipeline()
+result = pipeline.compare(oracle_token, iut_token)
+print(result.status)      # TaskStatus.OK or TaskStatus.MATH_MISMATCH
+print(result.layer)       # which layer resolved the comparison (1-4)
+print(result.layer_name)  # human-readable name (e.g. "identity", "structural")
 ```
 
 ## Layer 1 — Identity
@@ -41,7 +45,7 @@ status = compare_structural(token_a, token_b)
 
 ## Layers 3-4 — Extension points
 
-**Layer 3 (Canonical)** uses pluggable normalizer rules for semantic equivalence. **Layer 4 (Invariant)** uses numerical sampling and property-based testing. Both are domain-specific and not yet implemented in the core.
+**Layer 3 (Canonical)** uses pluggable normalizer rules for semantic equivalence. **Layer 4 (Invariant)** uses numerical sampling and property-based testing. Both are domain-specific — register them on a `ComparisonPipeline` instance. See [Property testing](property-testing.md) for layer 4 details.
 
 ## ComparisonResult
 
@@ -50,6 +54,7 @@ The pipeline returns a `ComparisonResult` dataclass:
 ```python
 from elegua.comparison import ComparisonResult
 
-# result.status — TaskStatus.OK or TaskStatus.MATH_MISMATCH
-# result.layer  — the layer number that produced the verdict (1-4)
+# result.status     — TaskStatus.OK or TaskStatus.MATH_MISMATCH
+# result.layer      — the layer number that produced the verdict (1-4)
+# result.layer_name — human-readable name (e.g. "identity", "structural")
 ```

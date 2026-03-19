@@ -2,7 +2,9 @@
 
 **Domain-agnostic, multi-tier test harness for validating mathematical equivalence.**
 
-Eleguá orchestrates validation tasks across multiple implementations of the same mathematical system. It proves functional equivalence by running the same symbolic action on a high-fidelity Oracle and one or more Implementations Under Test (IUT), then comparing results through a multi-layer pipeline.
+Eleguá proves that two implementations of the same mathematical system produce equivalent results. It runs identical symbolic actions on a high-fidelity Oracle and one or more Implementations Under Test (IUT), then compares outputs through a 4-layer pipeline — from fast structural equality to deep property-based testing — stopping at the first layer that confirms a match.
+
+In short, define test cases in TOML, write an Adapter for each implementation, and let Eleguá tell you whether they agree — and at what level of analysis.
 
 ## Key features
 
@@ -36,7 +38,7 @@ TOML fixture → EleguaTask → Adapter.execute() → ValidationToken → Compar
 
 ## Next steps
 
+- [Getting started](getting-started.md) — install prerequisites and run your first comparison
 - [Architecture](architecture.md) — understand the three-tier model and design decisions
-- [Getting started](getting-started.md) — install and run your first test
 - [User guide](guide/tasks.md) — work with tasks, adapters, and comparison layers
 - [API reference](reference/) — auto-generated from source

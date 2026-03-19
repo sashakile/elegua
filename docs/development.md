@@ -1,6 +1,6 @@
 # Development
 
-This guide covers contributing to Eleguá, the multi-tier test harness for validating mathematical equivalence.
+How to set up, lint, test, and contribute to Eleguá.
 
 ## Setup
 

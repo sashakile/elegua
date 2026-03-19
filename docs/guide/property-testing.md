@@ -1,8 +1,6 @@
 # Property-based testing
 
-## Overview
-
-The property runner validates mathematical laws by generating random inputs with reproducible PCG64 seeds and checking that properties hold across all samples.
+Property-based testing is layer 4 of the [comparison pipeline](comparison.md). It validates mathematical laws by generating random inputs with reproducible PCG64 seeds and checking that properties hold across all samples.
 
 ## Property spec format
 
@@ -76,13 +74,19 @@ print(result.failures)     # list of Failure(sample_index, bindings)
 
 ## Evaluator functions
 
-An evaluator takes the law string and a dict of variable bindings, and returns `True` if the property holds:
+An evaluator takes the law string and a dict of variable bindings, and returns `True` if the property holds. Use a local evaluator for pure-Python properties, or delegate to an adapter for properties that require a symbolic engine:
 
 ```python
+# Local evaluator — for properties computable in Python
 def my_evaluator(law: str, bindings: dict) -> bool:
     x = bindings["$x"]
     # Check: f(f(x)) == x where f is negation
     return -(-x) == x
+
+# Adapter-backed evaluator — for properties requiring a symbolic engine
+def adapter_evaluator(law: str, bindings: dict) -> bool:
+    token = my_adapter.execute(EleguaTask(action="Evaluate", payload=bindings))
+    return token.status == TaskStatus.OK
 ```
 
 ## Reproducibility

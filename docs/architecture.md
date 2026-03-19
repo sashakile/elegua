@@ -1,5 +1,7 @@
 # Architecture
 
+Eleguá's architecture solves a specific problem: when porting a symbolic math library across languages, you need to prove that the port produces equivalent results to the original — not just for simple cases, but for the full space of symbolic expressions.
+
 ## Three-tier execution model
 
 Eleguá validates mathematical systems by comparing results across tiers of decreasing fidelity.
