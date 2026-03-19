@@ -1,0 +1,28 @@
+# Generic Wolfram oracle for Eleguá.
+#
+# Start:  just oracle-up
+# Stop:   just oracle-down
+# Logs:   just oracle-logs
+#
+# To inject a domain-specific init script (e.g., for sxAct):
+#   ELEGUA_WOLFRAM_INIT=/opt/xAct/init.wl docker compose -f docker/docker-compose.yml up
+#   (and mount the xAct directory as a volume)
+
+services:
+  wolfram-oracle:
+    build: ./wolfram
+    ports:
+      - "8765:8765"
+    volumes:
+      - wolfram-config:/root/.WolframEngine
+    environment:
+      - ELEGUA_WOLFRAM_INIT=${ELEGUA_WOLFRAM_INIT:-}
+      - ELEGUA_WOLFRAM_CLEANUP=${ELEGUA_WOLFRAM_CLEANUP:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  wolfram-config:

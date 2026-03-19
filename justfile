@@ -43,6 +43,18 @@ fmt:
 typecheck:
     uv run pyright src/
 
+# Start the Wolfram oracle server (Docker)
+oracle-up:
+    docker compose -f docker/docker-compose.yml up -d --build
+
+# Stop the Wolfram oracle server
+oracle-down:
+    docker compose -f docker/docker-compose.yml down
+
+# Show oracle server logs
+oracle-logs:
+    docker compose -f docker/docker-compose.yml logs -f wolfram-oracle
+
 # Serve docs locally
 docs-serve:
     uv run --group docs mkdocs serve
