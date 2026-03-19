@@ -1,13 +1,14 @@
-"""WolframOracleAdapter — real adapter using the oracle HTTP server.
+"""WolframOracleAdapter — generic adapter for a Wolfram oracle server.
 
-Translates EleguaTask (action + payload) into Wolfram expressions,
-sends them to the oracle via HTTP, and maps results back to
-ValidationTokens.
+Domain-agnostic: the adapter is a transport layer between EleguaTask
+and a Wolfram kernel via HTTP. Domain-specific action translation is
+provided by an injectable ``expr_builder`` callable.
 """
 
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from typing import Any, Protocol
 
 from elegua.adapter import Adapter
@@ -26,11 +27,22 @@ class OracleLike(Protocol):
     def check_clean_state(self) -> tuple[bool, list[str]]: ...
 
 
+def _default_expr_builder(action: str, payload: dict[str, Any]) -> str:
+    """Default builder: use payload['expression'] or the action name as-is."""
+    return str(payload.get("expression", action))
+
+
 class WolframOracleAdapter(Adapter):
-    """Adapter for the Wolfram/xAct backend via oracle HTTP server.
+    """Generic adapter for a Wolfram oracle HTTP server.
+
+    The adapter handles lifecycle (health, cleanup), expression evaluation,
+    and result mapping. Domain-specific action→expression translation is
+    delegated to the ``expr_builder`` callable.
 
     Parameters:
         oracle: An OracleClient (or any OracleLike) instance.
+        expr_builder: Callable(action, payload) → Wolfram expression string.
+            Defaults to using ``payload["expression"]``.
         timeout: Default per-call timeout in seconds.
     """
 
@@ -39,6 +51,7 @@ class WolframOracleAdapter(Adapter):
         oracle: OracleLike | None = None,
         base_url: str = "http://localhost:8765",
         timeout: int = 60,
+        expr_builder: Callable[[str, dict[str, Any]], str] | None = None,
     ) -> None:
         if oracle is None:
             from elegua.oracle import OracleClient
@@ -46,6 +59,7 @@ class WolframOracleAdapter(Adapter):
             oracle = OracleClient(base_url)
         self._oracle = oracle
         self._timeout = timeout
+        self._expr_builder = expr_builder or _default_expr_builder
         self._context_id: str | None = None
 
     @property
@@ -72,12 +86,18 @@ class WolframOracleAdapter(Adapter):
 
     def execute(self, task: EleguaTask) -> ValidationToken:
         try:
-            wolfram_expr = build_expr(task.action, task.payload)
+            wolfram_expr = self._expr_builder(task.action, task.payload)
         except KeyError as exc:
             return ValidationToken(
                 adapter_id=self.adapter_id,
                 status=TaskStatus.EXECUTION_ERROR,
                 metadata={"error": f"Missing required argument: {exc}"},
+            )
+        except ValueError as exc:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.EXECUTION_ERROR,
+                metadata={"error": str(exc)},
             )
 
         data = self._oracle.evaluate_with_xact(
@@ -98,7 +118,9 @@ class WolframOracleAdapter(Adapter):
         oracle_result = data.get("result", "")
         error = data.get("error")
 
-        # Assert special case: non-True is a failure
+        # Boolean assertion: if the action is "Assert" and the oracle returned
+        # a non-True value, treat it as a failure. This is Wolfram-generic
+        # (not domain-specific) — any Wolfram boolean check uses this pattern.
         if action == "Assert" and status_raw == "ok":
             if str(oracle_result).strip() != "True":
                 msg = payload.get("message") or (
@@ -143,135 +165,3 @@ class WolframOracleAdapter(Adapter):
             result=result_dict,
             metadata=metadata,
         )
-
-
-def build_expr(action: str, args: dict[str, Any]) -> str:
-    """Translate action + args to a Wolfram expression string.
-
-    Raises:
-        KeyError: if a required arg is absent.
-        ValueError: if the action is unknown.
-    """
-    if action == "DefManifold":
-        idx_str = ", ".join(args["indices"])
-        return f"DefManifold[{args['name']}, {args['dimension']}, {{{idx_str}}}]"
-
-    if action == "DefMetric":
-        return f"DefMetric[{args['signdet']}, {args['metric']}, {args['covd']}]"
-
-    if action == "DefTensor":
-        idx_str = ",".join(args["indices"])
-        tensor_slot = f"{args['name']}[{idx_str}]"
-        manifold = args.get("manifold") or ""
-        symmetry = args.get("symmetry") or ""
-        parts = [p for p in (tensor_slot, manifold, symmetry) if p]
-        return f"DefTensor[{', '.join(parts)}]"
-
-    if action == "Evaluate":
-        return str(args["expression"])
-
-    if action == "ToCanonical":
-        return f"ToCanonical[{args['expression']}]"
-
-    if action == "Simplify":
-        expr = args["expression"]
-        assumptions = args.get("assumptions") or ""
-        if assumptions:
-            return f"Simplify[{expr}, {assumptions}]"
-        return f"Simplify[{expr}]"
-
-    if action == "Contract":
-        return f"ContractMetric[{args['expression']}]"
-
-    if action == "Assert":
-        return str(args["condition"])
-
-    if action == "CommuteCovDs":
-        idx = ", ".join(args["indices"])
-        return f"CommuteCovDs[{args['expression']}, {args['covd']}, {{{idx}}}]"
-
-    if action == "SortCovDs":
-        return f"SortCovDs[{args['expression']}, {args['covd']}]"
-
-    if action == "IntegrateByParts":
-        return f"IBP[{args['expression']}, {args['covd']}]"
-
-    if action == "TotalDerivativeQ":
-        return f"TotalDerivativeQ[{args['expression']}, {args['covd']}]"
-
-    if action == "VarD":
-        return f"VarD[{args['field']}, {args['covd']}][{args['expression']}]"
-
-    if action == "DefPerturbation":
-        return f"DefPerturbation[{args['tensor']}, {args['background']}, {args['order']}]"
-
-    if action == "Perturb":
-        return f"Perturb[{args['expr']}, {args['order']}]"
-
-    if action == "PerturbCurvature":
-        key = args.get("key")
-        if key:
-            return f"{key}[{args['covd']}]"
-        return f"PerturbCurvature[{args['covd']}, {args['perturbation']}]"
-
-    if action == "PerturbationOrder":
-        return f"PerturbationOrder[{args['tensor']}]"
-
-    if action == "PerturbationAtOrder":
-        return f"PerturbationAtOrder[{args['background']}, {args['order']}]"
-
-    if action == "CheckMetricConsistency":
-        return f"CheckMetricConsistency[{args['metric']}]"
-
-    if action == "Christoffel":
-        return f"Christoffel[{args['metric']}, {args['basis']}]"
-
-    if action == "SetBasisChange":
-        return f"SetBasisChange[{args['from_basis']}, {args['to_basis']}, {args['matrix']}]"
-
-    if action == "ChangeBasis":
-        return (
-            f"ChangeBasis[{args['expr']}, {args['slot']}, {args['from_basis']}, {args['to_basis']}]"
-        )
-
-    if action == "GetJacobian":
-        return f"Jacobian[{args['basis1']}, {args['basis2']}]"
-
-    if action == "BasisChangeQ":
-        return f"BasisChangeQ[{args['from_basis']}, {args['to_basis']}]"
-
-    if action == "SetComponents":
-        return f"SetComponents[{args['tensor']}, {args['array']}, {args['bases']}]"
-
-    if action == "GetComponents":
-        return f"GetComponents[{args['tensor']}, {args['bases']}]"
-
-    if action == "ComponentValue":
-        idx = ", ".join(str(i) for i in args["indices"])
-        return f"ComponentValue[{args['tensor']}, {{{idx}}}, {args['bases']}]"
-
-    if action == "CTensorQ":
-        return f"CTensorQ[{args['tensor']}, {args['bases']}]"
-
-    if action == "ToBasis":
-        return f"ToBasis[{args['basis']}][{args['expression']}]"
-
-    if action == "FromBasis":
-        return f"FromBasis[{args['tensor']}, {args['bases']}]"
-
-    if action == "TraceBasisDummy":
-        return f"TraceBasisDummy[{args['tensor']}, {args['bases']}]"
-
-    if action == "CollectTensors":
-        return f"CollectTensors[{args['expression']}]"
-
-    if action == "AllContractions":
-        return f"AllContractions[{args['expression']}, {args['metric']}]"
-
-    if action == "SymmetryOf":
-        return f"SymmetryOf[{args['expression']}]"
-
-    if action == "MakeTraceFree":
-        return f"MakeTraceFree[{args['expression']}, {args['metric']}]"
-
-    raise ValueError(f"Unknown action: {action!r}")

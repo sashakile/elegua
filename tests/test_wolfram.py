@@ -1,4 +1,4 @@
-"""Tests for WolframOracleAdapter — real adapter using oracle HTTP client."""
+"""Tests for WolframOracleAdapter and xAct expression builder."""
 
 from __future__ import annotations
 
@@ -8,7 +8,8 @@ from typing import Any
 import pytest
 
 from elegua.task import EleguaTask, TaskStatus
-from elegua.wolfram import WolframOracleAdapter, build_expr
+from elegua.wolfram import WolframOracleAdapter
+from tests.xact_builder import build_xact_expr
 
 # --- Fake oracle for unit tests ---
 
@@ -64,7 +65,7 @@ class FakeOracle:
         return self.clean, self.leaked
 
 
-# --- build_expr: action → Wolfram expression ---
+# --- build_xact_expr: xAct action → Wolfram expression ---
 
 
 @pytest.mark.parametrize(
@@ -141,18 +142,18 @@ class FakeOracle:
         ),
     ],
 )
-def test_build_expr(action: str, args: dict[str, Any], expected: str):
-    assert build_expr(action, args) == expected
+def test_build_xact_expr(action: str, args: dict[str, Any], expected: str):
+    assert build_xact_expr(action, args) == expected
 
 
-def test_build_expr_unknown_action():
-    with pytest.raises(ValueError, match="Unknown action"):
-        build_expr("NoSuchAction", {})
+def test_build_xact_expr_unknown_action():
+    with pytest.raises(ValueError, match="Unknown xAct action"):
+        build_xact_expr("NoSuchAction", {})
 
 
-def test_build_expr_missing_arg():
+def test_build_xact_expr_missing_arg():
     with pytest.raises(KeyError):
-        build_expr("DefManifold", {"name": "M"})
+        build_xact_expr("DefManifold", {"name": "M"})
 
 
 # --- Adapter lifecycle ---
@@ -228,19 +229,33 @@ def test_execute_maps_timeout_status():
     assert token.status == TaskStatus.TIMEOUT
 
 
-def test_execute_sends_correct_wolfram_expr():
+def test_default_builder_uses_expression_field():
+    """Default expr_builder sends payload['expression'] as-is."""
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="0")
     adapter = WolframOracleAdapter(oracle=oracle)
+    with adapter:
+        task = EleguaTask(
+            action="Evaluate",
+            payload={"expression": "1 + 1"},
+        )
+        adapter.execute(task)
+    eval_calls = [c for c in oracle.calls if c[0] == "evaluate"]
+    assert eval_calls[0][1] == "1 + 1"
+
+
+def test_custom_expr_builder():
+    """Custom expr_builder translates actions to Wolfram expressions."""
+    oracle = FakeOracle()
+    oracle.next_result = FakeResult(status="ok", result="0")
+    adapter = WolframOracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
     with adapter:
         task = EleguaTask(
             action="ToCanonical",
             payload={"expression": "T[-a,-b] - T[-b,-a]"},
         )
         adapter.execute(task)
-    # Verify the oracle received the translated expression
     eval_calls = [c for c in oracle.calls if c[0] == "evaluate"]
-    assert len(eval_calls) == 1
     assert eval_calls[0][1] == "ToCanonical[T[-a,-b] - T[-b,-a]]"
 
 
@@ -261,7 +276,7 @@ def test_execute_does_not_mutate_task():
 def test_assert_true_returns_ok():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="True", type="Bool")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = WolframOracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
     with adapter:
         task = EleguaTask(
             action="Assert",
@@ -274,7 +289,7 @@ def test_assert_true_returns_ok():
 def test_assert_false_returns_error():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="False", type="Bool")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = WolframOracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
     with adapter:
         task = EleguaTask(
             action="Assert",
