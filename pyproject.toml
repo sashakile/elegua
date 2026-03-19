@@ -63,3 +63,8 @@ pythonVersion = "3.11"
 typeCheckingMode = "standard"
 venvPath = "."
 venv = ".venv"
+exclude = [
+    "src/elegua/wolfram/kernel.py",
+    "src/elegua/wolfram/server.py",
+    "src/elegua/wolfram/__main__.py",
+]
