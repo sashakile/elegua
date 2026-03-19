@@ -26,6 +26,7 @@ from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, P
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.task import EleguaTask, InvalidTransition, TaskStatus
+from elegua.verdict import Verdict, evaluate_expected
 from elegua.wolfram import WolframOracleAdapter
 
 __all__ = [
@@ -55,12 +56,14 @@ __all__ = [
     "TestFileMeta",
     "TestRunResult",
     "ValidationToken",
+    "Verdict",
     "VerificationResult",
     "WolframAdapter",
     "WolframOracleAdapter",
     "compare_identity",
     "compare_pipeline",
     "compare_structural",
+    "evaluate_expected",
     "load_sxact_toml",
     "load_toml_tasks",
     "run_tasks",

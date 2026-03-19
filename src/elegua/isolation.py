@@ -30,6 +30,7 @@ class TestRunResult:
 
     test_id: str
     tokens: list[ValidationToken] = field(default_factory=list)
+    bindings: dict[str, str] = field(default_factory=dict)
     skipped: bool = False
     skip_reason: str | None = None
     error: str | None = None
@@ -97,9 +98,18 @@ class IsolatedRunner:
                 token = self._execute_op(op)
                 tokens.append(token)
         except Exception as exc:
-            return TestRunResult(test_id=tc.id, tokens=tokens, error=str(exc))
+            return TestRunResult(
+                test_id=tc.id,
+                tokens=tokens,
+                bindings=self._context.snapshot(),
+                error=str(exc),
+            )
 
-        return TestRunResult(test_id=tc.id, tokens=tokens)
+        return TestRunResult(
+            test_id=tc.id,
+            tokens=tokens,
+            bindings=self._context.snapshot(),
+        )
 
     def _execute_op(self, op: Operation) -> ValidationToken:
         resolved_args = self._context.resolve_refs(op.args)
