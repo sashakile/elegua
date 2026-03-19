@@ -80,3 +80,5 @@ for oracle, iut in zip(oracle_tokens, iut_tokens, strict=True):
     result = compare_pipeline(oracle, iut)
     print(f"Layer {result.layer}: {result.status}")
 ```
+
+For adapters backed by an HTTP oracle server, see [Oracle servers](oracle-servers.md).

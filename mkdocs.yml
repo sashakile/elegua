@@ -66,6 +66,7 @@ nav:
       - Writing Adapters: guide/adapters.md
       - Comparison Pipeline: guide/comparison.md
       - Property Testing: guide/property-testing.md
+      - Oracle Servers: guide/oracle-servers.md
       - Blob Store: guide/blob-store.md
       - TOML Format: guide/toml-format.md
   - Development: development.md
