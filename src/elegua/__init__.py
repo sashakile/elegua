@@ -19,9 +19,11 @@ from elegua.comparison import (
 from elegua.context import ExecutionContext
 from elegua.isolation import IsolatedRunner, TestRunResult
 from elegua.models import ActionPayload, ValidationToken
+from elegua.oracle import OracleClient
 from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, PropertySpec
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.task import EleguaTask, InvalidTransition, TaskStatus
+from elegua.wolfram import WolframOracleAdapter, build_expr
 
 __all__ = [
     "ActionPayload",
@@ -35,6 +37,7 @@ __all__ = [
     "InvalidTransition",
     "IsolatedRunner",
     "Operation",
+    "OracleClient",
     "PropertyResult",
     "PropertyRunner",
     "PropertySpec",
@@ -45,6 +48,8 @@ __all__ = [
     "TestRunResult",
     "ValidationToken",
     "WolframAdapter",
+    "WolframOracleAdapter",
+    "build_expr",
     "compare_identity",
     "compare_pipeline",
     "compare_structural",
