@@ -35,7 +35,10 @@ class OracleClient:
         body: dict[str, Any] = {"expr": expr, "timeout": timeout}
         if context_id:
             body["context_id"] = context_id
-        return self._post("/evaluate-with-init", body, timeout=timeout + 5)
+        try:
+            return self._post("/evaluate-with-init", body, timeout=timeout + 5)
+        except (urllib.error.URLError, OSError) as exc:
+            return {"status": "error", "error": str(exc)}
 
     def cleanup(self) -> bool:
         """Clear Global context and reset xAct registries."""

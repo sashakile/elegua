@@ -326,3 +326,18 @@ def test_execute_includes_timing():
         task = EleguaTask(action="Evaluate", payload={"expression": "0"})
         token = adapter.execute(task)
     assert token.metadata.get("execution_time_ms") == 42
+
+
+# --- Oracle connection error ---
+
+
+def test_execute_handles_oracle_connection_error():
+    """Oracle returning error dict (connection failure) maps to EXECUTION_ERROR."""
+    oracle = FakeOracle()
+    oracle.next_result = FakeResult(status="error", error="Connection refused")
+    adapter = WolframOracleAdapter(oracle=oracle)
+    with adapter:
+        task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
+        token = adapter.execute(task)
+    assert token.status == TaskStatus.EXECUTION_ERROR
+    assert "Connection refused" in (token.metadata.get("error") or "")

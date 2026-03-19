@@ -116,6 +116,48 @@ def test_setup_bindings_visible_in_tests(tmp_path: Path):
     assert token.result["expr"] != "$X"
 
 
+def test_store_as_extracts_repr_from_dict(tmp_path: Path):
+    """When result is a dict with 'repr', store_as uses the repr string."""
+
+    class ReprAdapter(Adapter):
+        """Setup ops return dict with repr key. Test ops echo payload."""
+
+        @property
+        def adapter_id(self) -> str:
+            return "repr"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            if task.action == "Eval":
+                return ValidationToken(
+                    adapter_id=self.adapter_id,
+                    status=TaskStatus.OK,
+                    result={"repr": "T[-a,-b]", "type": "Expr"},
+                )
+            # Echo payload so we can see what $expr1 resolved to
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n'
+        '[[setup]]\naction = "Eval"\nstore_as = "expr1"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "Read"\n'
+        '[tests.operations.args]\ninput = "$expr1"\n'
+    )
+    tf = load_sxact_toml(f)
+    runner = IsolatedRunner(ReprAdapter())
+    with runner:
+        results = runner.run(tf)
+    token = results[0].tokens[0]
+    assert token.result is not None
+    # $expr1 should resolve to the repr string, not the full dict
+    assert token.result["input"] == "T[-a,-b]"
+
+
 def test_test_bindings_do_not_leak(tmp_path: Path):
     """Bindings from test 1 are not visible in test 2."""
     f = tmp_path / "t.toml"
