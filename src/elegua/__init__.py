@@ -17,6 +17,7 @@ from elegua.comparison import (
     compare_structural,
 )
 from elegua.context import ExecutionContext
+from elegua.isolation import IsolatedRunner, TestRunResult
 from elegua.models import ActionPayload, ValidationToken
 from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, PropertySpec
 from elegua.runner import load_toml_tasks, run_tasks
@@ -32,6 +33,7 @@ __all__ = [
     "Expected",
     "GeneratorRegistry",
     "InvalidTransition",
+    "IsolatedRunner",
     "Operation",
     "PropertyResult",
     "PropertyRunner",
@@ -40,6 +42,7 @@ __all__ = [
     "TestCase",
     "TestFile",
     "TestFileMeta",
+    "TestRunResult",
     "ValidationToken",
     "WolframAdapter",
     "compare_identity",
