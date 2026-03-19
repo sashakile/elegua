@@ -61,5 +61,15 @@ class BlobStore:
     def maybe_resolve(self, payload: dict[str, Any]) -> dict[str, Any]:
         """If payload is a blob ref, resolve it; otherwise return as-is."""
         if set(payload.keys()) == {"blob"} and isinstance(payload.get("blob"), str):
-            return self.get(payload["blob"])
+            try:
+                return self.get(payload["blob"])
+            except (FileNotFoundError, SchemaError):
+                import warnings
+
+                warnings.warn(
+                    f"Blob {payload['blob'][:12]}... not found, returning ref as-is",
+                    RuntimeWarning,
+                    stacklevel=2,
+                )
+                return payload
         return payload

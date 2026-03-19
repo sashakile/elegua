@@ -100,3 +100,101 @@ class TestBackwardCompat:
 
         with pytest.raises(ValueError):
             raise PropertyValidationError("backward compat")
+
+
+class TestExceptionChaining:
+    """Verify raise X from Y preserves __cause__ in all except blocks (M4)."""
+
+    def test_bridge_toml_parse_chains_cause(self, tmp_path):
+        from elegua.bridge import load_sxact_toml
+        from elegua.errors import SchemaError
+
+        bad = tmp_path / "bad.toml"
+        bad.write_text("not = [valid toml")
+        with pytest.raises(SchemaError) as exc_info:
+            load_sxact_toml(bad)
+        assert exc_info.value.__cause__ is not None
+
+    def test_runner_toml_parse_chains_cause(self, tmp_path):
+        from elegua.errors import SchemaError
+        from elegua.runner import load_toml_tasks
+
+        bad = tmp_path / "bad.toml"
+        bad.write_text("not = [valid toml")
+        with pytest.raises(SchemaError) as exc_info:
+            load_toml_tasks(bad)
+        assert exc_info.value.__cause__ is not None
+
+    def test_snapshot_json_parse_chains_cause(self, tmp_path):
+        from elegua.errors import SchemaError
+        from elegua.snapshot import SnapshotStore
+
+        bad = tmp_path / "bad.json"
+        bad.write_text("{not valid json")
+        with pytest.raises(SchemaError) as exc_info:
+            SnapshotStore.read(bad)
+        assert exc_info.value.__cause__ is not None
+
+    def test_blobstore_json_parse_chains_cause(self, tmp_path):
+        from elegua.blobstore import BlobStore
+        from elegua.errors import SchemaError
+
+        store = BlobStore(tmp_path / "blobs")
+        # Put valid data first to get a real sha
+        ref = store.put({"key": "value"})
+        # Corrupt the blob file
+        sha = ref["blob"]
+        blob_path = tmp_path / "blobs" / sha[:2] / sha[2:]
+        blob_path.write_text("{corrupt json")
+        with pytest.raises(SchemaError) as exc_info:
+            store.get(sha)
+        assert exc_info.value.__cause__ is not None
+
+    def test_property_toml_parse_chains_cause(self, tmp_path):
+        from elegua.errors import SchemaError
+        from elegua.property import PropertySpec
+
+        bad = tmp_path / "bad.toml"
+        bad.write_text("not = [valid toml")
+        with pytest.raises(SchemaError) as exc_info:
+            PropertySpec.from_toml(bad)
+        assert exc_info.value.__cause__ is not None
+
+    def test_comparison_layer_exception_chains_cause(self):
+        from elegua.comparison import ComparisonPipeline
+        from elegua.models import ValidationToken
+        from elegua.task import TaskStatus
+
+        def exploding_layer(a, b):
+            raise ValueError("kaboom")
+
+        pipeline = ComparisonPipeline(default_layers=False)
+        pipeline.register(1, "boom", exploding_layer)
+
+        ta = ValidationToken(adapter_id="a", status=TaskStatus.OK, result={"x": 1})
+        tb = ValidationToken(adapter_id="b", status=TaskStatus.OK, result={"x": 2})
+        with pytest.raises(RuntimeError) as exc_info:
+            pipeline.compare(ta, tb)
+        assert exc_info.value.__cause__ is not None
+
+    def test_isolation_setup_reraise_chains_cause(self):
+        """IsolatedRunner._run_setup re-raises with from exc."""
+        from elegua.adapter import Adapter
+        from elegua.bridge import Operation
+        from elegua.isolation import IsolatedRunner
+        from elegua.models import ValidationToken
+        from elegua.task import EleguaTask
+
+        class SetupBoomAdapter(Adapter):
+            @property
+            def adapter_id(self):
+                return "boom"
+
+            def execute(self, task: EleguaTask) -> ValidationToken:
+                raise RuntimeError("setup exploded")
+
+        runner = IsolatedRunner(SetupBoomAdapter())
+        with runner:
+            with pytest.raises(RuntimeError) as exc_info:
+                runner._run_setup([Operation(action="Boom")])
+            assert exc_info.value.__cause__ is not None

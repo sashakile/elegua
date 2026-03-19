@@ -273,3 +273,25 @@ def test_load_malformed_toml(tmp_path):
     f.write_text("this is not valid [[[ toml")
     with pytest.raises(SchemaError, match="invalid TOML"):
         load_sxact_toml(f)
+
+
+# --- store_as identifier validation (L3) ---
+
+
+def test_store_as_invalid_identifier(tmp_path):
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n'
+        '[[setup]]\naction = "Foo"\nstore_as = "has spaces"\n'
+    )
+    with pytest.raises(SchemaError, match="not a valid identifier"):
+        load_sxact_toml(f)
+
+
+def test_store_as_valid_identifier(tmp_path):
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n[[setup]]\naction = "Foo"\nstore_as = "_valid_1"\n'
+    )
+    tf = load_sxact_toml(f)
+    assert tf.setup[0].store_as == "_valid_1"

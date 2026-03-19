@@ -79,6 +79,9 @@ class ComparisonPipeline:
 
     def register(self, layer_num: int, name: str, fn: LayerFn) -> None:
         """Register a comparison layer. Layers run in ``layer_num`` order."""
+        existing = {layer.num for layer in self._layers}
+        if layer_num in existing:
+            raise SchemaError(f"Duplicate layer number {layer_num}: already registered")
         self._layers.append(_RegisteredLayer(num=layer_num, name=name, fn=fn))
         self._layers.sort(key=lambda entry: entry.num)
 

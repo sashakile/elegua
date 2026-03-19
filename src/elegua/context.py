@@ -50,4 +50,14 @@ class ExecutionContext:
         }
 
     def _sub_refs(self, text: str) -> str:
-        return _REF_RE.sub(lambda m: self._bindings.get(m.group(1), m.group(0)), text)
+        def _replace(m: re.Match[str]) -> str:
+            name = m.group(1)
+            value = self._bindings.get(name)
+            if value is None:
+                import warnings
+
+                warnings.warn(f"Unresolved reference ${name}", RuntimeWarning, stacklevel=4)
+                return m.group(0)
+            return value
+
+        return _REF_RE.sub(_replace, text)

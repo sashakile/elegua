@@ -7,6 +7,7 @@ conversion to flat EleguaTask sequences.
 
 from __future__ import annotations
 
+import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -104,10 +105,15 @@ def _parse_operation(raw: dict[str, Any]) -> Operation:
     action = raw.get("action")
     if not action:
         raise SchemaError("operation missing required 'action' field")
+    store_as = raw.get("store_as")
+    if store_as is not None and not re.match(r"^[a-zA-Z_]\w*$", store_as):
+        raise SchemaError(
+            f"store_as={store_as!r} is not a valid identifier (must match [a-zA-Z_]\\w*)"
+        )
     return Operation(
         action=action,
         args=raw.get("args", {}),
-        store_as=raw.get("store_as"),
+        store_as=store_as,
     )
 
 

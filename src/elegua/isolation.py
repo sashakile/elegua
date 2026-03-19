@@ -138,11 +138,19 @@ class IsolatedRunner:
         resolved_args = self._context.resolve_refs(op.args)
         task = EleguaTask(action=op.action, payload=resolved_args)
         token = self._adapter.execute(task)
-        if op.store_as is not None and token.result is not None:
-            value = (
-                token.result.get("repr", str(token.result))
-                if isinstance(token.result, dict)
-                else str(token.result)
-            )
-            self._context.store(op.store_as, value)
+        if op.store_as is not None:
+            if token.result is not None:
+                value = (
+                    token.result.get("repr", str(token.result))
+                    if isinstance(token.result, dict)
+                    else str(token.result)
+                )
+                self._context.store(op.store_as, value)
+            else:
+                import warnings
+
+                msg = (
+                    f"store_as={op.store_as!r} skipped: token.result is None (action={op.action!r})"
+                )
+                warnings.warn(msg, RuntimeWarning, stacklevel=2)
         return token

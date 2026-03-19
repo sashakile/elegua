@@ -125,3 +125,14 @@ def test_transition_preserves_fields():
     assert new.payload == {"x": 1}
     assert new.result == {"y": 2}
     assert new.id == task.id
+
+
+# --- All statuses have transitions (L4) ---
+
+
+def test_all_statuses_have_transitions():
+    """Every TaskStatus enum value must have an entry in _TRANSITIONS."""
+    from elegua.task import _TRANSITIONS, TaskStatus
+
+    for status in TaskStatus:
+        assert status in _TRANSITIONS, f"Missing transition entry for {status}"

@@ -256,3 +256,31 @@ def test_no_tokens_but_expected():
     tc = _test_case(Expected(expr="42"))
     v = evaluate_expected(result, tc)
     assert v.status == "error"
+
+
+# --- Non-dict token.result handling (L9) ---
+
+
+def test_non_dict_result_uses_str_repr():
+    """When token.result is a non-standard object (not dict), use str() for repr.
+
+    ValidationToken.result is typed as dict|None, but verdict code should be
+    defensive against receiving unexpected types at runtime.
+    """
+    token = ValidationToken(adapter_id="test", status=TaskStatus.OK, result=None)
+    # Simulate a non-dict result at runtime (bypass Pydantic validation)
+    object.__setattr__(token, "result", "raw_string")
+    result = TestRunResult(test_id="t1", tokens=[token], bindings={})
+    tc = _test_case(Expected(expr="raw_string"))
+    v = evaluate_expected(result, tc)
+    assert v.status == "pass"
+    assert v.actual == "raw_string"
+
+
+def test_non_dict_result_none_uses_empty_string():
+    """When token.result is None, actual_repr should be empty string."""
+    token = ValidationToken(adapter_id="test", status=TaskStatus.OK, result=None)
+    result = TestRunResult(test_id="t1", tokens=[token], bindings={})
+    tc = _test_case(Expected(expr=""))
+    v = evaluate_expected(result, tc)
+    assert v.status == "pass"

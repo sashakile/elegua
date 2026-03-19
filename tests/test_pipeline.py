@@ -151,3 +151,14 @@ class TestLayerExceptionAnnotation:
         t = _token({"x": 1})
         with pytest.raises(RuntimeError, match=r"Layer 1.*buggy.*oops"):
             pipeline.compare(t, t)
+
+
+# --- Duplicate layer_num rejection (L10) ---
+
+
+class TestDuplicateLayerNum:
+    def test_duplicate_layer_num_raises(self):
+        pipeline = ComparisonPipeline(default_layers=False)
+        pipeline.register(1, "first", lambda a, b: TaskStatus.OK)
+        with pytest.raises(SchemaError, match="Duplicate layer number 1"):
+            pipeline.register(1, "second", lambda a, b: TaskStatus.OK)

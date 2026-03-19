@@ -91,3 +91,10 @@ class TestBlobStore:
         blob_path.write_bytes(b"not json{{{")
         with pytest.raises(SchemaError, match="Corrupt blob"):
             store.get(sha)
+
+    def test_maybe_resolve_missing_blob_returns_ref_with_warning(self, tmp_path: Path):
+        store = BlobStore(tmp_path)
+        ref = {"blob": "a" * 64}
+        with pytest.warns(RuntimeWarning, match="not found"):
+            result = store.maybe_resolve(ref)
+        assert result == ref

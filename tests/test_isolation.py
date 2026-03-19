@@ -172,7 +172,7 @@ def test_test_bindings_do_not_leak(tmp_path: Path):
     )
     tf = load_sxact_toml(f)
     runner = IsolatedRunner(WolframAdapter())
-    with runner:
+    with pytest.warns(RuntimeWarning, match=r"Unresolved reference \$local_var"), runner:
         results = runner.run(tf)
     # t2 should see $local_var unresolved (leaked binding = bug)
     token = results[1].tokens[0]
@@ -392,6 +392,31 @@ def test_isolated_runner_ready_false_after_teardown_exception():
     with pytest.warns(RuntimeWarning), runner:
         pass
     assert not runner._ready
+
+
+# --- store_as None result warning (L2) ---
+
+
+def test_store_as_none_result_emits_warning(tmp_path: Path):
+    class NoneResultAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "none"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(adapter_id=self.adapter_id, status=TaskStatus.OK, result=None)
+
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n'
+        '[[setup]]\naction = "Foo"\nstore_as = "X"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "Bar"\n'
+    )
+    tf = load_sxact_toml(f)
+    runner = IsolatedRunner(NoneResultAdapter())
+    with pytest.warns(RuntimeWarning, match="store_as='X' skipped"), runner:
+        runner.run(tf)
 
 
 # --- Operation context in error messages (M3) ---

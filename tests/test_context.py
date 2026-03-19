@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from elegua.context import ExecutionContext
 
 # --- store / resolve ---
@@ -44,7 +46,8 @@ def test_resolve_refs_leaves_non_strings():
 
 def test_resolve_refs_unknown_ref_preserved():
     ctx = ExecutionContext()
-    result = ctx.resolve_refs({"expression": "$unknown"})
+    with pytest.warns(RuntimeWarning, match=r"Unresolved reference \$unknown"):
+        result = ctx.resolve_refs({"expression": "$unknown"})
     assert result == {"expression": "$unknown"}
 
 
@@ -135,3 +138,12 @@ def test_contains():
     assert "x" not in ctx
     ctx.store("x", "val")
     assert "x" in ctx
+
+
+# --- Unresolved reference warning (L1) ---
+
+
+def test_unresolved_ref_emits_warning():
+    ctx = ExecutionContext()
+    with pytest.warns(RuntimeWarning, match=r"Unresolved reference \$missing"):
+        ctx.resolve_refs({"key": "$missing"})

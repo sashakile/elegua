@@ -56,7 +56,7 @@ class EleguaTask(BaseModel):
         Raises InvalidTransition if the transition is not allowed.
         Does not mutate self.
         """
-        allowed = _TRANSITIONS.get(self.status, frozenset())
+        allowed = _TRANSITIONS[self.status]
         if to not in allowed:
             raise InvalidTransition(f"Cannot transition from {self.status.name} to {to.name}")
         return self.model_copy(update={"status": to})

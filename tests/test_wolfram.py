@@ -32,6 +32,7 @@ class FakeOracle:
         self.leaked: list[str] = []
         self.next_result: FakeResult = FakeResult()
         self._health_error: Exception | None = None
+        self._cleanup_ok: bool = True
 
     def health(self) -> bool:
         self.calls.append(("health",))
@@ -66,7 +67,7 @@ class FakeOracle:
 
     def cleanup(self) -> bool:
         self.calls.append(("cleanup",))
-        return True
+        return self._cleanup_ok
 
     def check_clean_state(self) -> tuple[bool, list[str]]:
         self.calls.append(("check_clean_state",))
@@ -401,3 +402,15 @@ def test_evaluate_with_xact_handles_json_decode_error():
 
     assert result["status"] == "error"
     assert "error" in result
+
+
+# --- Teardown warns on cleanup failure (L5) ---
+
+
+def test_teardown_warns_on_cleanup_failure():
+    oracle = FakeOracle()
+    oracle._cleanup_ok = False
+    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter.initialize()
+    with pytest.warns(RuntimeWarning, match="cleanup failed"):
+        adapter.teardown()

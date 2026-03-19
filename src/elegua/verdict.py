@@ -77,7 +77,10 @@ def evaluate_expected(
 
     last_token = result.tokens[-1]
     token_result = last_token.result or {}
-    actual_repr = token_result.get("repr", "") if isinstance(token_result, dict) else ""
+    if isinstance(token_result, dict):
+        actual_repr = token_result.get("repr", "")
+    else:
+        actual_repr = str(token_result) if token_result else ""
 
     norm = normalizer or _identity
 

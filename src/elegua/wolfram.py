@@ -81,7 +81,10 @@ class WolframOracleAdapter(Adapter):
         self._context_id = str(uuid.uuid4())
 
     def teardown(self) -> None:
-        self._oracle.cleanup()
+        if not self._oracle.cleanup():
+            import warnings
+
+            warnings.warn("Oracle cleanup failed", RuntimeWarning, stacklevel=2)
         self._context_id = None
 
     def execute(self, task: EleguaTask) -> ValidationToken:
