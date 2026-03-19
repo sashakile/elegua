@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from elegua.adapter import WolframAdapter
+from elegua.adapter import Adapter, WolframAdapter
 from elegua.models import ValidationToken
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.task import EleguaTask, TaskStatus
@@ -78,3 +78,37 @@ def test_load_toml_empty_action_treated_as_missing(tmp_path: Path):
     bad.write_text('[[tasks]]\naction = ""\n')
     with pytest.raises(ValueError, match="missing required field 'action'"):
         load_toml_tasks(bad)
+
+
+def test_run_tasks_calls_adapter_lifecycle():
+    """run_tasks brackets execution with initialize/teardown."""
+
+    class TrackingAdapter(Adapter):
+        def __init__(self):
+            self.calls: list[str] = []
+
+        @property
+        def adapter_id(self) -> str:
+            return "tracking"
+
+        def initialize(self) -> None:
+            self.calls.append("initialize")
+
+        def teardown(self) -> None:
+            self.calls.append("teardown")
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            self.calls.append(f"execute:{task.action}")
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    adapter = TrackingAdapter()
+    tasks = [
+        EleguaTask(action="A", payload={}),
+        EleguaTask(action="B", payload={}),
+    ]
+    run_tasks(tasks, adapter=adapter)
+    assert adapter.calls == ["initialize", "execute:A", "execute:B", "teardown"]

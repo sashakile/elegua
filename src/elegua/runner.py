@@ -41,8 +41,11 @@ def run_tasks(
 ) -> list[ValidationToken]:
     """Execute tasks through an adapter and return ValidationTokens.
 
-    If no adapter is provided, defaults to WolframAdapter (stub).
+    Calls adapter.initialize() before execution and adapter.teardown()
+    after, even if execution raises. If no adapter is provided, defaults
+    to WolframAdapter (stub).
     """
     if adapter is None:
         adapter = WolframAdapter()
-    return [adapter.execute(task) for task in tasks]
+    with adapter:
+        return [adapter.execute(task) for task in tasks]

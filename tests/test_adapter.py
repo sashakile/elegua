@@ -47,3 +47,135 @@ def test_execute_does_not_mutate_input():
     adapter.execute(task)
     assert task.status == TaskStatus.PENDING
     assert task.result is None
+
+
+# --- Lifecycle: initialize / teardown ---
+
+
+def test_default_initialize_is_noop():
+    adapter = WolframAdapter()
+    result = adapter.initialize()
+    assert result is None
+
+
+def test_default_teardown_is_noop():
+    adapter = WolframAdapter()
+    result = adapter.teardown()
+    assert result is None
+
+
+def test_adapter_works_without_lifecycle_calls():
+    """Backward compat: execute still works without calling initialize/teardown."""
+    adapter = WolframAdapter()
+    task = EleguaTask(action="DefTensor", payload={"name": "T"})
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+
+
+def test_lifecycle_bracket():
+    """initialize → execute → teardown full lifecycle."""
+    adapter = WolframAdapter()
+    adapter.initialize()
+    task = EleguaTask(action="DefTensor", payload={"name": "T"})
+    token = adapter.execute(task)
+    adapter.teardown()
+    assert token.status == TaskStatus.OK
+
+
+def test_context_manager():
+    """Adapter can be used as a context manager."""
+    with WolframAdapter() as adapter:
+        task = EleguaTask(action="DefTensor", payload={"name": "T"})
+        token = adapter.execute(task)
+        assert token.status == TaskStatus.OK
+
+
+def test_custom_adapter_lifecycle():
+    """Custom adapter can override initialize and teardown."""
+
+    class TrackingAdapter(Adapter):
+        def __init__(self):
+            self.initialized = False
+            self.torn_down = False
+
+        @property
+        def adapter_id(self) -> str:
+            return "tracking"
+
+        def initialize(self) -> None:
+            self.initialized = True
+
+        def teardown(self) -> None:
+            self.torn_down = True
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    adapter = TrackingAdapter()
+    assert not adapter.initialized
+    adapter.initialize()
+    assert adapter.initialized
+    task = EleguaTask(action="Test", payload={})
+    adapter.execute(task)
+    adapter.teardown()
+    assert adapter.torn_down
+
+
+def test_context_manager_calls_lifecycle():
+    """Context manager calls initialize on enter and teardown on exit."""
+
+    class TrackingAdapter(Adapter):
+        def __init__(self):
+            self.initialized = False
+            self.torn_down = False
+
+        @property
+        def adapter_id(self) -> str:
+            return "tracking"
+
+        def initialize(self) -> None:
+            self.initialized = True
+
+        def teardown(self) -> None:
+            self.torn_down = True
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    adapter = TrackingAdapter()
+    assert not adapter.initialized
+    with adapter:
+        assert adapter.initialized
+        assert not adapter.torn_down
+    assert adapter.torn_down
+
+
+def test_context_manager_teardown_on_exception():
+    """Teardown is called even if execute raises."""
+
+    class FailingAdapter(Adapter):
+        def __init__(self):
+            self.torn_down = False
+
+        @property
+        def adapter_id(self) -> str:
+            return "failing"
+
+        def teardown(self) -> None:
+            self.torn_down = True
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            raise RuntimeError("boom")
+
+    adapter = FailingAdapter()
+    with pytest.raises(RuntimeError, match="boom"), adapter:
+        adapter.execute(EleguaTask(action="Test", payload={}))
+    assert adapter.torn_down

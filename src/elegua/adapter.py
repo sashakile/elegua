@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import abc
+from typing import Self
 
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask, TaskStatus
@@ -13,6 +14,20 @@ class Adapter(abc.ABC):
     @abc.abstractmethod
     def adapter_id(self) -> str: ...
 
+    def initialize(self) -> None:  # noqa: B027
+        """Set up adapter resources (kernel, connection, etc.).
+
+        Default is a no-op. Override in subclasses that manage
+        external processes or connections.
+        """
+
+    def teardown(self) -> None:  # noqa: B027
+        """Release adapter resources.
+
+        Default is a no-op. Override in subclasses. Must not raise
+        even if the adapter is in an error state.
+        """
+
     @abc.abstractmethod
     def execute(self, task: EleguaTask) -> ValidationToken:
         """Execute the task and return a ValidationToken.
@@ -20,6 +35,13 @@ class Adapter(abc.ABC):
         Implementations MUST NOT mutate the input task.
         """
         ...
+
+    def __enter__(self) -> Self:
+        self.initialize()
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        self.teardown()
 
 
 class WolframAdapter(Adapter):
