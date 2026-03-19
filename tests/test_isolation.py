@@ -340,3 +340,123 @@ def test_operational_error_captured_in_test(tmp_path: Path):
     assert results[0].error is not None
     assert "OSError" in results[0].error
     assert "disk full" in results[0].error
+
+
+# --- Teardown exception guarding (M5) ---
+
+
+def test_isolated_runner_teardown_exception_suppressed():
+    """IsolatedRunner.__exit__ guards adapter.teardown() with a warning."""
+
+    class BadTeardownAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "bad-teardown"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+        def teardown(self) -> None:
+            raise RuntimeError("teardown exploded")
+
+    adapter = BadTeardownAdapter()
+    runner = IsolatedRunner(adapter)
+    with pytest.warns(RuntimeWarning, match="teardown raised"), runner:
+        pass  # normal exit, teardown will raise
+
+
+def test_isolated_runner_ready_false_after_teardown_exception():
+    """Even if teardown raises, _ready is set to False."""
+
+    class BadTeardownAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "bad-teardown"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+        def teardown(self) -> None:
+            raise RuntimeError("teardown exploded")
+
+    adapter = BadTeardownAdapter()
+    runner = IsolatedRunner(adapter)
+    with pytest.warns(RuntimeWarning), runner:
+        pass
+    assert not runner._ready
+
+
+# --- Operation context in error messages (M3) ---
+
+
+def test_setup_error_includes_operation_context(tmp_path: Path):
+    """Setup error message should include operation index and action name."""
+
+    class FailOnSetup(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "fail-setup"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            if task.action == "BadOp":
+                raise OSError("connection lost")
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n'
+        '[[setup]]\naction = "GoodOp"\n\n'
+        '[[setup]]\naction = "BadOp"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "Foo"\n'
+    )
+    tf = load_sxact_toml(f)
+    runner = IsolatedRunner(FailOnSetup())
+    with runner:
+        results = runner.run(tf)
+    assert "setup[1]" in results[0].error
+    assert "BadOp" in results[0].error
+
+
+def test_test_error_includes_operation_context(tmp_path: Path):
+    """Per-test error message should include operation index and action name."""
+
+    class FailOnSecondOp(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "fail-op"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            if task.action == "FailHere":
+                raise OSError("timeout")
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "OkOp"\n\n'
+        '[[tests.operations]]\naction = "FailHere"\n'
+    )
+    tf = load_sxact_toml(f)
+    runner = IsolatedRunner(FailOnSecondOp())
+    with runner:
+        results = runner.run(tf)
+    assert "op[1]" in results[0].error
+    assert "FailHere" in results[0].error

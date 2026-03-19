@@ -41,7 +41,16 @@ class Adapter(abc.ABC):
         return self
 
     def __exit__(self, *_: object) -> None:
-        self.teardown()
+        try:
+            self.teardown()
+        except Exception:
+            import warnings
+
+            msg = (
+                f"{type(self).__name__}.teardown() raised; "
+                "suppressing to preserve original exception"
+            )
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
 
 class WolframAdapter(Adapter):

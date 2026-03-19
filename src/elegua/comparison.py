@@ -12,6 +12,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
 
@@ -83,12 +84,18 @@ class ComparisonPipeline:
 
     def compare(self, token_a: ValidationToken, token_b: ValidationToken) -> ComparisonResult:
         """Run layers in order, stopping at the first match."""
+        if not self._layers:
+            raise SchemaError("ComparisonPipeline has no registered layers")
         last_layer = 0
         last_name = ""
         for layer in self._layers:
             last_layer = layer.num
             last_name = layer.name
-            if layer.fn(token_a, token_b) == TaskStatus.OK:
+            try:
+                result = layer.fn(token_a, token_b)
+            except Exception as exc:
+                raise RuntimeError(f"Layer {layer.num} ({layer.name!r}) raised: {exc}") from exc
+            if result == TaskStatus.OK:
                 return ComparisonResult(
                     status=TaskStatus.OK, layer=layer.num, layer_name=layer.name
                 )

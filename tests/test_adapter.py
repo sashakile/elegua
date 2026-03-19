@@ -179,3 +179,52 @@ def test_context_manager_teardown_on_exception():
     with pytest.raises(RuntimeError, match="boom"), adapter:
         adapter.execute(EleguaTask(action="Test", payload={}))
     assert adapter.torn_down
+
+
+# --- Teardown exception guarding (M5) ---
+
+
+def test_teardown_exception_suppressed_with_warning():
+    """If teardown() raises, the warning is emitted but the original exception propagates."""
+
+    class BadTeardown(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "bad"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result={},
+            )
+
+        def teardown(self) -> None:
+            raise RuntimeError("teardown boom")
+
+    adapter = BadTeardown()
+    with pytest.warns(RuntimeWarning, match=r"teardown.*raised"), adapter:
+        pass  # normal exit, teardown will raise
+
+
+def test_teardown_does_not_mask_original_exception():
+    """Original exception propagates even when teardown also raises."""
+
+    class BadTeardown(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "bad"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            raise ValueError("exec error")
+
+        def teardown(self) -> None:
+            raise RuntimeError("teardown boom")
+
+    adapter = BadTeardown()
+    with (
+        pytest.warns(RuntimeWarning),
+        pytest.raises(ValueError, match="exec error"),
+        adapter,
+    ):
+        adapter.execute(None)

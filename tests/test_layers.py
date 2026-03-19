@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import pytest
+
 from elegua.comparison import (
     ComparisonPipeline,
 )
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
 
@@ -145,13 +148,12 @@ def test_empty_pipeline():
     assert len(pipeline.layers) == 0
 
 
-def test_empty_pipeline_returns_mismatch():
+def test_empty_pipeline_raises_schema_error():
     pipeline = ComparisonPipeline(default_layers=False)
     a = _token({"x": 1})
     b = _token({"x": 1})
-    result = pipeline.compare(a, b)
-    assert result.status == TaskStatus.MATH_MISMATCH
-    assert result.layer == 0
+    with pytest.raises(SchemaError, match="no registered layers"):
+        pipeline.compare(a, b)
 
 
 # --- Layer ordering ---

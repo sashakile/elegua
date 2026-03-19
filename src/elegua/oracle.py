@@ -46,7 +46,7 @@ class OracleClient:
             body["context_id"] = context_id
         try:
             return self._post("/evaluate-with-init", body, timeout=timeout + 5)
-        except (urllib.error.URLError, OSError) as exc:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
             return {"status": "error", "error": str(exc)}
 
     def cleanup(self) -> bool:

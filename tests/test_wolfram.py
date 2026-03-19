@@ -379,3 +379,25 @@ def test_initialize_unhealthy_no_network_error():
     adapter = WolframOracleAdapter(oracle=oracle)
     with pytest.raises(RuntimeError, match=r"unhealthy|unavailable"):
         adapter.initialize()
+
+
+# --- OracleClient: JSONDecodeError handling (M6) ---
+
+
+def test_evaluate_with_xact_handles_json_decode_error():
+    """JSONDecodeError from a malformed response should be caught."""
+    from unittest.mock import MagicMock, patch
+
+    from elegua.oracle import OracleClient
+
+    client = OracleClient("http://fake:1234")
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = b"not json at all"
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
+
+    with patch("urllib.request.urlopen", return_value=mock_resp):
+        result = client.evaluate_with_xact("1+1")
+
+    assert result["status"] == "error"
+    assert "error" in result

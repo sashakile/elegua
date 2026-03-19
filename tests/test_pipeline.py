@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import pytest
+
 from elegua.comparison import (
+    ComparisonPipeline,
     ComparisonResult,
     compare_identity,
     compare_pipeline,
     compare_structural,
 )
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
 
@@ -121,3 +125,29 @@ class TestStructuralEdgeCases:
         b = _token({"fn": "Sub", "args": [3, 10]})
         # Layer 2 treats these as equivalent (known false positive)
         assert compare_structural(a, b) == TaskStatus.OK
+
+
+# --- Empty pipeline guard (M7) ---
+
+
+class TestEmptyPipelineGuard:
+    def test_empty_pipeline_raises(self):
+        pipeline = ComparisonPipeline(default_layers=False)
+        t = _token({"x": 1})
+        with pytest.raises(SchemaError, match="no registered layers"):
+            pipeline.compare(t, t)
+
+
+# --- Layer exception annotation (M10) ---
+
+
+class TestLayerExceptionAnnotation:
+    def test_layer_exception_annotated(self):
+        def bad_layer(a, b):
+            raise ZeroDivisionError("oops")
+
+        pipeline = ComparisonPipeline(default_layers=False)
+        pipeline.register(1, "buggy", bad_layer)
+        t = _token({"x": 1})
+        with pytest.raises(RuntimeError, match=r"Layer 1.*buggy.*oops"):
+            pipeline.compare(t, t)
