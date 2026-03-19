@@ -2,17 +2,20 @@
 
 Layer 1 (Identity): Structural equality of result dicts.
 Layer 2 (Structural): AST isomorphism — sorted canonical form comparison.
-Layer 3 (Canonical): pluggable normalizer rules (domain-specific, not yet implemented).
-Layer 4 (Invariant): Numerical/PBT validation (domain-specific, not yet implemented).
+Layer 3 (Canonical): pluggable — register via ComparisonPipeline.register().
+Layer 4 (Invariant): pluggable — register via ComparisonPipeline.register().
 """
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
+
+LayerFn = Callable[[ValidationToken, ValidationToken], TaskStatus]
 
 
 @dataclass(frozen=True)
@@ -21,6 +24,7 @@ class ComparisonResult:
 
     status: TaskStatus
     layer: int
+    layer_name: str = ""
 
 
 def compare_identity(token_a: ValidationToken, token_b: ValidationToken) -> TaskStatus:
@@ -47,19 +51,52 @@ def compare_structural(token_a: ValidationToken, token_b: ValidationToken) -> Ta
     return TaskStatus.MATH_MISMATCH
 
 
-def compare_pipeline(token_a: ValidationToken, token_b: ValidationToken) -> ComparisonResult:
-    """Run the comparison pipeline, stopping at the first layer that matches.
+@dataclass
+class _RegisteredLayer:
+    num: int
+    name: str
+    fn: LayerFn
 
-    Currently implements Layer 1 (Identity) and Layer 2 (Structural).
-    Layers 3-4 are domain-specific extension points.
+
+class ComparisonPipeline:
+    """Multi-layer comparison pipeline with pluggable layer registration.
+
+    By default registers L1 (identity) and L2 (structural). Domain-specific
+    layers (L3 canonical, L4 numeric, etc.) are added via ``register()``.
     """
-    # Layer 1: Identity
-    if compare_identity(token_a, token_b) == TaskStatus.OK:
-        return ComparisonResult(status=TaskStatus.OK, layer=1)
 
-    # Layer 2: Structural
-    if compare_structural(token_a, token_b) == TaskStatus.OK:
-        return ComparisonResult(status=TaskStatus.OK, layer=2)
+    def __init__(self, *, default_layers: bool = True) -> None:
+        self._layers: list[_RegisteredLayer] = []
+        if default_layers:
+            self.register(1, "identity", compare_identity)
+            self.register(2, "structural", compare_structural)
 
-    # No higher layers registered — report mismatch at last layer checked
-    return ComparisonResult(status=TaskStatus.MATH_MISMATCH, layer=2)
+    @property
+    def layers(self) -> list[tuple[int, str]]:
+        """Return registered layers as (num, name) pairs, sorted by num."""
+        return [(layer.num, layer.name) for layer in self._layers]
+
+    def register(self, layer_num: int, name: str, fn: LayerFn) -> None:
+        """Register a comparison layer. Layers run in ``layer_num`` order."""
+        self._layers.append(_RegisteredLayer(num=layer_num, name=name, fn=fn))
+        self._layers.sort(key=lambda entry: entry.num)
+
+    def compare(self, token_a: ValidationToken, token_b: ValidationToken) -> ComparisonResult:
+        """Run layers in order, stopping at the first match."""
+        last_layer = 0
+        last_name = ""
+        for layer in self._layers:
+            last_layer = layer.num
+            last_name = layer.name
+            if layer.fn(token_a, token_b) == TaskStatus.OK:
+                return ComparisonResult(
+                    status=TaskStatus.OK, layer=layer.num, layer_name=layer.name
+                )
+        return ComparisonResult(
+            status=TaskStatus.MATH_MISMATCH, layer=last_layer, layer_name=last_name
+        )
+
+
+def compare_pipeline(token_a: ValidationToken, token_b: ValidationToken) -> ComparisonResult:
+    """Run the default comparison pipeline (L1 identity + L2 structural)."""
+    return ComparisonPipeline().compare(token_a, token_b)

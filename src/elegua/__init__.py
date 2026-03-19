@@ -11,6 +11,7 @@ from elegua.bridge import (
     load_sxact_toml,
 )
 from elegua.comparison import (
+    ComparisonPipeline,
     ComparisonResult,
     compare_identity,
     compare_pipeline,
@@ -29,6 +30,7 @@ __all__ = [
     "ActionPayload",
     "Adapter",
     "BlobStore",
+    "ComparisonPipeline",
     "ComparisonResult",
     "EleguaTask",
     "ExecutionContext",
