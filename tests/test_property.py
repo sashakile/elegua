@@ -6,8 +6,10 @@ from pathlib import Path
 
 import pytest
 
+from elegua.errors import SchemaError
 from elegua.property import (
     GeneratorRegistry,
+    GeneratorSpec,
     PropertyResult,
     PropertyRunner,
     PropertySpec,
@@ -138,3 +140,46 @@ class TestPropertyRunner:
         assert not result.passed
         assert len(result.failures) > 0
         assert result.failures[0].bindings["$x"] < 0
+
+
+def test_generator_crash_includes_context():
+    """Generator exception should include generator name, type, and sample index."""
+    registry = GeneratorRegistry()
+    registry.register("crasher", lambda rng: 1 / 0)
+
+    spec = PropertySpec(
+        name="test_prop",
+        layer="property",
+        law="True",
+        generators=[GeneratorSpec(name="x", type="crasher")],
+    )
+    runner = PropertyRunner(registry)
+    with pytest.raises(RuntimeError, match=r"Generator 'x'.*type='crasher'.*sample 0"):
+        runner.generate_samples(spec, seed=0, count=1)
+
+
+def test_evaluator_crash_includes_context():
+    """Evaluator exception should include sample index, law, and bindings."""
+    registry = GeneratorRegistry()
+    registry.register("int", lambda rng: rng.integers(0, 100))
+
+    spec = PropertySpec(
+        name="test_prop",
+        layer="property",
+        law="some_law",
+        generators=[GeneratorSpec(name="x", type="int")],
+    )
+
+    def bad_evaluator(law, bindings):
+        raise TypeError("unsupported operand")
+
+    runner = PropertyRunner(registry)
+    with pytest.raises(RuntimeError, match=r"Evaluator failed.*sample 0.*law='some_law'"):
+        runner.run(spec, evaluator=bad_evaluator, seed=42, samples=1)
+
+
+def test_from_toml_malformed(tmp_path):
+    f = tmp_path / "bad.toml"
+    f.write_text("this is not valid [[[ toml")
+    with pytest.raises(SchemaError, match="invalid TOML"):
+        PropertySpec.from_toml(f)

@@ -37,7 +37,10 @@ class PropertySpec(BaseModel):
     @classmethod
     def from_toml(cls, path: Path) -> PropertySpec:
         with open(path, "rb") as f:
-            data = tomllib.load(f)
+            try:
+                data = tomllib.load(f)
+            except tomllib.TOMLDecodeError as exc:
+                raise SchemaError(f"{path}: invalid TOML: {exc}") from exc
 
         for required in ("name", "law"):
             if required not in data:
@@ -105,11 +108,17 @@ class PropertyRunner:
 
         rng = Generator(PCG64(seed))
         samples = []
-        for _ in range(count):
+        for sample_idx in range(count):
             bindings: dict[str, Any] = {}
             for gen in spec.generators:
                 fn = self._registry.get(gen.type)
-                bindings[gen.name] = fn(rng)
+                try:
+                    bindings[gen.name] = fn(rng)
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"Generator '{gen.name}' (type={gen.type!r}) "
+                        f"failed at sample {sample_idx}: {exc}"
+                    ) from exc
             samples.append(bindings)
         return samples
 
@@ -125,7 +134,14 @@ class PropertyRunner:
         failures: list[Failure] = []
 
         for i, bindings in enumerate(sample_list):
-            if not evaluator(spec.law, bindings):
+            try:
+                result = evaluator(spec.law, bindings)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Evaluator failed at sample {i} for law={spec.law!r} "
+                    f"with bindings={bindings!r}: {exc}"
+                ) from exc
+            if not result:
                 failures.append(Failure(sample_index=i, bindings=bindings))
 
         return PropertyResult(

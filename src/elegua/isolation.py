@@ -64,7 +64,16 @@ class IsolatedRunner:
         return self
 
     def __exit__(self, *_: object) -> None:
-        self._adapter.teardown()
+        try:
+            self._adapter.teardown()
+        except Exception:
+            import warnings
+
+            warnings.warn(
+                "Adapter teardown raised; suppressing to preserve original exception",
+                RuntimeWarning,
+                stacklevel=2,
+            )
         self._ready = False
 
     def run(self, test_file: TestFile) -> list[TestRunResult]:
@@ -92,24 +101,31 @@ class IsolatedRunner:
         return results
 
     def _run_setup(self, setup_ops: list[Operation]) -> None:
-        for op in setup_ops:
-            self._execute_op(op)
+        for i, op in enumerate(setup_ops):
+            try:
+                self._execute_op(op)
+            except _OPERATIONAL_ERRORS as exc:
+                raise type(exc)(f"setup[{i}] ({op.action}): {exc}") from exc
 
     def _run_test(self, tc: TestCase) -> TestRunResult:
         if tc.skip:
             return TestRunResult(test_id=tc.id, skipped=True, skip_reason=tc.skip)
 
         tokens: list[ValidationToken] = []
+        current_op: Operation | None = None
         try:
             for op in tc.operations:
+                current_op = op
                 token = self._execute_op(op)
                 tokens.append(token)
         except _OPERATIONAL_ERRORS as exc:
+            idx = len(tokens)
+            action = current_op.action if current_op is not None else "<unknown>"
             return TestRunResult(
                 test_id=tc.id,
                 tokens=tokens,
                 bindings=self._context.snapshot(),
-                error=f"{type(exc).__name__}: {exc}",
+                error=f"{type(exc).__name__}: op[{idx}] ({action}): {exc}",
             )
 
         return TestRunResult(
