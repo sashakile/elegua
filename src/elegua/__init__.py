@@ -20,6 +20,7 @@ from elegua.comparison import (
 from elegua.context import ExecutionContext
 from elegua.isolation import IsolatedRunner, TestRunResult
 from elegua.models import ActionPayload, ValidationToken
+from elegua.multitier import MultiTierRunner, VerificationResult
 from elegua.oracle import OracleClient
 from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, PropertySpec
 from elegua.runner import load_toml_tasks, run_tasks
@@ -39,6 +40,7 @@ __all__ = [
     "GeneratorRegistry",
     "InvalidTransition",
     "IsolatedRunner",
+    "MultiTierRunner",
     "Operation",
     "OracleClient",
     "PropertyResult",
@@ -53,6 +55,7 @@ __all__ = [
     "TestFileMeta",
     "TestRunResult",
     "ValidationToken",
+    "VerificationResult",
     "WolframAdapter",
     "WolframOracleAdapter",
     "compare_identity",
