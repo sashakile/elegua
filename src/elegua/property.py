@@ -15,8 +15,10 @@ from typing import Any
 from numpy.random import PCG64, Generator
 from pydantic import BaseModel
 
+from elegua.errors import SchemaError
 
-class PropertyValidationError(Exception):
+
+class PropertyValidationError(SchemaError):
     """Raised when a property TOML spec is invalid."""
 
 

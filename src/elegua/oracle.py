@@ -25,6 +25,15 @@ class OracleClient:
         except (urllib.error.URLError, OSError, ValueError):
             return False
 
+    def health_or_raise(self) -> None:
+        """Check health, raising on failure with the original cause."""
+        try:
+            data = self._get("/health", timeout=5)
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            raise RuntimeError(f"Oracle unavailable: {exc}") from exc
+        if data.get("status") != "ok":
+            raise RuntimeError(f"Oracle unhealthy (status={data.get('status')!r})")
+
     def evaluate_with_xact(
         self,
         expr: str,

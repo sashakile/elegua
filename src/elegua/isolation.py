@@ -21,6 +21,10 @@ from elegua.context import ExecutionContext
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask
 
+# Operational errors that should be captured as test errors.
+# Programming errors (TypeError, AttributeError, etc.) propagate.
+_OPERATIONAL_ERRORS = (OSError, ConnectionError, RuntimeError, TimeoutError, ValueError)
+
 
 @dataclass(frozen=True)
 class TestRunResult:
@@ -73,8 +77,11 @@ class IsolatedRunner:
 
         try:
             self._run_setup(test_file.setup)
-        except Exception as exc:
-            return [TestRunResult(test_id=tc.id, error=str(exc)) for tc in test_file.tests]
+        except _OPERATIONAL_ERRORS as exc:
+            return [
+                TestRunResult(test_id=tc.id, error=f"{type(exc).__name__}: {exc}")
+                for tc in test_file.tests
+            ]
 
         setup_snap = self._context.snapshot()
 
@@ -97,12 +104,12 @@ class IsolatedRunner:
             for op in tc.operations:
                 token = self._execute_op(op)
                 tokens.append(token)
-        except Exception as exc:
+        except _OPERATIONAL_ERRORS as exc:
             return TestRunResult(
                 test_id=tc.id,
                 tokens=tokens,
                 bindings=self._context.snapshot(),
-                error=str(exc),
+                error=f"{type(exc).__name__}: {exc}",
             )
 
         return TestRunResult(

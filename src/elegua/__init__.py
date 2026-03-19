@@ -18,6 +18,7 @@ from elegua.comparison import (
     compare_structural,
 )
 from elegua.context import ExecutionContext
+from elegua.errors import AdapterError, EleguaError, OracleError, SchemaError
 from elegua.isolation import IsolatedRunner, TestRunResult
 from elegua.models import ActionPayload, ValidationToken
 from elegua.multitier import MultiTierRunner, VerificationResult
@@ -32,9 +33,11 @@ from elegua.wolfram import WolframOracleAdapter
 __all__ = [
     "ActionPayload",
     "Adapter",
+    "AdapterError",
     "BlobStore",
     "ComparisonPipeline",
     "ComparisonResult",
+    "EleguaError",
     "EleguaTask",
     "ExecutionContext",
     "Expected",
@@ -44,11 +47,13 @@ __all__ = [
     "MultiTierRunner",
     "Operation",
     "OracleClient",
+    "OracleError",
     "PropertyResult",
     "PropertyRunner",
     "PropertySpec",
     "RecordingAdapter",
     "ReplayAdapter",
+    "SchemaError",
     "SnapshotStore",
     "TaskStatus",
     "TestCase",

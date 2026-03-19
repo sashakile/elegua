@@ -31,10 +31,18 @@ class FakeOracle:
         self.clean: bool = True
         self.leaked: list[str] = []
         self.next_result: FakeResult = FakeResult()
+        self._health_error: Exception | None = None
 
     def health(self) -> bool:
         self.calls.append(("health",))
         return self.healthy
+
+    def health_or_raise(self) -> None:
+        self.calls.append(("health_or_raise",))
+        if self._health_error is not None:
+            raise RuntimeError(f"Oracle unavailable: {self._health_error}") from self._health_error
+        if not self.healthy:
+            raise RuntimeError("Oracle unhealthy (status='not-ok')")
 
     def evaluate_with_xact(
         self,
@@ -163,14 +171,14 @@ def test_initialize_checks_health():
     oracle = FakeOracle()
     adapter = WolframOracleAdapter(oracle=oracle)
     adapter.initialize()
-    assert ("health",) in oracle.calls
+    assert ("health_or_raise",) in oracle.calls
 
 
 def test_initialize_fails_when_unhealthy():
     oracle = FakeOracle()
     oracle.healthy = False
     adapter = WolframOracleAdapter(oracle=oracle)
-    with pytest.raises(RuntimeError, match="unavailable"):
+    with pytest.raises(RuntimeError, match=r"unhealthy|unavailable"):
         adapter.initialize()
 
 
@@ -187,7 +195,7 @@ def test_context_manager_lifecycle():
     adapter = WolframOracleAdapter(oracle=oracle)
     with adapter:
         pass
-    assert ("health",) in oracle.calls
+    assert ("health_or_raise",) in oracle.calls
     assert ("cleanup",) in oracle.calls
 
 
@@ -341,3 +349,33 @@ def test_execute_handles_oracle_connection_error():
         token = adapter.execute(task)
     assert token.status == TaskStatus.EXECUTION_ERROR
     assert "Connection refused" in (token.metadata.get("error") or "")
+
+
+# --- health_or_raise: root cause preservation ---
+
+
+def test_initialize_unhealthy_includes_cause():
+    """When health check fails due to network error, RuntimeError chains the original."""
+    oracle = FakeOracle()
+    oracle._health_error = ConnectionRefusedError("Connection refused")
+    adapter = WolframOracleAdapter(oracle=oracle)
+    with pytest.raises(RuntimeError, match="unavailable") as exc_info:
+        adapter.initialize()
+    assert exc_info.value.__cause__ is oracle._health_error
+
+
+def test_initialize_calls_health_or_raise():
+    """initialize() should call health_or_raise(), not just health()."""
+    oracle = FakeOracle()
+    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter.initialize()
+    assert ("health_or_raise",) in oracle.calls
+
+
+def test_initialize_unhealthy_no_network_error():
+    """When health_or_raise reports unhealthy (no network error), RuntimeError is raised."""
+    oracle = FakeOracle()
+    oracle.healthy = False
+    adapter = WolframOracleAdapter(oracle=oracle)
+    with pytest.raises(RuntimeError, match=r"unhealthy|unavailable"):
+        adapter.initialize()

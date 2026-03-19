@@ -240,3 +240,103 @@ def test_empty_test_file(tmp_path: Path):
     with runner:
         results = runner.run(tf)
     assert results == []
+
+
+# --- Narrow exception handling ---
+
+
+def test_programming_error_propagates_from_setup():
+    """TypeError/AttributeError from adapter should NOT be captured as test error."""
+
+    class BuggyAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "buggy"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            # Simulates a programming error (bug in adapter)
+            raise TypeError("'NoneType' object is not subscriptable")
+
+    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    runner = IsolatedRunner(BuggyAdapter())
+    with runner, pytest.raises(TypeError, match="NoneType"):
+        runner.run(tf)
+
+
+def test_operational_error_captured_in_setup():
+    """OSError from adapter should be captured as test error (not propagated)."""
+
+    class NetworkAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "network"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            raise ConnectionRefusedError("Connection refused")
+
+    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    runner = IsolatedRunner(NetworkAdapter())
+    with runner:
+        results = runner.run(tf)
+    assert results[0].error is not None
+    assert "ConnectionRefusedError" in results[0].error
+
+
+def test_programming_error_propagates_from_test():
+    """TypeError during test execution should propagate, not be captured."""
+    call_count = 0
+
+    class BuggyTestAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "buggy-test"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            nonlocal call_count
+            call_count += 1
+            if task.action == "DefManifold" or task.action == "DefTensor":
+                # Setup succeeds
+                return ValidationToken(
+                    adapter_id=self.adapter_id,
+                    status=TaskStatus.OK,
+                    result={"repr": "ok"},
+                )
+            # Test operation has a bug
+            raise AttributeError("'NoneType' object has no attribute 'foo'")
+
+    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    runner = IsolatedRunner(BuggyTestAdapter())
+    with runner, pytest.raises(AttributeError, match="NoneType"):
+        runner.run(tf)
+
+
+def test_operational_error_captured_in_test(tmp_path: Path):
+    """OSError/RuntimeError during test op should be captured with class name."""
+
+    class FailOnTestAdapter(Adapter):
+        @property
+        def adapter_id(self) -> str:
+            return "fail-test"
+
+        def execute(self, task: EleguaTask) -> ValidationToken:
+            if task.action == "TestOp":
+                raise OSError("disk full")
+            return ValidationToken(
+                adapter_id=self.adapter_id,
+                status=TaskStatus.OK,
+                result=task.payload,
+            )
+
+    f = tmp_path / "t.toml"
+    f.write_text(
+        '[meta]\nid = "t"\ndescription = "d"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "TestOp"\n'
+    )
+    tf = load_sxact_toml(f)
+    runner = IsolatedRunner(FailOnTestAdapter())
+    with runner:
+        results = runner.run(tf)
+    assert results[0].error is not None
+    assert "OSError" in results[0].error
+    assert "disk full" in results[0].error

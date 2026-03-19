@@ -6,6 +6,7 @@ import tomllib
 from pathlib import Path
 
 from elegua.adapter import Adapter, WolframAdapter
+from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask
 
@@ -19,7 +20,7 @@ def load_toml_tasks(path: Path) -> list[EleguaTask]:
         data = tomllib.load(f)
 
     if "tasks" not in data:
-        raise ValueError(f"{path}: missing required 'tasks' array")
+        raise SchemaError(f"{path}: missing required 'tasks' array")
 
     tasks = data["tasks"]
     return [
@@ -32,7 +33,7 @@ def load_toml_tasks(path: Path) -> list[EleguaTask]:
 
 
 def _missing_field(path: Path, index: int, field: str) -> str:
-    raise ValueError(f"{path}: tasks[{index}] missing required field '{field}'")
+    raise SchemaError(f"{path}: tasks[{index}] missing required field '{field}'")
 
 
 def run_tasks(

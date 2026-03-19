@@ -20,6 +20,7 @@ class OracleLike(Protocol):
     """Minimal protocol for oracle dependency injection."""
 
     def health(self) -> bool: ...
+    def health_or_raise(self) -> None: ...
     def evaluate_with_xact(
         self, expr: str, timeout: int = 60, context_id: str | None = None
     ) -> dict[str, Any]: ...
@@ -67,8 +68,7 @@ class WolframOracleAdapter(Adapter):
         return "wolfram-oracle"
 
     def initialize(self) -> None:
-        if not self._oracle.health():
-            raise RuntimeError("Wolfram oracle unavailable — is the server running?")
+        self._oracle.health_or_raise()
         is_clean, leaked = self._oracle.check_clean_state()
         if not is_clean:
             import warnings

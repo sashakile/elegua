@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from elegua.errors import SchemaError
 from elegua.task import EleguaTask
 
 
@@ -102,7 +103,7 @@ def _op_to_task(op: Operation) -> EleguaTask:
 def _parse_operation(raw: dict[str, Any]) -> Operation:
     action = raw.get("action")
     if not action:
-        raise ValueError("operation missing required 'action' field")
+        raise SchemaError("operation missing required 'action' field")
     return Operation(
         action=action,
         args=raw.get("args", {}),
@@ -125,13 +126,13 @@ def _parse_expected(raw: dict[str, Any]) -> Expected:
 def _parse_test(raw: dict[str, Any], index: int) -> TestCase:
     test_id = raw.get("id")
     if not test_id:
-        raise ValueError(f"tests[{index}] missing required 'id' field")
+        raise SchemaError(f"tests[{index}] missing required 'id' field")
     description = raw.get("description")
     if not description:
-        raise ValueError(f"tests[{index}] missing required 'description' field")
+        raise SchemaError(f"tests[{index}] missing required 'description' field")
     operations_raw = raw.get("operations", [])
     if not operations_raw:
-        raise ValueError(f"tests[{index}] must have at least one operation")
+        raise SchemaError(f"tests[{index}] must have at least one operation")
     return TestCase(
         id=test_id,
         description=description,
@@ -153,13 +154,13 @@ def load_sxact_toml(path: Path) -> TestFile:
         data = tomllib.load(f)
 
     if "meta" not in data:
-        raise ValueError(f"{path}: missing required 'meta' section")
+        raise SchemaError(f"{path}: missing required 'meta' section")
 
     meta_raw = data["meta"]
     if "id" not in meta_raw:
-        raise ValueError(f"{path}: meta missing required 'id' field")
+        raise SchemaError(f"{path}: meta missing required 'id' field")
     if "description" not in meta_raw:
-        raise ValueError(f"{path}: meta missing required 'description' field")
+        raise SchemaError(f"{path}: meta missing required 'description' field")
 
     meta = TestFileMeta(
         id=meta_raw["id"],

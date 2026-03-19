@@ -8,6 +8,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from elegua.errors import EleguaError
+
 
 class TaskStatus(StrEnum):
     PENDING = "pending"
@@ -37,7 +39,7 @@ _TRANSITIONS: dict[TaskStatus, frozenset[TaskStatus]] = {
 }
 
 
-class InvalidTransition(Exception):
+class InvalidTransition(EleguaError):
     """Raised when a task status transition is not allowed."""
 
 
