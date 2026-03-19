@@ -1,0 +1,16 @@
+{
+  "snapshots": {
+    "6a51b76f72646b230a4aa9e444f42b06f7421d8fa310a7e49a0c11d043123bcb": {
+      "adapter_id": "wolfram-oracle",
+      "metadata": {
+        "execution_time_ms": 1
+      },
+      "result": {
+        "properties": {},
+        "repr": "1+1",
+        "type": "Expr"
+      },
+      "status": "ok"
+    }
+  }
+}

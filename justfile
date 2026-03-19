@@ -28,6 +28,10 @@ test *args:
 test-integration:
     uv run pytest -m integration -v
 
+# Record fresh snapshots for offline integration tests
+record-snapshots:
+    ELEGUA_RECORD=1 uv run pytest -m integration -v
+
 # Run tests with coverage
 cov:
     uv run pytest --cov=elegua --cov-report=term-missing
