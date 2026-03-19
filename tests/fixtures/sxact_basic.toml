@@ -1,0 +1,61 @@
+# Minimal sxAct-format test file for bridge tests.
+
+[meta]
+id              = "bridge/basic"
+description     = "Bridge loader smoke test"
+tags            = ["bridge", "layer:1"]
+layer           = 1
+oracle_is_axiom = true
+
+[[setup]]
+action   = "DefManifold"
+store_as = "M"
+[setup.args]
+name      = "M"
+dimension = 4
+indices   = ["a", "b", "c", "d"]
+
+[[setup]]
+action   = "DefTensor"
+store_as = "T"
+[setup.args]
+name     = "T"
+indices  = ["-a", "-b"]
+manifold = "M"
+symmetry = "Symmetric[{-a,-b}]"
+
+[[tests]]
+id          = "canon_symmetric"
+description = "Symmetric swap canonicalizes to zero"
+
+[[tests.operations]]
+action   = "Evaluate"
+store_as = "diff"
+[tests.operations.args]
+expression = "T[-a,-b] - T[-b,-a]"
+
+[[tests.operations]]
+action   = "ToCanonical"
+store_as = "result"
+[tests.operations.args]
+expression = "$diff"
+
+[[tests.operations]]
+action = "Assert"
+[tests.operations.args]
+condition = "$result == 0"
+message   = "Symmetric swap should be zero"
+
+[tests.expected]
+is_zero         = true
+comparison_tier = 1
+
+[[tests]]
+id           = "registry_check"
+description  = "Tensor appears in registry"
+dependencies = ["canon_symmetric"]
+
+[[tests.operations]]
+action = "Assert"
+[tests.operations.args]
+condition = "TensorQ[T] === True"

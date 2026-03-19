@@ -2,6 +2,14 @@
 
 from elegua.adapter import Adapter, WolframAdapter
 from elegua.blobstore import BlobStore
+from elegua.bridge import (
+    Expected,
+    Operation,
+    TestCase,
+    TestFile,
+    TestFileMeta,
+    load_sxact_toml,
+)
 from elegua.comparison import (
     ComparisonResult,
     compare_identity,
@@ -19,17 +27,23 @@ __all__ = [
     "BlobStore",
     "ComparisonResult",
     "EleguaTask",
+    "Expected",
     "GeneratorRegistry",
     "InvalidTransition",
+    "Operation",
     "PropertyResult",
     "PropertyRunner",
     "PropertySpec",
     "TaskStatus",
+    "TestCase",
+    "TestFile",
+    "TestFileMeta",
     "ValidationToken",
     "WolframAdapter",
     "compare_identity",
     "compare_pipeline",
     "compare_structural",
+    "load_sxact_toml",
     "load_toml_tasks",
     "run_tasks",
 ]
