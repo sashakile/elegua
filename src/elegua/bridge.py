@@ -154,7 +154,7 @@ def _parse_test(raw: dict[str, Any], index: int) -> TestCase:
 def load_sxact_toml(path: Path) -> TestFile:
     """Load an sxAct-format TOML test file.
 
-    Raises ValueError if the file is missing required fields.
+    Raises SchemaError if the file is missing required fields.
     """
     with open(path, "rb") as f:
         try:

@@ -42,22 +42,31 @@ class ExecutionContext:
         """Return a copy of *payload* with ``$name`` references substituted.
 
         Only top-level string values are substituted. Unknown references
-        are left as-is.
+        are left as-is (with a RuntimeWarning emitted).
         """
-        return {
-            key: self._sub_refs(val) if isinstance(val, str) else val
-            for key, val in payload.items()
-        }
+        resolved = {}
+        for key, val in payload.items():
+            if isinstance(val, str):
+                new_val, unresolved = self._sub_refs(val)
+                for name in unresolved:
+                    import warnings
 
-    def _sub_refs(self, text: str) -> str:
+                    warnings.warn(f"Unresolved reference ${name}", RuntimeWarning, stacklevel=2)
+                resolved[key] = new_val
+            else:
+                resolved[key] = val
+        return resolved
+
+    def _sub_refs(self, text: str) -> tuple[str, list[str]]:
+        unresolved: list[str] = []
+
         def _replace(m: re.Match[str]) -> str:
             name = m.group(1)
             value = self._bindings.get(name)
             if value is None:
-                import warnings
-
-                warnings.warn(f"Unresolved reference ${name}", RuntimeWarning, stacklevel=4)
+                unresolved.append(name)
                 return m.group(0)
             return value
 
-        return _REF_RE.sub(_replace, text)
+        result = _REF_RE.sub(_replace, text)
+        return result, unresolved

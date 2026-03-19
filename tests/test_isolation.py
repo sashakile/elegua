@@ -279,7 +279,8 @@ def test_operational_error_captured_in_setup():
     with runner:
         results = runner.run(tf)
     assert results[0].error is not None
-    assert "ConnectionRefusedError" in results[0].error
+    assert "Connection refused" in results[0].error
+    assert "setup[0]" in results[0].error
 
 
 def test_programming_error_propagates_from_test():

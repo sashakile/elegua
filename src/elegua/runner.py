@@ -14,7 +14,7 @@ from elegua.task import EleguaTask
 def load_toml_tasks(path: Path) -> list[EleguaTask]:
     """Load tasks from a TOML test file.
 
-    Raises ValueError if the TOML file has no 'tasks' key.
+    Raises SchemaError if the TOML file has no 'tasks' key.
     """
     with open(path, "rb") as f:
         try:

@@ -23,6 +23,7 @@ from elegua.task import EleguaTask
 
 # Operational errors that should be captured as test errors.
 # Programming errors (TypeError, AttributeError, etc.) propagate.
+# RuntimeError is included because adapters raise it for connection/server errors.
 _OPERATIONAL_ERRORS = (OSError, ConnectionError, RuntimeError, TimeoutError, ValueError)
 
 
@@ -105,7 +106,7 @@ class IsolatedRunner:
             try:
                 self._execute_op(op)
             except _OPERATIONAL_ERRORS as exc:
-                raise type(exc)(f"setup[{i}] ({op.action}): {exc}") from exc
+                raise RuntimeError(f"setup[{i}] ({op.action}): {exc}") from exc
 
     def _run_test(self, tc: TestCase) -> TestRunResult:
         if tc.skip:
