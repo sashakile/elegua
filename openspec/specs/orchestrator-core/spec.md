@@ -230,12 +230,56 @@ Adapters that target cross-CAS verification (e.g., Wolfram vs Julia) SHOULD foll
 3. **Keep `numeric_samples` out of structural identity**: The core strips `numeric_samples` before L1 and L2 comparison. Adapters can return different sample points without affecting structural match results.
 4. **Use consistent variable naming**: Sample point variables (`vars` keys) should match the variable names used in the original expression so L4 can align samples across adapters.
 
-### 7. Non-Goals
+### 7. Verification Patterns
+
+#### Integrate-then-Differentiate (RUBI Pattern)
+
+The standard verification strategy for integration rules. Works with any CAS backend using the existing `store_as` + `$ref` mechanism in TOML test files — no code changes required.
+
+**Pattern:**
+1. **Integrate** the expression, store the antiderivative via `store_as`
+2. **Differentiate** the stored antiderivative using `$ref`
+3. **Assert** the result matches the original integrand via `expected.expr`
+
+**TOML structure:**
+```toml
+[[tests]]
+id          = "integrate_x_squared"
+description = "Power rule round-trip"
+
+[[tests.operations]]
+action   = "Integrate"
+store_as = "antideriv"
+[tests.operations.args]
+expression = "x^2"
+variable   = "x"
+
+[[tests.operations]]
+action   = "Differentiate"
+store_as = "result"
+[tests.operations.args]
+expression = "$antideriv"
+variable   = "x"
+
+[tests.expected]
+expr = "x^2"
+```
+
+**How it works:**
+- The `Integrate` operation sends `{"expression": "x^2", "variable": "x"}` to the adapter. The adapter returns a `ValidationToken` with `result.repr` (e.g., `"x^3/3"`). The `store_as` mechanism stores this repr as `antideriv`.
+- The `Differentiate` operation resolves `$antideriv` to the stored value and sends it to the adapter. The adapter returns the derivative, which should equal the original integrand.
+- The `expected.expr` check in the verdict system verifies the round-trip.
+
+**Why this works across CAS backends:** Each backend may represent the antiderivative differently (e.g., `x^3/3` vs `Power[x,3]/3`), but differentiation is a well-defined operation. The round-trip `d/dx(integral(f)) == f` is the mathematical invariant, independent of representation.
+
+**Example files:** See `tests/fixtures/rubi_power.toml`, `rubi_trig.toml`, `rubi_exp.toml`.
+
+### 8. Non-Goals
 - Real-time interactive execution (designed for batch validation).
 - Direct modification of source code (read-only verification).
 - Domain-specific logic in the core (injected via adapters and init scripts).
 
-### 8. Technical Architecture
+### 9. Technical Architecture
 - **Language**: Python 3.11+
 - **Data Models**: Pydantic
 - **Transport**: HTTP (oracle protocol). ZMQ/TCP deferred until a concrete consumer requires it.
