@@ -1,0 +1,30 @@
+# RUBI integration rule: ∫x² dx = x³/3
+# Pattern: Integrate → store result → Differentiate stored result → verify round-trip
+
+[meta]
+id              = "rubi/power"
+description     = "Power rule: integral of x^2"
+tags            = ["rubi", "integration", "power-rule"]
+layer           = 1
+oracle_is_axiom = true
+
+[[tests]]
+id          = "integrate_x_squared"
+description = "∫x² dx = x³/3, verified by differentiation round-trip"
+
+[[tests.operations]]
+action   = "Integrate"
+store_as = "antideriv"
+[tests.operations.args]
+expression = "x^2"
+variable   = "x"
+
+[[tests.operations]]
+action   = "Differentiate"
+store_as = "result"
+[tests.operations.args]
+expression = "$antideriv"
+variable   = "x"
+
+[tests.expected]
+expr = "x^2"

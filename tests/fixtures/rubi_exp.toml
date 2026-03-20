@@ -1,0 +1,30 @@
+# RUBI integration rule: ∫eˣ dx = eˣ
+# Pattern: Integrate → store result → Differentiate stored result → verify round-trip
+
+[meta]
+id              = "rubi/exp"
+description     = "Exponential rule: integral of e^x"
+tags            = ["rubi", "integration", "exponential"]
+layer           = 1
+oracle_is_axiom = true
+
+[[tests]]
+id          = "integrate_exp"
+description = "∫eˣ dx = eˣ, verified by differentiation round-trip"
+
+[[tests.operations]]
+action   = "Integrate"
+store_as = "antideriv"
+[tests.operations.args]
+expression = "Exp[x]"
+variable   = "x"
+
+[[tests.operations]]
+action   = "Differentiate"
+store_as = "result"
+[tests.operations.args]
+expression = "$antideriv"
+variable   = "x"
+
+[tests.expected]
+expr = "Exp[x]"

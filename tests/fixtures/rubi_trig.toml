@@ -1,0 +1,30 @@
+# RUBI integration rule: ∫sin(x) dx = -cos(x)
+# Pattern: Integrate → store result → Differentiate stored result → verify round-trip
+
+[meta]
+id              = "rubi/trig"
+description     = "Trig rule: integral of sin(x)"
+tags            = ["rubi", "integration", "trig"]
+layer           = 1
+oracle_is_axiom = true
+
+[[tests]]
+id          = "integrate_sin"
+description = "∫sin(x) dx = -cos(x), verified by differentiation round-trip"
+
+[[tests.operations]]
+action   = "Integrate"
+store_as = "antideriv"
+[tests.operations.args]
+expression = "Sin[x]"
+variable   = "x"
+
+[[tests.operations]]
+action   = "Differentiate"
+store_as = "result"
+[tests.operations.args]
+expression = "$antideriv"
+variable   = "x"
+
+[tests.expected]
+expr = "Sin[x]"
