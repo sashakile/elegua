@@ -1,8 +1,8 @@
-"""Bridge loader for sxAct-format TOML test files.
+"""Bridge loader for TOML test files.
 
-Parses the rich sxAct test format (meta, setup, tests with operations
-and expected outcomes) into structured data models, and provides
-conversion to flat EleguaTask sequences.
+Parses the test format (meta, setup, tests with operations and expected
+outcomes) into structured data models, and provides conversion to flat
+EleguaTask sequences.
 """
 
 from __future__ import annotations
@@ -71,7 +71,7 @@ class TestCase:
 
 @dataclass(frozen=True)
 class TestFile:
-    """Parsed sxAct-format test file."""
+    """Parsed TOML test file."""
 
     __test__ = False
 
@@ -151,8 +151,8 @@ def _parse_test(raw: dict[str, Any], index: int) -> TestCase:
     )
 
 
-def load_sxact_toml(path: Path) -> TestFile:
-    """Load an sxAct-format TOML test file.
+def load_test_file(path: Path) -> TestFile:
+    """Load a TOML test file.
 
     Raises SchemaError if the file is missing required fields.
     """
@@ -184,3 +184,7 @@ def load_sxact_toml(path: Path) -> TestFile:
     tests = [_parse_test(t, i) for i, t in enumerate(data.get("tests", []))]
 
     return TestFile(meta=meta, setup=setup, tests=tests)
+
+
+# Backward compatibility alias
+load_sxact_toml = load_test_file

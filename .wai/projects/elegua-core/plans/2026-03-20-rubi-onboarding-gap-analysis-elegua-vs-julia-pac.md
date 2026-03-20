@@ -2,9 +2,10 @@
 
 ## Context
 
-RUBI (Rule-Based Integration) has ~73,000 integration rules originally in
-Mathematica. The goal is to verify a Julia/Symbolics.jl port against the
-Wolfram original using elegua as the verification orchestrator.
+RUBI (Rule-Based Integration) has thousands of integration rules
+originally in Mathematica. The goal is to verify a Julia/Symbolics.jl
+port against the Wolfram original using elegua as the verification
+orchestrator.
 
 This is the first non-tensor domain for elegua. The foundations spec
 (REQ-FOUND-001 §1) explicitly names RUBI as a motivating scenario:
@@ -16,222 +17,261 @@ This is the first non-tensor domain for elegua. The foundations spec
 
 ## Concern Divide
 
-### Elegua's responsibility (domain-agnostic orchestration)
+**Litmus test:** If removing the code breaks only one domain, it belongs
+in that domain's package. If it breaks all domains, it belongs in elegua.
 
-Elegua owns the **infrastructure of trust** — the plumbing that lets any
-two CAS backends be compared. It must NOT contain RUBI-specific or
-Julia-specific logic in its core.
+### Elegua (domain-agnostic orchestration)
 
-### Julia package's responsibility (domain-specific compute)
+Elegua owns the **infrastructure of trust** — adapter lifecycle,
+comparison pipeline, test format, snapshot replay. It must NOT contain
+RUBI-specific or Julia-specific logic.
 
-A new Julia package (e.g., `RubiOracle.jl` or `EleguaJulia.jl`) owns
-the **compute backend** — accepting expressions over HTTP, evaluating
-them in Symbolics.jl, and returning results in the oracle protocol format.
-RUBI rule definitions, integration algorithms, and Julia-specific
-isolation live here.
+### Julia package (domain-specific compute)
 
-### Wolfram-side RUBI adapter (likely in sxAct or its own package)
+A new Julia package (e.g., `EleguaJulia.jl`) owns the **compute
+backend** — HTTP server, expression evaluation in Symbolics.jl, context
+isolation, cleanup. RUBI rule definitions and Julia-specific process
+management live here.
 
-The Wolfram RUBI init script (`Needs["Rubi`"]`) and RUBI-specific
-expression builder are NOT elegua-core concerns. They're injected via
-`ELEGUA_WOLFRAM_INIT` and the `expr_builder` callable, same as xAct.
+### RUBI project (domain-specific test data + expression builders)
+
+The Wolfram RUBI init script (`Needs["Rubi`"]`), Julia-side RUBI rules,
+expression builders for both sides, and the test suite (TOML files) are
+NOT elegua concerns. They're injected via `ELEGUA_WOLFRAM_INIT` and the
+`expr_builder` callable, same as xAct today.
 
 ---
 
-## What's missing in elegua (5 gaps)
+## Validation: the adapter is already generic
 
-### Gap 1: `elegua[julia]` — Julia oracle extra
+The review identified that `OracleAdapter` (formerly `WolframOracleAdapter`)
+is backend-agnostic — it wraps `OracleClient` (stdlib HTTP) with an
+injectable `expr_builder`. Integration tests already prove this: the
+echo oracle (a Python HTTP server with no Wolfram) works with the same
+adapter.
 
-**Owner:** elegua
-**Why:** The extension model (`pip install elegua[julia]`) is elegua's
-pattern. The Julia extra provides the Python-side plumbing to talk to a
-Julia oracle server, just as `elegua[wolfram]` provides wolframclient.
+**Done:** Renamed `WolframOracleAdapter` → `OracleAdapter` with backward-
+compat alias. Renamed `load_sxact_toml` → `load_test_file`. Updated
+docstrings to remove domain-specific language.
 
-**What to build:**
-- `src/elegua/julia/__init__.py` — package entry point
-- `src/elegua/julia/adapter.py` — `JuliaOracleAdapter(Adapter)` that
-  wraps `OracleClient` with a Julia-specific `expr_builder` injection
-  point. Mirrors `WolframOracleAdapter` but for Julia expression syntax.
-- `src/elegua/julia/__main__.py` — CLI entry point (`python -m elegua.julia serve`)
+**Consequence:** No `elegua[julia]` adapter package is needed. A Julia
+oracle server that implements the HTTP protocol works out of the box:
+```python
+adapter = OracleAdapter(
+    oracle=OracleClient("http://localhost:9000"),
+    expr_builder=rubi_julia_builder,
+)
+```
 
-**What NOT to build here:**
-- The Julia HTTP server itself (that's the Julia package)
-- The Julia kernel manager (that's the Julia package)
-- Any RUBI-specific logic
+---
 
-**Key design question:** Should `elegua[julia]` include a Python-side
-`KernelManager` that spawns/manages a Julia process (like wolfram's
-`KernelManager` wraps `WolframLanguageSession`)? Or should it expect an
-already-running Julia server and just provide the adapter?
+## What's missing in elegua (3 gaps)
 
-**Recommendation:** Just the adapter + CLI launcher. The Julia package
-manages its own process. Elegua provides a thin `JuliaOracleAdapter`
-and optionally a subprocess launcher (`elegua julia serve` shells out to
-`julia -e 'using EleguaJulia; serve()'`).
-
-### Gap 2: Numeric comparison layer (L4)
+### Gap 1: Numeric comparison layer (L4)
 
 **Owner:** elegua-core
-**Why:** This is domain-agnostic infrastructure. Any symbolic verification
-benefits from "evaluate both sides at random points and check they agree."
-RUBI needs it acutely (different CAS produce structurally different but
-mathematically equal antiderivatives), but tensor verification needs it
-too (the papers repo describes this for Bianchi identity verification).
+**Why:** Different CAS produce structurally different but mathematically
+equal results. `x^2/2` vs `(1/2)*x^2` fail L1/L2. For RUBI this is
+the norm — antiderivatives have many equivalent forms. Tensor
+verification needs this too (Bianchi identity, per the papers repo).
 
 **What to build:**
-- `src/elegua/compare_numeric.py` — a `LayerFn` that:
-  1. Extracts `result["repr"]` from both tokens
-  2. Evaluates both expressions at N random points (configurable)
-  3. Returns `OK` if all evaluations agree within tolerance
-  4. Returns `MATH_MISMATCH` otherwise
-- Register as L4 in the pipeline: `pipeline.register(4, "numeric", compare_numeric)`
-- Support configurable: variable names, sampling range, tolerance, N samples
+- `src/elegua/compare_numeric.py` — a comparison function that checks
+  whether pre-computed numeric samples from both tokens agree within
+  tolerance.
 
-**What NOT to build here:**
-- CAS-specific evaluation (the numeric sampling itself needs a compute
-  backend — this layer calls back to the oracle or uses a lightweight
-  evaluator like `sympy` or `math`)
-- Domain-specific normalization (that's L3)
+**Design decision: how does L4 get numeric values?**
 
-**Key design question:** How does L4 evaluate expressions numerically?
-Options:
-1. **Callback to oracle** — send `N[expr /. x -> 0.5]` to the oracle
-   (requires oracle round-trip, slow but accurate)
-2. **Embedded lightweight evaluator** — parse repr into sympy, evaluate
-   with `float()` (fast but limited to expressions sympy can parse)
-3. **Pre-computed numeric values** — require adapters to return
-   `result["numeric_samples"]` alongside `result["repr"]`
+Adapters include sample values in the result dict. This keeps L4
+stateless and oracle-free:
+```python
+result["numeric_samples"] = [
+    {"vars": {"x": 0.5}, "value": 0.125},
+    {"vars": {"x": 1.0}, "value": 0.5},
+    ...
+]
+```
 
-**Recommendation:** Option 3. Extend the adapter contract so that
-adapters MAY include `result["numeric_samples"]: list[{vars: dict, value: float}]`
-in the ValidationToken. The L4 comparator checks if sample values agree.
-This keeps L4 stateless and oracle-free.
+The **sample points are prescribed by the test payload**, not chosen by
+adapters independently. This solves the coordination problem — both
+adapters evaluate at the same points:
+```toml
+[tests.expected]
+sample_points = [{x = 0.5}, {x = 1.0}, {x = 2.0}]
+```
 
-### Gap 3: Canonical normalization layer (L3)
+**API issue:** The current `LayerFn` signature is
+`(ValidationToken, ValidationToken) -> TaskStatus` — no way to pass
+config (tolerance, min samples). Fix: use a closure that captures config:
+```python
+def make_numeric_comparator(tol: float = 1e-10, min_samples: int = 3) -> LayerFn:
+    def compare(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        ...
+    return compare
+```
 
-**Owner:** elegua-core (plugin interface) + domain packages (implementations)
-**Why:** `x^2/2` and `(1/2)*x^2` are identical math but different strings.
-L1/L2 reject them. L3 normalizes before comparing. The plugin interface
-is elegua's job; the actual normalization rules are domain-specific.
+This preserves the existing `pipeline.register()` API. No pipeline
+changes needed.
 
-**What to build:**
-- Document the `LayerFn` contract for L3 normalizers
-- Provide a `NormalizerRegistry` (or just use `pipeline.register()` as-is)
-- Optionally: a simple canonical-form normalizer that handles common
-  algebraic equivalences (coefficient ordering, sign normalization)
+**Acceptance criteria:**
+- Synthetic test: two tokens with matching samples → OK
+- Synthetic test: two tokens with divergent samples → MATH_MISMATCH
+- Synthetic test: tokens with no/insufficient samples → MATH_MISMATCH
+- Registered as L4, runs after L1/L2 in default pipeline
 
-**What NOT to build here:**
-- RUBI-specific normalization (e.g., `+C` constant handling)
-- CAS-specific expression parsing
-
-**Note:** This may not be needed for MVP if L4 numeric comparison is
-robust enough. L3 is an optimization to catch matches faster.
-
-### Gap 4: Expression interchange (result format)
+### Gap 2: Result schema extension
 
 **Owner:** elegua-core (contract definition)
-**Why:** `result["repr"]` is currently a plain string whose format varies
-by CAS. Wolfram returns `T[-a,-b]`, Julia might return `T[a,b]` or
-`T_{a,b}`. Without a shared format, even L2 structural comparison fails.
+**Why:** `result["repr"]` is a plain string whose format varies by CAS.
+Without additional fields, L2 structural comparison fails across CAS
+boundaries. This schema extension is required by Gap 1 (L4 needs
+`numeric_samples`) and benefits all cross-CAS verification.
 
 **What to build:**
-- Define a recommended `result` schema in the spec:
+- Document the extended result schema in the spec:
   ```
-  result.repr: str           # CAS-native string (for display)
-  result.canonical: str      # Optional: normalized form (for L3)
-  result.numeric_samples: [] # Optional: evaluated points (for L4)
-  result.type: str           # Expression type
-  result.properties: dict    # Computed properties
+  result.repr: str               # CAS-native string (for display)
+  result.type: str               # Expression type
+  result.properties: dict        # Computed properties
+  result.numeric_samples: list   # Optional: [{vars: dict, value: float}]
   ```
-- Adapters SHOULD populate `canonical` using a shared format (e.g.,
-  prefix S-expressions, or a minimal agreed-upon normalization)
-- L2 structural comparison SHOULD prefer `canonical` over `repr` when
-  available
+- Update L2 structural comparison to ignore `numeric_samples` (it's L4
+  data, not structural).
+- Write adapter guidelines: "what adapters SHOULD return for cross-CAS
+  verification."
 
-**What NOT to build here:**
-- A universal CAS interchange format (that's Chacana's long-term goal)
-- CAS-specific parsers
+**Note on L3 (canonical normalization):** Deferred. If L4 numeric
+comparison is robust, L3 is an optimization, not a requirement. The
+`pipeline.register()` API already supports plugging in an L3 when
+domain packages provide one.
 
-### Gap 5: RUBI test suite format
+**Acceptance criteria:**
+- Spec updated with result schema
+- L2 ignores numeric_samples field
+- Adapter guidelines doc written
 
-**Owner:** elegua-core (format support) + RUBI project (test data)
-**Why:** The TOML test format is generic (`action` + `payload` dict) but
-all existing test files use xAct actions. Need to validate the format
-works cleanly for integration-domain actions.
+### Gap 3: Derivative-check as a property test
+
+**Owner:** elegua-core (property testing framework)
+**Why:** The gold-standard RUBI verification is `d/dx[F(x)] == f(x)` —
+differentiate the antiderivative and check it matches the integrand.
+
+This is NOT a verdict mode (verdicts are pure string comparison with no
+CAS access). It's a **property test**: "for all integration results,
+the derivative of the result equals the integrand."
 
 **What to build:**
-- Example RUBI test files in TOML demonstrating the action vocabulary:
+- A `PropertySpec` template for derivative-check:
+  ```python
+  PropertySpec(
+      name="derivative_check",
+      law="D[result, var] == integrand",
+      generators=[...],
+  )
+  ```
+- The property runner already supports custom evaluation functions.
+  The derivative check sends `D[F, x]` to the oracle and compares with
+  `f(x)` — this is an oracle-callback property test.
+- Alternatively: express as a two-operation test in TOML:
   ```toml
-  [[tests]]
-  id = "rubi-rule-1.1.1"
-
   [[tests.operations]]
   action = "Integrate"
   [tests.operations.args]
   expression = "x^2"
   variable = "x"
+  store_as = "antideriv"
+
+  [[tests.operations]]
+  action = "Differentiate"
+  [tests.operations.args]
+  expression = "$antideriv"
+  variable = "x"
 
   [tests.expected]
-  expr = "x^3/3"
+  expr = "x^2"
   ```
-- Verify the bridge loader, IsolatedRunner, and verdict evaluator handle
-  integration-domain actions without modification
-- Add derivative-check as a verdict mode: `expected.derivative_check = true`
-  means "differentiate result w.r.t. variable and compare to integrand"
+  This works TODAY with no code changes — the bridge, runner, and
+  verdict evaluator handle it. The `store_as` + `$ref` mechanism
+  chains operations.
 
-**What NOT to build here:**
-- The 73k RUBI rules as TOML (that's a data generation task)
-- RUBI-specific test runner logic
+**Decision:** The TOML two-operation approach works without new code.
+Document it as a pattern. The PropertySpec approach is future work for
+batch verification of all rules.
+
+**Acceptance criteria:**
+- Example TOML test file demonstrating integrate-then-differentiate
+- Verify it runs end-to-end with EchoOracle (no real CAS)
+- Document the pattern in adapter guidelines
 
 ---
 
 ## What belongs in the Julia package (NOT elegua)
 
-For clarity, these are explicitly out of scope for elegua:
-
 | Component | Owner | Description |
 |-----------|-------|-------------|
-| Julia HTTP server | `EleguaJulia.jl` | HTTP.jl server implementing oracle protocol endpoints |
-| Julia kernel manager | `EleguaJulia.jl` | Session lifecycle, init script loading, cleanup |
+| Julia HTTP server | `EleguaJulia.jl` | HTTP.jl server implementing oracle protocol |
+| Julia process lifecycle | `EleguaJulia.jl` | Session start/stop, init scripts, cleanup |
 | Julia context isolation | `EleguaJulia.jl` | Module-based or workspace-scoped isolation |
-| Symbolics.jl evaluation | `EleguaJulia.jl` | `Symbolics.integrate()`, `Symbolics.derivative()`, etc. |
-| RUBI rule definitions | `Rubi.jl` or similar | The actual 73k integration rules in Julia |
-| RUBI Wolfram init script | sxAct or RUBI project | `Needs["Rubi`"]` loading for Wolfram oracle |
-| RUBI expression builders | RUBI project | `(action, payload) -> CAS expression` for both sides |
-| RUBI test data | RUBI project | The 73k rules as TOML test files |
+| Symbolics.jl evaluation | `EleguaJulia.jl` | `integrate()`, `derivative()`, etc. |
+| RUBI rule definitions | `Rubi.jl` or similar | Integration rules in Julia |
+| RUBI Wolfram init script | RUBI project | `Needs["Rubi`"]` for Wolfram oracle |
+| RUBI expression builders | RUBI project | `(action, payload) -> expr` for both sides |
+| RUBI test data | RUBI project | Integration rules as TOML test files |
+| Sample point generation | RUBI project | Domain-aware point selection avoiding poles |
 
 ---
 
 ## Implementation order (elegua only)
 
-### Phase 1: Validate the adapter pattern works for non-Wolfram
+### MVP: One RUBI rule verified end-to-end
 
-1. Create `src/elegua/julia/` package with `JuliaOracleAdapter`
-2. Write unit tests using `EchoOracle` (no real Julia needed)
-3. Add `elegua[julia]` optional dependency in `pyproject.toml`
-4. Verify MultiTierRunner works with two different adapter types
+The smallest proof that the architecture works for RUBI:
+1. One TOML test file with `Integrate` + `Differentiate` operations
+2. Run against EchoOracle to prove the pipeline works
+3. (Later) Run against real Wolfram RUBI + Julia RUBI via snapshots
 
-### Phase 2: Numeric comparison (L4)
+### Phase 1: Result schema + L4 numeric comparison
 
-1. Define `result.numeric_samples` schema in the spec
-2. Implement `compare_numeric` LayerFn
-3. Test with synthetic tokens (known-equal and known-different expressions)
-4. Register in default pipeline as L4
+1. Update spec with extended result schema (Gap 2)
+2. Implement `make_numeric_comparator()` closure factory (Gap 1)
+3. Test with synthetic tokens
+4. Register in pipeline as L4
 
-### Phase 3: Result format and interchange
+**Done when:** `pipeline.compare(token_a, token_b)` returns OK for
+tokens with different `repr` but matching `numeric_samples`.
 
-1. Extend ValidationToken result schema docs with `canonical`, `numeric_samples`
-2. Update L2 structural comparison to prefer `canonical` when present
-3. Write adapter guidelines: "what adapters SHOULD return"
+### Phase 2: RUBI test format validation
 
-### Phase 4: RUBI test format validation
+1. Create example RUBI TOML test files (integrate + differentiate pattern)
+2. Run end-to-end: TOML → bridge → IsolatedRunner → verdict (with EchoOracle)
+3. Document the pattern (Gap 3)
 
-1. Create example RUBI TOML test files
-2. Add `derivative_check` verdict mode
-3. End-to-end test: TOML -> bridge -> runner -> verdict (with EchoOracle)
+**Done when:** `pytest tests/test_rubi_format.py` passes with at least
+3 example RUBI rules in TOML format.
 
-### Phase 5: Integration testing with real Julia
+### Phase 3: Cross-CAS integration testing
 
-1. Docker-compose with Julia + Symbolics.jl oracle server
+1. Docker-compose with Julia oracle server (depends on EleguaJulia.jl)
 2. Record snapshots from both Wolfram RUBI and Julia RUBI
-3. MultiTier verification: Wolfram vs Julia via snapshot replay
+3. MultiTierRunner verification: Wolfram vs Julia via snapshot replay
+4. L4 numeric comparison catches equivalent-but-different antiderivatives
+
+**Done when:** MultiTierRunner reports OK for at least 10 RUBI rules
+where Wolfram and Julia produce structurally different but numerically
+equal results.
+
+---
+
+## Notes
+
+- **MultiTierRunner strict zip** (multitier.py:82): If oracle and IUT
+  produce different test counts (e.g., one skips a rule), the strict
+  zip will crash. May need relaxation for cross-CAS testing — track as
+  a future issue if it arises.
+- **L3 canonical normalization**: Deferred. The pipeline already supports
+  `register(3, "canonical", fn)`. Domain packages can provide L3
+  implementations when needed.
+- **adapter_id for Julia**: When using OracleAdapter against a Julia
+  server, the `adapter_id` defaults to `"wolfram-oracle"`. Override via
+  subclass or make it configurable — minor issue, address when
+  EleguaJulia.jl integration starts.

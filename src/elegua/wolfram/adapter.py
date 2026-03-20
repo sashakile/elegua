@@ -1,7 +1,7 @@
-"""WolframOracleAdapter — generic adapter for a Wolfram oracle server.
+"""OracleAdapter — generic adapter for any oracle HTTP server.
 
 Domain-agnostic: the adapter is a transport layer between EleguaTask
-and a Wolfram kernel via HTTP. Domain-specific action translation is
+and a compute kernel via HTTP. Domain-specific action translation is
 provided by an injectable ``expr_builder`` callable.
 """
 
@@ -33,8 +33,8 @@ def _default_expr_builder(action: str, payload: dict[str, Any]) -> str:
     return str(payload.get("expression", action))
 
 
-class WolframOracleAdapter(Adapter):
-    """Generic adapter for a Wolfram oracle HTTP server.
+class OracleAdapter(Adapter):
+    """Generic adapter for any oracle HTTP server.
 
     The adapter handles lifecycle (health, cleanup), expression evaluation,
     and result mapping. Domain-specific action→expression translation is
@@ -42,7 +42,7 @@ class WolframOracleAdapter(Adapter):
 
     Parameters:
         oracle: An OracleClient (or any OracleLike) instance.
-        expr_builder: Callable(action, payload) → Wolfram expression string.
+        expr_builder: Callable(action, payload) → expression string.
             Defaults to using ``payload["expression"]``.
         timeout: Default per-call timeout in seconds.
     """
@@ -174,3 +174,7 @@ class WolframOracleAdapter(Adapter):
             result=result_dict,
             metadata=metadata,
         )
+
+
+# Backward compatibility alias
+WolframOracleAdapter = OracleAdapter

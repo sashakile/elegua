@@ -1,7 +1,7 @@
 """Per-file test isolation and lifecycle management.
 
 Orchestrates adapter lifecycle, ExecutionContext scoping, and
-test execution for sxAct-format test files.
+test execution for TOML test files.
 
 Usage::
 

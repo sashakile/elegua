@@ -9,6 +9,7 @@ from elegua.bridge import (
     TestFile,
     TestFileMeta,
     load_sxact_toml,
+    load_test_file,
 )
 from elegua.comparison import (
     ComparisonPipeline,
@@ -28,7 +29,7 @@ from elegua.runner import load_toml_tasks, run_tasks
 from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.task import EleguaTask, InvalidTransition, TaskStatus
 from elegua.verdict import Verdict, evaluate_expected
-from elegua.wolfram.adapter import WolframOracleAdapter
+from elegua.wolfram.adapter import OracleAdapter, WolframOracleAdapter
 
 __all__ = [
     "ActionPayload",
@@ -46,6 +47,7 @@ __all__ = [
     "IsolatedRunner",
     "MultiTierRunner",
     "Operation",
+    "OracleAdapter",
     "OracleClient",
     "OracleError",
     "PropertyResult",
@@ -70,6 +72,7 @@ __all__ = [
     "compare_structural",
     "evaluate_expected",
     "load_sxact_toml",
+    "load_test_file",
     "load_toml_tasks",
     "run_tasks",
 ]
