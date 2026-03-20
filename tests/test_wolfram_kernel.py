@@ -107,6 +107,43 @@ class TestContextIdWrapping:
         assert "Elegua" in args[0]
         assert "SxAct" not in args[0]
 
+    def test_expression_injection_via_quotes(self) -> None:
+        """Expressions with quotes must not break out of ToExpression wrapping."""
+        km = _make_km()
+        payload = '"]; Quit[];"'
+        km.evaluate(payload, timeout_s=5, with_init=False, context_id="inject-test")
+        args, _ = km._session.evaluate.call_args
+        wrapped = args[0]
+        # The raw payload must NOT appear literally in the wrapped expression —
+        # it must be encoded so Wolfram cannot parse it as code.
+        assert payload not in wrapped, (
+            f"Raw injection payload found in wrapped expression: {wrapped!r}"
+        )
+        # The session must receive exactly one evaluate call (no split execution).
+        assert km._session.evaluate.call_count == 1
+
+    def test_expression_injection_via_newline(self) -> None:
+        """Newlines in expressions must not break the string literal."""
+        km = _make_km()
+        payload = 'x = 1\nDeleteDirectory["/tmp"]'
+        km.evaluate(payload, timeout_s=5, with_init=False, context_id="nl-test")
+        args, _ = km._session.evaluate.call_args
+        wrapped = args[0]
+        # A literal newline must not appear in the wrapped expression.
+        assert "\n" not in wrapped, f"Literal newline found in wrapped expression: {wrapped!r}"
+        assert km._session.evaluate.call_count == 1
+
+    def test_expression_injection_via_backslash_sequence(self) -> None:
+        """Backslash sequences must not create Wolfram escape codes."""
+        km = _make_km()
+        payload = r"x\"; Quit[]; \"y"
+        km.evaluate(payload, timeout_s=5, with_init=False, context_id="bs-test")
+        args, _ = km._session.evaluate.call_args
+        wrapped = args[0]
+        assert payload not in wrapped, (
+            f"Raw injection payload found in wrapped expression: {wrapped!r}"
+        )
+
 
 # --- Concurrency ---
 
@@ -257,3 +294,93 @@ class TestConfigurableCleanup:
         expr = args[0]
         assert "Manifolds" in expr
         assert "Tensors" in expr
+
+
+# --- Assertions replaced with explicit checks (elegua-bwy) ---
+
+
+class TestSessionNoneRaisesRuntimeError:
+    """Assert statements are replaced with explicit RuntimeError checks."""
+
+    def test_evaluate_with_none_session_raises_runtime_error(self) -> None:
+        """evaluate() must raise RuntimeError (not AssertionError) if session is None."""
+        km = _make_km()
+        km._session = None
+        # Bypass ensure() and restart() which would try to start a real kernel
+        km.ensure = lambda: None  # type: ignore[assignment]
+        km.restart = lambda: None  # type: ignore[assignment]
+        ok, _result, error = km.evaluate("1+1", timeout_s=5)
+        assert ok is False
+        assert error is not None
+        assert "RuntimeError" in error
+
+    def test_cleanup_with_none_session_raises_runtime_error(self) -> None:
+        km = _make_km()
+        km._session = None
+        km.ensure = lambda: None  # type: ignore[assignment]
+        ok, _result, error = km.cleanup()
+        assert ok is False
+        assert error is not None
+        assert "RuntimeError" in error
+
+    def test_check_clean_state_with_none_session_raises_runtime_error(self) -> None:
+        km = _make_km()
+        km._session = None
+        km.ensure = lambda: None  # type: ignore[assignment]
+        is_clean, _leaked = km.check_clean_state()
+        assert is_clean is False
+
+
+# --- Executor shutdown (elegua-5i3) ---
+
+
+class TestExecutorShutdown:
+    """Verify ThreadPoolExecutor is shut down when KernelManager stops."""
+
+    def test_stop_shuts_down_executor(self) -> None:
+        km = _make_km()
+        km.stop()
+        assert km._executor._shutdown is True
+
+    def test_context_manager_calls_stop(self) -> None:
+        km = _make_km()
+        with km:
+            pass
+        assert km._session is None
+        assert km._executor._shutdown is True
+
+
+# --- check_clean_state logging (elegua-53s) ---
+
+
+class TestCheckCleanStateParsing:
+    """Verify check_clean_state handles malformed responses."""
+
+    def test_malformed_response_includes_actual_result(self) -> None:
+        """When Wolfram returns unexpected output, the error should include it."""
+        km = _make_km(evaluate_fn=lambda _: "UNEXPECTED GARBAGE")
+        is_clean, leaked = km.check_clean_state()
+        assert is_clean is False
+        # The leaked list should contain something more useful than just
+        # "check_clean_state evaluation failed"
+        error_msg = " ".join(leaked)
+        assert "UNEXPECTED" in error_msg or "ValueError" in error_msg
+
+
+# --- Init path validation (elegua-pdf) ---
+
+
+class TestInitPathValidation:
+    """Verify ELEGUA_WOLFRAM_INIT path is validated at construction time."""
+
+    def test_nonexistent_init_path_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ELEGUA_WOLFRAM_INIT", "/nonexistent/init.wl")
+        with pytest.raises(FileNotFoundError, match="ELEGUA_WOLFRAM_INIT"):
+            KernelManager()
+
+    def test_valid_init_path_accepted(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+        init_file = tmp_path / "init.wl"
+        init_file.write_text("(* init *)")
+        monkeypatch.setenv("ELEGUA_WOLFRAM_INIT", str(init_file))
+        km = KernelManager()
+        assert km._init_script == str(init_file)

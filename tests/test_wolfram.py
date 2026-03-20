@@ -414,3 +414,17 @@ def test_teardown_warns_on_cleanup_failure():
     adapter.initialize()
     with pytest.warns(RuntimeWarning, match="cleanup failed"):
         adapter.teardown()
+
+
+# --- execute without initialize (elegua-1u1) ---
+
+
+def test_execute_without_initialize_raises():
+    """execute() without initialize() must raise, not silently use Global context."""
+    oracle = FakeOracle()
+    oracle.next_result = FakeResult(status="ok", result="1")
+    adapter = WolframOracleAdapter(oracle=oracle)
+    # Do NOT call adapter.initialize()
+    task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
+    with pytest.raises(RuntimeError, match="initialize"):
+        adapter.execute(task)

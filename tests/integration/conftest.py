@@ -28,17 +28,16 @@ def echo_oracle():
         yield oracle
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def snapshot_store(request: pytest.FixtureRequest) -> SnapshotStore:
     """Snapshot store scoped to the test module.
 
     In record mode, writes to ``tests/snapshots/<module>.json``.
     In replay mode, reads from the same path.
+    Module-scoped so recordings accumulate across tests.
     """
     module_name = request.module.__name__.rsplit(".", 1)[-1]
     path = SNAPSHOT_DIR / f"{module_name}.json"
-    if RECORD_MODE:
-        return SnapshotStore(path)
     return SnapshotStore.read(path)
 
 

@@ -14,12 +14,16 @@ Configuration via environment variables:
 
 from __future__ import annotations
 
+import base64
+import logging
 import os
 import shutil
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FuturesTimeout
 from typing import TYPE_CHECKING, Any
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from wolframclient.evaluation import WolframLanguageSession
@@ -56,6 +60,9 @@ class KernelManager:
         self._kernel_path = shutil.which("WolframKernel")
         self._init_loaded = False
         self._init_script: str | None = os.environ.get("ELEGUA_WOLFRAM_INIT")
+        if self._init_script and not os.path.isfile(self._init_script):
+            msg = f"ELEGUA_WOLFRAM_INIT path does not exist: {self._init_script}"
+            raise FileNotFoundError(msg)
         self._cleanup_expr: str = os.environ.get("ELEGUA_WOLFRAM_CLEANUP", _DEFAULT_CLEANUP)
 
     def start(self) -> None:
@@ -86,7 +93,8 @@ class KernelManager:
             self.start()
 
     def stop(self) -> None:
-        """Stop the kernel."""
+        """Stop the kernel and shut down the executor."""
+        self._executor.shutdown(wait=False)
         if self._session is not None:
             try:
                 self._session.terminate()
@@ -95,6 +103,12 @@ class KernelManager:
             finally:
                 self._session = None
                 self._init_loaded = False
+
+    def __enter__(self) -> KernelManager:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.stop()
 
     def restart(self) -> None:
         """Hard-restart the kernel."""
@@ -112,7 +126,9 @@ class KernelManager:
                 self._ensure_init()
 
             def _do_eval() -> Any:
-                assert self._session is not None
+                if self._session is None:
+                    msg = "Kernel session not started"
+                    raise RuntimeError(msg)
                 return self._session.evaluate(KernelManager._wlexpr(self._cleanup_expr))
 
             fut = self._executor.submit(_do_eval)
@@ -142,19 +158,27 @@ class KernelManager:
                 self._ensure_init()
 
             def _do_eval() -> Any:
-                assert self._session is not None
+                if self._session is None:
+                    msg = "Kernel session not started"
+                    raise RuntimeError(msg)
                 return self._session.evaluate(KernelManager._wlexpr(check_wl))
 
             fut = self._executor.submit(_do_eval)
             try:
                 result_str = str(fut.result(timeout=10)).strip().strip('"')
+                if not result_str.startswith("G:"):
+                    logger.warning("check_clean_state: unexpected result: %s", result_str)
+                    return False, [f"unexpected result: {result_str}"]
                 parts = result_str.split(",", 1)
-                g_count = int(parts[0].replace("G:", "")) if parts else -1
+                g_count = int(parts[0].replace("G:", ""))
                 leaked = parts[1].split(",") if len(parts) > 1 and parts[1] else []
                 leaked = [s for s in leaked if s]
                 return (g_count == 0), leaked
-            except (FuturesTimeout, Exception):
-                return False, ["check_clean_state evaluation failed"]
+            except FuturesTimeout:
+                return False, ["check_clean_state timed out"]
+            except Exception as exc:
+                logger.warning("check_clean_state failed: %s: %s", type(exc).__name__, exc)
+                return False, [f"{type(exc).__name__}: {exc}"]
 
     def evaluate(
         self,
@@ -179,11 +203,11 @@ class KernelManager:
             if context_id:
                 safe_id = "".join(c for c in context_id if c.isalnum())
                 unique_ctx = f"Elegua{safe_id}`"
-                escaped_expr = expr.replace("\\", "\\\\").replace('"', '\\"')
+                b64 = base64.b64encode(expr.encode("utf-8")).decode("ascii")
                 wrapped_expr = (
                     f'Block[{{$Context = "{unique_ctx}", '
                     f'$ContextPath = Prepend[$ContextPath, "{unique_ctx}"]}}, '
-                    f'ToExpression["{escaped_expr}"]]'
+                    f'ToExpression[FromCharacterCode[Normal[BaseDecode["{b64}"]]]]]'
                 )
             else:
                 wrapped_expr = expr
@@ -191,7 +215,9 @@ class KernelManager:
             def _do_eval() -> Any:
                 if with_init:
                     self._ensure_init()
-                assert self._session is not None
+                if self._session is None:
+                    msg = "Kernel session not started"
+                    raise RuntimeError(msg)
                 return self._session.evaluate(KernelManager._wlexpr(wrapped_expr))
 
             fut = self._executor.submit(_do_eval)

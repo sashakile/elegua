@@ -88,6 +88,12 @@ class WolframOracleAdapter(Adapter):
         self._context_id = None
 
     def execute(self, task: EleguaTask) -> ValidationToken:
+        if self._context_id is None:
+            msg = (
+                "execute() called before initialize() "
+                "— call initialize() or use the context manager"
+            )
+            raise RuntimeError(msg)
         try:
             wolfram_expr = self._expr_builder(task.action, task.payload)
         except KeyError as exc:
