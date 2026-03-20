@@ -307,3 +307,92 @@ def test_no_tokens_uses_execution_error_status(tmp_path: Path):
     assert len(results) == 1
     r = results[0]
     assert r.comparison.status == TaskStatus.EXECUTION_ERROR
+
+
+# --- Mismatched result counts (elegua-jhc) ---
+
+
+class _ShortIsolatedRunner:
+    """Fake IsolatedRunner that drops results at given indices."""
+
+    def __init__(self, adapter: Adapter, drop_indices: set[int]) -> None:
+        from elegua.isolation import IsolatedRunner
+
+        self._real = IsolatedRunner(adapter)
+        self._drop = drop_indices
+
+    def __enter__(self):
+        self._real.__enter__()
+        return self
+
+    def __exit__(self, *exc):
+        self._real.__exit__(*exc)
+
+    def run(self, test_file):
+        results = self._real.run(test_file)
+        return [r for i, r in enumerate(results) if i not in self._drop]
+
+
+def test_mismatched_result_counts_no_crash(tmp_path: Path):
+    """When oracle and IUT produce different numbers of results, no ValueError."""
+    # Create a 3-test file
+    f = tmp_path / "three_tests.toml"
+    f.write_text(
+        '[meta]\nid = "m"\ndescription = "d"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "A"\n\n'
+        '[[tests]]\nid = "t2"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "B"\n\n'
+        '[[tests]]\nid = "t3"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "C"\n'
+    )
+    tf = load_sxact_toml(f)
+
+    oracle = EchoAdapter("oracle")
+    iut = EchoAdapter("iut")
+
+    runner = MultiTierRunner(oracle=oracle, iut=iut)
+    # Monkey-patch the IUT runner to drop the last result
+    runner._iut_runner = _ShortIsolatedRunner(iut, drop_indices={2})
+
+    with runner:
+        # This should NOT raise ValueError
+        results = runner.verify(tf)
+
+    assert len(results) == 3
+    # First two should compare normally
+    assert results[0].comparison.status == TaskStatus.OK
+    assert results[1].comparison.status == TaskStatus.OK
+    # Third has no IUT result → EXECUTION_ERROR
+    assert results[2].comparison.status == TaskStatus.EXECUTION_ERROR
+    assert results[2].iut_error is not None
+    assert "missing" in results[2].iut_error.lower()
+
+
+def test_mismatched_oracle_shorter(tmp_path: Path):
+    """When oracle produces fewer results than IUT, pad oracle side."""
+    f = tmp_path / "two_tests.toml"
+    f.write_text(
+        '[meta]\nid = "m"\ndescription = "d"\n\n'
+        '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "A"\n\n'
+        '[[tests]]\nid = "t2"\ndescription = "d"\n\n'
+        '[[tests.operations]]\naction = "B"\n'
+    )
+    tf = load_sxact_toml(f)
+
+    oracle = EchoAdapter("oracle")
+    iut = EchoAdapter("iut")
+
+    runner = MultiTierRunner(oracle=oracle, iut=iut)
+    # Oracle drops last result
+    runner._oracle_runner = _ShortIsolatedRunner(oracle, drop_indices={1})
+
+    with runner:
+        results = runner.verify(tf)
+
+    assert len(results) == 2
+    assert results[0].comparison.status == TaskStatus.OK
+    assert results[1].comparison.status == TaskStatus.EXECUTION_ERROR
+    assert results[1].oracle_error is not None
+    assert "missing" in results[1].oracle_error.lower()

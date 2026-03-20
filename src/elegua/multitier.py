@@ -7,6 +7,7 @@ then compares results per test via ComparisonPipeline.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from itertools import zip_longest
 from typing import Self
 
 from elegua.adapter import Adapter
@@ -79,8 +80,27 @@ class MultiTierRunner:
         iut_results = self._iut_runner.run(test_file)
 
         verifications: list[VerificationResult] = []
-        for oracle_r, iut_r in zip(oracle_results, iut_results, strict=True):
-            verifications.append(self._compare_test(oracle_r, iut_r))
+        for oracle_r, iut_r in zip_longest(oracle_results, iut_results):
+            if oracle_r is None:
+                verifications.append(
+                    VerificationResult(
+                        test_id=iut_r.test_id,
+                        iut_token=iut_r.tokens[-1] if iut_r.tokens else None,
+                        comparison=ComparisonResult(status=TaskStatus.EXECUTION_ERROR, layer=0),
+                        oracle_error="Missing oracle result for this test",
+                    )
+                )
+            elif iut_r is None:
+                verifications.append(
+                    VerificationResult(
+                        test_id=oracle_r.test_id,
+                        oracle_token=oracle_r.tokens[-1] if oracle_r.tokens else None,
+                        comparison=ComparisonResult(status=TaskStatus.EXECUTION_ERROR, layer=0),
+                        iut_error="Missing IUT result for this test",
+                    )
+                )
+            else:
+                verifications.append(self._compare_test(oracle_r, iut_r))
         return verifications
 
     def _compare_test(self, oracle_r: TestRunResult, iut_r: TestRunResult) -> VerificationResult:

@@ -1,3 +1,7 @@
+# Development
+
+- **Package manager**: Use `uv` for all Python commands (e.g., `uv run pytest`, `uv pip install`)
+
 <!-- OPENSPEC:START -->
 # OpenSpec Instructions
 
