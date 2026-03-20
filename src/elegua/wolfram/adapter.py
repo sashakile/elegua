@@ -53,6 +53,7 @@ class OracleAdapter(Adapter):
         base_url: str = "http://localhost:8765",
         timeout: int = 60,
         expr_builder: Callable[[str, dict[str, Any]], str] | None = None,
+        adapter_id: str = "wolfram-oracle",
     ) -> None:
         if oracle is None:
             from elegua.oracle import OracleClient
@@ -62,10 +63,11 @@ class OracleAdapter(Adapter):
         self._timeout = timeout
         self._expr_builder = expr_builder or _default_expr_builder
         self._context_id: str | None = None
+        self._adapter_id = adapter_id
 
     @property
     def adapter_id(self) -> str:
-        return "wolfram-oracle"
+        return self._adapter_id
 
     def initialize(self) -> None:
         self._oracle.health_or_raise()

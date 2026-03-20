@@ -428,3 +428,27 @@ def test_execute_without_initialize_raises():
     task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
     with pytest.raises(RuntimeError, match="initialize"):
         adapter.execute(task)
+
+
+# --- Configurable adapter_id (elegua-85f) ---
+
+
+def test_adapter_id_defaults_to_wolfram_oracle():
+    adapter = WolframOracleAdapter(oracle=FakeOracle())
+    assert adapter.adapter_id == "wolfram-oracle"
+
+
+def test_adapter_id_configurable():
+    adapter = WolframOracleAdapter(oracle=FakeOracle(), adapter_id="julia")
+    assert adapter.adapter_id == "julia"
+
+
+def test_custom_adapter_id_in_tokens():
+    oracle = FakeOracle()
+    oracle.next_result = FakeResult(status="ok", result="42")
+    adapter = WolframOracleAdapter(oracle=oracle, adapter_id="julia")
+    adapter.initialize()
+    task = EleguaTask(action="Evaluate", payload={"expression": "21*2"})
+    token = adapter.execute(task)
+    assert token.adapter_id == "julia"
+    adapter.teardown()
