@@ -384,3 +384,28 @@ class TestInitPathValidation:
         monkeypatch.setenv("ELEGUA_WOLFRAM_INIT", str(init_file))
         km = KernelManager()
         assert km._init_script == str(init_file)
+
+
+# --- Server shutdown hook (elegua-dr1) ---
+
+
+class TestServerShutdownHook:
+    """Verify serve() registers atexit handler for KernelManager cleanup."""
+
+    @pytest.fixture(autouse=True)
+    def _require_flask(self) -> None:
+        pytest.importorskip("flask")
+
+    def test_serve_registers_atexit(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import atexit
+
+        registered: list = []
+        monkeypatch.setattr(atexit, "register", lambda fn: registered.append(fn))
+
+        from elegua.wolfram import server
+
+        # Prevent actually starting the Flask server
+        monkeypatch.setattr(server.app, "run", lambda **_kw: None)
+        server.serve()
+
+        assert any(fn == server.km.stop for fn in registered)

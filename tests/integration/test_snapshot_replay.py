@@ -93,12 +93,11 @@ class TestSnapshotRecordReplay:
             assert result.layer == 1
 
     def test_oracle_adapter_fixture_works(self, oracle_adapter: Adapter) -> None:
-        """The conftest oracle_adapter fixture produces valid tokens."""
+        """The conftest oracle_adapter fixture manages lifecycle automatically."""
         from elegua.task import EleguaTask
 
-        with oracle_adapter:
-            task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
-            token = oracle_adapter.execute(task)
+        task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
+        token = oracle_adapter.execute(task)
 
         if RECORD_MODE:
             assert token.status == TaskStatus.OK

@@ -13,6 +13,7 @@ Start with: ``python -m elegua.wolfram serve``
 
 from __future__ import annotations
 
+import atexit
 import time
 
 from flask import Flask, jsonify, request  # type: ignore[import-untyped]
@@ -98,4 +99,5 @@ def check_state():  # type: ignore[no-untyped-def]
 
 def serve(host: str = "0.0.0.0", port: int = 8765) -> None:
     """Start the oracle HTTP server."""
+    atexit.register(km.stop)
     app.run(host=host, port=port, threaded=True)

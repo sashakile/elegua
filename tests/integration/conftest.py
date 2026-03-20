@@ -47,8 +47,14 @@ def oracle_adapter(echo_oracle, snapshot_store):  # type: ignore[no-untyped-def]
 
     Record mode (ELEGUA_RECORD=1): wraps a real adapter and captures results.
     Replay mode (default): serves cached results from snapshots.
+
+    Lifecycle is managed here so tests don't need a context manager.
     """
     if RECORD_MODE:
         inner = WolframOracleAdapter(oracle=OracleClient(echo_oracle.url))
-        return RecordingAdapter(inner, snapshot_store)
-    return ReplayAdapter(snapshot_store)
+        adapter = RecordingAdapter(inner, snapshot_store)
+    else:
+        adapter = ReplayAdapter(snapshot_store)
+    adapter.initialize()
+    yield adapter
+    adapter.teardown()
