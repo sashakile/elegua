@@ -204,3 +204,46 @@ def test_layer_with_context_closure():
     assert result.status == TaskStatus.OK
     assert result.layer == 3
     assert oracle_calls == ["http://localhost:8765"]
+
+
+# --- L2 ignores numeric_samples (L4 data) ---
+
+
+def test_structural_ignores_numeric_samples():
+    """L2 structural comparison should ignore numeric_samples in results."""
+    pipeline = ComparisonPipeline()
+    a = _token(
+        {
+            "repr": "x^2",
+            "numeric_samples": [
+                {"vars": {"x": 1.0}, "value": 1.0},
+                {"vars": {"x": 2.0}, "value": 4.0},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "x^2",
+            "numeric_samples": [
+                {"vars": {"x": 3.0}, "value": 9.0},
+            ],
+        }
+    )
+    result = pipeline.compare(a, b)
+    assert result.status == TaskStatus.OK
+    assert result.layer <= 2, "Should match at L1 or L2, not require higher layers"
+
+
+def test_structural_ignores_numeric_samples_one_missing():
+    """L2 matches even if only one side has numeric_samples."""
+    pipeline = ComparisonPipeline()
+    a = _token(
+        {
+            "repr": "x^2",
+            "numeric_samples": [{"vars": {"x": 1.0}, "value": 1.0}],
+        }
+    )
+    b = _token({"repr": "x^2"})
+    result = pipeline.compare(a, b)
+    assert result.status == TaskStatus.OK
+    assert result.layer <= 2

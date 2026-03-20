@@ -28,9 +28,21 @@ class ComparisonResult:
     layer_name: str = ""
 
 
+# Keys that carry L4 (numeric/invariant) data and must be excluded from
+# L1 identity and L2 structural comparison.
+_L4_KEYS = frozenset({"numeric_samples"})
+
+
+def _strip_l4(result: dict[str, Any] | None) -> dict[str, Any] | None:
+    """Remove L4-only keys from a result dict before L1/L2 comparison."""
+    if result is None or not _L4_KEYS.intersection(result):
+        return result
+    return {k: v for k, v in result.items() if k not in _L4_KEYS}
+
+
 def compare_identity(token_a: ValidationToken, token_b: ValidationToken) -> TaskStatus:
     """Layer 1: Return OK if token results are structurally equal."""
-    if token_a.result == token_b.result:
+    if _strip_l4(token_a.result) == _strip_l4(token_b.result):
         return TaskStatus.OK
     return TaskStatus.MATH_MISMATCH
 
@@ -38,7 +50,7 @@ def compare_identity(token_a: ValidationToken, token_b: ValidationToken) -> Task
 def _canonicalize(value: Any) -> Any:
     """Recursively sort dicts and lists-of-sortable for structural comparison."""
     if isinstance(value, dict):
-        return {k: _canonicalize(v) for k, v in sorted(value.items())}
+        return {k: _canonicalize(v) for k, v in sorted(value.items()) if k not in _L4_KEYS}
     if isinstance(value, list):
         canonical = [_canonicalize(v) for v in value]
         return sorted(canonical, key=repr)

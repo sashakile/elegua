@@ -128,6 +128,28 @@ class ValidationToken(BaseModel):
     metadata: dict[str, Any] = {}  # timing, diagnostics, etc.
 ```
 
+##### Extended `result` Schema
+
+The `result` dict is domain-specific, but adapters targeting cross-CAS verification SHOULD include these optional fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `repr` | `str` | Canonical string representation of the result |
+| `numeric_samples` | `list[{vars: dict[str, float], value: float}]` | Numerical evaluations at sample points for L4 comparison |
+
+**`numeric_samples`**: A list of point evaluations used by L4 (numeric/invariant) comparison. Each entry maps variable names to values and records the function value at that point. This field is **excluded from L1 and L2 comparison** — it carries data for higher-layer verification only.
+
+Example:
+```json
+{
+  "repr": "x^3/3",
+  "numeric_samples": [
+    {"vars": {"x": 1.0}, "value": 0.333},
+    {"vars": {"x": 2.0}, "value": 2.667}
+  ]
+}
+```
+
 #### 1.3 CLI Interface
 **Status:** NOT YET IMPLEMENTED. All functionality is available via the Python API (`load_toml_tasks()`, `run_tasks()`, `ComparisonPipeline.compare()`).
 
@@ -199,12 +221,21 @@ sxAct (consumer)
 └── depends on: elegua[wolfram]
 ```
 
-### 6. Non-Goals
+### 6. Adapter Guidelines for Cross-CAS Verification
+
+Adapters that target cross-CAS verification (e.g., Wolfram vs Julia) SHOULD follow these conventions for `ValidationToken.result`:
+
+1. **Always include `repr`**: A canonical string form of the result. This is what L1/L2 comparison and verdict evaluation use.
+2. **Include `numeric_samples` when feasible**: Sample the result expression at representative points. This enables L4 numeric comparison to verify mathematical equivalence even when string representations differ across CAS backends.
+3. **Keep `numeric_samples` out of structural identity**: The core strips `numeric_samples` before L1 and L2 comparison. Adapters can return different sample points without affecting structural match results.
+4. **Use consistent variable naming**: Sample point variables (`vars` keys) should match the variable names used in the original expression so L4 can align samples across adapters.
+
+### 7. Non-Goals
 - Real-time interactive execution (designed for batch validation).
 - Direct modification of source code (read-only verification).
 - Domain-specific logic in the core (injected via adapters and init scripts).
 
-### 7. Technical Architecture
+### 8. Technical Architecture
 - **Language**: Python 3.11+
 - **Data Models**: Pydantic
 - **Transport**: HTTP (oracle protocol). ZMQ/TCP deferred until a concrete consumer requires it.
