@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Change-ID**: `REQ-PBT-001`
-- **Version**: `1.4.0`
+- **Version**: `1.5.0`
 - **Status**: `IMPLEMENTED`
-- **Last Updated**: 2026-03-19
+- **Last Updated**: 2026-03-23
 
 ## Purpose
 This specification defines the format and runner integration for Layer 2 property-based testing in Eleguá. It enables language-agnostic mathematical property validation across different implementations by specifying invariants as declarative "for all X, P(X)" properties.
@@ -109,7 +109,7 @@ Implemented in `src/elegua/property.py`:
 - `GeneratorRegistry` for domain-specific generator registration.
 - `PropertyRunner` with `run()` and `generate_samples()`, PCG64-backed.
 - `Failure` dataclass with `sample_index` and `bindings`.
-- CLI (`xact-test property`) is NOT implemented. All functionality is Python API only.
+- CLI is NOT implemented. Planned as `elegua-test run --layer 2`. All functionality is Python API only.
 
 ### 7. Non-Goals
 - Exhaustive symbolic proof (PBT is for sampling only).

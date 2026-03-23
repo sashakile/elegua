@@ -54,7 +54,7 @@ Domain-specific oracle servers are shipped as optional extras rather than built 
 - Future extras follow the same pattern for Julia, Sage, or other CAS engines.
 
 ### 4. Implementation Roadmap
-- **Phase 1: Eleguá Core**: Generalization of the runner into a domain-agnostic orchestrator. **IMPLEMENTED** (v0.1.0, 2026-03-19). Includes: task state machine, 4-layer comparison pipeline, property-based testing, adapter lifecycle, IsolatedRunner, MultiTierRunner, snapshot record/replay, blob store, domain exception hierarchy. 336 tests, 100% coverage.
+- **Phase 1: Eleguá Core**: Generalization of the runner into a domain-agnostic orchestrator. **IMPLEMENTED** (v0.1.0, 2026-03-19). Includes: task state machine, 4-layer comparison pipeline (L1–L4 including numeric comparison), property-based testing, adapter lifecycle, IsolatedRunner, MultiTierRunner, execution context with `$ref` resolution, verdict evaluation, snapshot record/replay, blob store, domain exception hierarchy, EchoOracle test utility. 413 tests, 100% coverage.
 - **Phase 1b: elegua[wolfram]**: Port the Wolfram oracle HTTP server from sxAct into an optional extra. Generic kernel wrapper with configurable init/cleanup. **IN PROGRESS**.
 - **Phase 2: Chacana-Spec**: Implementation of the standalone DSL and static type system.
 - **Phase 3: xAct-jl**: Completion of the literal functional port.
