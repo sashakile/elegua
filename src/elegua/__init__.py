@@ -24,7 +24,13 @@ from elegua.isolation import IsolatedRunner, TestRunResult
 from elegua.models import ActionPayload, ValidationToken
 from elegua.multitier import MultiTierRunner, VerificationResult
 from elegua.oracle import OracleClient
-from elegua.property import GeneratorRegistry, PropertyResult, PropertyRunner, PropertySpec
+from elegua.property import (
+    GeneratorRegistry,
+    PropertyResult,
+    PropertyRunner,
+    PropertySpec,
+    StrategyRegistry,
+)
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.task import EleguaTask, InvalidTransition, TaskStatus
@@ -57,6 +63,7 @@ __all__ = [
     "ReplayAdapter",
     "SchemaError",
     "SnapshotStore",
+    "StrategyRegistry",
     "TaskStatus",
     "TestCase",
     "TestFile",

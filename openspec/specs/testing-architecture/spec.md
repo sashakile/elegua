@@ -207,7 +207,7 @@ with EchoOracle(port=0) as oracle:
 
 ### 6. Implementation Status
 - **Layer 1 (Unit tests)**: IMPLEMENTED. TOML-based test definitions via `load_test_file()`, `IsolatedRunner`, `MultiTierRunner`, verdict evaluation.
-- **Layer 2 (Property tests)**: IMPLEMENTED. `PropertyRunner` with PCG64 seeds, `GeneratorRegistry`, TOML spec format. Python API only (no CLI yet). See `specs/property-testing/spec.md`.
+- **Layer 2 (Property tests)**: IMPLEMENTED. `PropertyRunner` backed by Hypothesis with shrinking, `StrategyRegistry`, TOML spec format. Python API only (no CLI yet). See `specs/property-testing/spec.md`.
 - **Layer 3 (Performance tests)**: NOT YET IMPLEMENTED. CSV reporting and regression tracking remain future work.
 - **CLI (`elegua-test`)**: NOT YET IMPLEMENTED. All functionality is available via Python API.
 

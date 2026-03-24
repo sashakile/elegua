@@ -1,6 +1,6 @@
 # Property-based testing
 
-Property-based testing is layer 4 of the [comparison pipeline](comparison.md). It validates mathematical laws by generating random inputs with reproducible PCG64 seeds and checking that properties hold across all samples.
+Property-based testing is Layer 2 of the [testing architecture](../specs/testing-architecture.md). It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
 
 ## Property spec format
 
@@ -27,8 +27,30 @@ Required fields:
 
 Optional fields:
 
-- `generators` — list of variable generators with `name` and `type`
+- `generators` — list of variable generators with `name`, `type`, and optional `params`
 - `setup` — list of setup actions to run before testing
+- `settings` — Hypothesis configuration (see below)
+
+### Generator parameters
+
+Generators can include a `params` table to configure the strategy:
+
+```toml
+[[generators]]
+name = "$x"
+type = "bounded_int"
+[generators.params]
+min_value = 0
+max_value = 100
+```
+
+### Settings
+
+```toml
+[settings]
+max_examples = 200   # default: 100
+deadline = 5000      # ms, default: 1000
+```
 
 ## Loading a property spec
 
@@ -44,20 +66,44 @@ print(spec.generators)  # [GeneratorSpec(name='$x', type='integer')]
 
 Invalid specs raise `PropertyValidationError`.
 
-## Generator registry
+## Strategy registry
 
-Register domain-specific generators that produce random values from a seeded RNG:
+Register Hypothesis strategies that map TOML type names to data generators:
 
 ```python
-from elegua.property import GeneratorRegistry
+from hypothesis import strategies as st
+from elegua.property import StrategyRegistry
 
-registry = GeneratorRegistry()
-registry.register("integer", lambda rng: int(rng.integers(-1000, 1000)))
-registry.register("float", lambda rng: float(rng.uniform(-1.0, 1.0)))
-registry.register("tensor_rank", lambda rng: int(rng.integers(0, 5)))
+registry = StrategyRegistry()
+registry.register("integer", st.integers(-1000, 1000))
+registry.register("positive_real", st.floats(min_value=0.01, max_value=1e6))
 ```
 
-The `rng` parameter is a `numpy.random.Generator` backed by PCG64.
+### Callable factories
+
+Register a callable that accepts params from the TOML spec:
+
+```python
+registry.register(
+    "bounded_int",
+    lambda min_value=0, max_value=100: st.integers(min_value, max_value),
+)
+```
+
+### Composing strategies
+
+Because entries are Hypothesis strategies, you can compose them freely:
+
+```python
+registry.register(
+    "rank2_tensor",
+    st.builds(make_rank2_tensor, dim=st.integers(2, 6)),
+)
+registry.register(
+    "metric_or_connection",
+    st.one_of(st.builds(make_metric), st.builds(make_connection)),
+)
+```
 
 ## Running properties
 
@@ -65,22 +111,27 @@ The `rng` parameter is a `numpy.random.Generator` backed by PCG64.
 from elegua.property import PropertyRunner
 
 runner = PropertyRunner(registry=registry)
-result = runner.run(spec, evaluator=my_evaluator, seed=42, samples=100)
+result = runner.run(spec, evaluator=my_evaluator)
 
 print(result.passed)       # True/False
-print(result.samples_run)  # 100
-print(result.failures)     # list of Failure(sample_index, bindings)
+print(result.samples_run)  # number of examples tested
+print(result.failures)     # list of Failure with shrunk counterexamples
+```
+
+Override settings per call:
+
+```python
+result = runner.run(spec, evaluator=my_evaluator, max_examples=500, deadline=None)
 ```
 
 ## Evaluator functions
 
-An evaluator takes the law string and a dict of variable bindings, and returns `True` if the property holds. Use a local evaluator for pure-Python properties, or delegate to an adapter for properties that require a symbolic engine:
+An evaluator takes the law string and a dict of variable bindings, and returns `True` if the property holds:
 
 ```python
 # Local evaluator — for properties computable in Python
 def my_evaluator(law: str, bindings: dict) -> bool:
     x = bindings["$x"]
-    # Check: f(f(x)) == x where f is negation
     return -(-x) == x
 
 # Adapter-backed evaluator — for properties requiring a symbolic engine
@@ -89,25 +140,47 @@ def adapter_evaluator(law: str, bindings: dict) -> bool:
     return token.status == TaskStatus.OK
 ```
 
-## Reproducibility
+## Shrinking
 
-The same seed always produces the same sample sequence across platforms, thanks to PCG64:
+When a property fails, Hypothesis automatically reduces the failing input to a minimal counterexample:
 
 ```python
-samples_a = runner.generate_samples(spec, seed=42, count=10)
-samples_b = runner.generate_samples(spec, seed=42, count=10)
-assert samples_a == samples_b  # always true
+result = runner.run(spec, evaluator=lambda law, b: b["$x"] >= 0)
+if not result.passed:
+    failure = result.failures[0]
+    print(failure.shrunk_bindings)  # {"$x": -1} — minimal counterexample
 ```
 
 ## Failure reporting
 
-When a property fails, each `Failure` records:
+Each `Failure` records:
 
 - `sample_index` — which sample number failed
-- `bindings` — the variable values that caused the failure
+- `bindings` — the variable values at the point of failure
+- `shrunk_bindings` — the minimal counterexample after shrinking
 
 ```python
 if not result.passed:
     for failure in result.failures:
-        print(f"Sample {failure.sample_index}: {failure.bindings}")
+        print(f"Shrunk to: {failure.shrunk_bindings}")
 ```
+
+## Migration from GeneratorRegistry
+
+`GeneratorRegistry` is deprecated. Replace:
+
+```python
+# Old
+registry = GeneratorRegistry()
+registry.register("integer", lambda rng: int(rng.integers(-1000, 1000)))
+
+# New
+registry = StrategyRegistry()
+registry.register("integer", st.integers(-1000, 1000))
+```
+
+`GeneratorRegistry` still works but emits a `DeprecationWarning`.
+
+## Note on L4 numeric comparison
+
+PCG64 cross-platform deterministic sampling is used for L4 numeric comparison (`compare_numeric.py`), not for property-based testing. These are separate concerns — Hypothesis owns PBT randomness, PCG64 owns cross-CAS sample point generation.
