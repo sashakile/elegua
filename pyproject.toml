@@ -3,11 +3,31 @@ name = "elegua"
 version = "0.1.0"
 description = "Domain-agnostic multi-tier test harness for validating mathematical equivalence"
 requires-python = ">=3.11"
+license = "MIT"
+readme = "README.md"
+authors = [
+    { name = "sashakile", email = "saxa.kile@gmail.com" },
+]
+keywords = ["testing", "verification", "computer-algebra", "wolfram", "oracle"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Testing",
+]
 dependencies = [
     "pydantic>=2.0",
     "numpy>=1.22",
     "hypothesis>=6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/sashakile/elegua"
+Repository = "https://github.com/sashakile/elegua"
 
 [project.optional-dependencies]
 wolfram = [

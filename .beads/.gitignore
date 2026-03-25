@@ -34,6 +34,12 @@ dolt-server.port
 dolt-server.activity
 dolt-monitor.pid
 
+# Credential key (local encryption, must not be shared)
+.beads-credential-key
+
+# Interaction log (session-local)
+interactions.jsonl
+
 # Backup data (auto-exported JSONL, local-only)
 backup/
 
