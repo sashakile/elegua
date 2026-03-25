@@ -1,8 +1,8 @@
-"""xAct expression builder — test helper / reference implementation.
+"""xAct expression builder — test fixture (canonical version in sxAct).
 
 Translates xAct-specific actions (DefManifold, DefTensor, ToCanonical, etc.)
-into Wolfram expression strings. This is domain-specific to the sxAct tensor
-calculus project and lives here as a test example, not in the elegua core.
+into Wolfram expression strings. This is a local copy kept for elegua's own
+tests. The canonical version is maintained in the sxAct project.
 
 Usage::
 
