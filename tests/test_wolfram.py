@@ -1,4 +1,4 @@
-"""Tests for WolframOracleAdapter and xAct expression builder."""
+"""Tests for OracleAdapter and xAct expression builder."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 
 from elegua.task import EleguaTask, TaskStatus
-from elegua.wolfram.adapter import WolframOracleAdapter
+from elegua.wolfram.adapter import OracleAdapter
 from tests.xact_builder import build_xact_expr
 
 # --- Fake oracle for unit tests ---
@@ -170,7 +170,7 @@ def test_build_xact_expr_missing_arg():
 
 def test_initialize_checks_health():
     oracle = FakeOracle()
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     adapter.initialize()
     assert ("health_or_raise",) in oracle.calls
 
@@ -178,14 +178,14 @@ def test_initialize_checks_health():
 def test_initialize_fails_when_unhealthy():
     oracle = FakeOracle()
     oracle.healthy = False
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with pytest.raises(RuntimeError, match=r"unhealthy|unavailable"):
         adapter.initialize()
 
 
 def test_teardown_calls_cleanup():
     oracle = FakeOracle()
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     adapter.initialize()
     adapter.teardown()
     assert ("cleanup",) in oracle.calls
@@ -193,7 +193,7 @@ def test_teardown_calls_cleanup():
 
 def test_context_manager_lifecycle():
     oracle = FakeOracle()
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         pass
     assert ("health_or_raise",) in oracle.calls
@@ -206,7 +206,7 @@ def test_context_manager_lifecycle():
 def test_execute_returns_validation_token():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="T[-a,-b]", type="Expr")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "T[-a,-b]"})
         token = adapter.execute(task)
@@ -220,7 +220,7 @@ def test_execute_returns_validation_token():
 def test_execute_maps_error_status():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="error", error="kernel crash")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "bad"})
         token = adapter.execute(task)
@@ -231,7 +231,7 @@ def test_execute_maps_error_status():
 def test_execute_maps_timeout_status():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="timeout")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "slow"})
         token = adapter.execute(task)
@@ -242,7 +242,7 @@ def test_default_builder_uses_expression_field():
     """Default expr_builder sends payload['expression'] as-is."""
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="0")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(
             action="Evaluate",
@@ -257,7 +257,7 @@ def test_custom_expr_builder():
     """Custom expr_builder translates actions to Wolfram expressions."""
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="0")
-    adapter = WolframOracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
+    adapter = OracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
     with adapter:
         task = EleguaTask(
             action="ToCanonical",
@@ -271,7 +271,7 @@ def test_custom_expr_builder():
 def test_execute_does_not_mutate_task():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="ok")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
         adapter.execute(task)
@@ -285,7 +285,7 @@ def test_execute_does_not_mutate_task():
 def test_assert_true_returns_ok():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="True", type="Bool")
-    adapter = WolframOracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
+    adapter = OracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
     with adapter:
         task = EleguaTask(
             action="Assert",
@@ -298,7 +298,7 @@ def test_assert_true_returns_ok():
 def test_assert_false_returns_error():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="False", type="Bool")
-    adapter = WolframOracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
+    adapter = OracleAdapter(oracle=oracle, expr_builder=build_xact_expr)
     with adapter:
         task = EleguaTask(
             action="Assert",
@@ -319,7 +319,7 @@ def test_execute_includes_properties():
         result="T[-a,-b]",
         properties={"rank": 2, "type": "Tensor"},
     )
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "T[-a,-b]"})
         token = adapter.execute(task)
@@ -330,7 +330,7 @@ def test_execute_includes_properties():
 def test_execute_includes_timing():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="0", timing_ms=42)
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "0"})
         token = adapter.execute(task)
@@ -344,7 +344,7 @@ def test_execute_handles_oracle_connection_error():
     """Oracle returning error dict (connection failure) maps to EXECUTION_ERROR."""
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="error", error="Connection refused")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with adapter:
         task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
         token = adapter.execute(task)
@@ -359,7 +359,7 @@ def test_initialize_unhealthy_includes_cause():
     """When health check fails due to network error, RuntimeError chains the original."""
     oracle = FakeOracle()
     oracle._health_error = ConnectionRefusedError("Connection refused")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with pytest.raises(RuntimeError, match="unavailable") as exc_info:
         adapter.initialize()
     assert exc_info.value.__cause__ is oracle._health_error
@@ -368,7 +368,7 @@ def test_initialize_unhealthy_includes_cause():
 def test_initialize_calls_health_or_raise():
     """initialize() should call health_or_raise(), not just health()."""
     oracle = FakeOracle()
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     adapter.initialize()
     assert ("health_or_raise",) in oracle.calls
 
@@ -377,7 +377,7 @@ def test_initialize_unhealthy_no_network_error():
     """When health_or_raise reports unhealthy (no network error), RuntimeError is raised."""
     oracle = FakeOracle()
     oracle.healthy = False
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     with pytest.raises(RuntimeError, match=r"unhealthy|unavailable"):
         adapter.initialize()
 
@@ -410,7 +410,7 @@ def test_evaluate_with_xact_handles_json_decode_error():
 def test_teardown_warns_on_cleanup_failure():
     oracle = FakeOracle()
     oracle._cleanup_ok = False
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     adapter.initialize()
     with pytest.warns(RuntimeWarning, match="cleanup failed"):
         adapter.teardown()
@@ -423,7 +423,7 @@ def test_execute_without_initialize_raises():
     """execute() without initialize() must raise, not silently use Global context."""
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="1")
-    adapter = WolframOracleAdapter(oracle=oracle)
+    adapter = OracleAdapter(oracle=oracle)
     # Do NOT call adapter.initialize()
     task = EleguaTask(action="Evaluate", payload={"expression": "1+1"})
     with pytest.raises(RuntimeError, match="initialize"):
@@ -434,21 +434,29 @@ def test_execute_without_initialize_raises():
 
 
 def test_adapter_id_defaults_to_wolfram_oracle():
-    adapter = WolframOracleAdapter(oracle=FakeOracle())
+    adapter = OracleAdapter(oracle=FakeOracle())
     assert adapter.adapter_id == "wolfram-oracle"
 
 
 def test_adapter_id_configurable():
-    adapter = WolframOracleAdapter(oracle=FakeOracle(), adapter_id="julia")
+    adapter = OracleAdapter(oracle=FakeOracle(), adapter_id="julia")
     assert adapter.adapter_id == "julia"
 
 
 def test_custom_adapter_id_in_tokens():
     oracle = FakeOracle()
     oracle.next_result = FakeResult(status="ok", result="42")
-    adapter = WolframOracleAdapter(oracle=oracle, adapter_id="julia")
+    adapter = OracleAdapter(oracle=oracle, adapter_id="julia")
     adapter.initialize()
     task = EleguaTask(action="Evaluate", payload={"expression": "21*2"})
     token = adapter.execute(task)
     assert token.adapter_id == "julia"
     adapter.teardown()
+
+
+def test_wolfram_oracle_adapter_emits_deprecation_warning():
+    from elegua.wolfram.adapter import WolframOracleAdapter
+
+    oracle = FakeOracle()
+    with pytest.warns(DeprecationWarning, match="WolframOracleAdapter is deprecated"):
+        WolframOracleAdapter(oracle=oracle)

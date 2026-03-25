@@ -96,7 +96,7 @@ def evaluate_expected(
             )
 
     # --- normalized check ---
-    if exp.normalized is not None and norm(actual_repr) != exp.normalized:
+    if exp.normalized is not None and norm(actual_repr) != norm(exp.normalized):
         return Verdict(
             status="fail",
             actual=norm(actual_repr),

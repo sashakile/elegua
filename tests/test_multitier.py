@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from elegua.adapter import Adapter
-from elegua.bridge import load_sxact_toml
+from elegua.bridge import load_test_file
 from elegua.comparison import ComparisonPipeline
 from elegua.models import ValidationToken
 from elegua.multitier import MultiTierRunner, VerificationResult
@@ -77,7 +77,7 @@ def test_verify_matching_adapters():
         oracle=EchoAdapter("oracle"),
         iut=EchoAdapter("iut"),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     assert len(results) == 2
@@ -90,7 +90,7 @@ def test_verify_returns_test_ids():
         oracle=EchoAdapter("oracle"),
         iut=EchoAdapter("iut"),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     assert results[0].test_id == "canon_symmetric"
@@ -102,7 +102,7 @@ def test_verify_includes_both_tokens():
         oracle=EchoAdapter("oracle"),
         iut=EchoAdapter("iut"),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     r = results[0]
@@ -121,7 +121,7 @@ def test_verify_detects_mismatch():
         oracle=EchoAdapter("oracle"),
         iut=OffsetAdapter(),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     assert any(r.comparison.status == TaskStatus.MATH_MISMATCH for r in results)
@@ -136,7 +136,7 @@ def test_verify_iut_error():
         oracle=EchoAdapter("oracle"),
         iut=FailingAdapter(),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     # Should have results (not crash)
@@ -158,7 +158,7 @@ def test_verify_with_custom_pipeline():
         iut=OffsetAdapter(),
         pipeline=always_ok,
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     assert all(r.comparison.status == TaskStatus.OK for r in results)
@@ -172,7 +172,7 @@ def test_must_use_context_manager():
         oracle=EchoAdapter("oracle"),
         iut=EchoAdapter("iut"),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with pytest.raises(RuntimeError, match="context manager"):
         runner.verify(tf)
 
@@ -183,7 +183,7 @@ def test_must_use_context_manager():
 def test_verify_empty_file(tmp_path: Path):
     f = tmp_path / "empty.toml"
     f.write_text('[meta]\nid = "e"\ndescription = "d"\n')
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = MultiTierRunner(
         oracle=EchoAdapter("oracle"),
         iut=EchoAdapter("iut"),
@@ -203,7 +203,7 @@ def test_verify_skipped_test(tmp_path: Path):
         '[[tests]]\nid = "t1"\ndescription = "d"\nskip = "not ready"\n\n'
         '[[tests.operations]]\naction = "Foo"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = MultiTierRunner(
         oracle=EchoAdapter("oracle"),
         iut=EchoAdapter("iut"),
@@ -222,7 +222,7 @@ def test_dual_error_uses_execution_error_status():
         oracle=FailingAdapter("oracle-fail"),
         iut=FailingAdapter("iut-fail"),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     assert len(results) == 2
@@ -238,7 +238,7 @@ def test_single_iut_error_uses_execution_error_status():
         oracle=EchoAdapter("oracle"),
         iut=FailingAdapter(),
     )
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.verify(tf)
     for r in results:
@@ -299,7 +299,7 @@ def test_no_tokens_uses_execution_error_status(tmp_path: Path):
         oracle=SetupFailAdapter(),
         iut=SetupFailAdapter(),
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     with runner:
         results = runner.verify(tf)
     # Setup failure → error on all tests → no tokens
@@ -346,7 +346,7 @@ def test_mismatched_result_counts_no_crash(tmp_path: Path):
         '[[tests]]\nid = "t3"\ndescription = "d"\n\n'
         '[[tests.operations]]\naction = "C"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
 
     oracle = EchoAdapter("oracle")
     iut = EchoAdapter("iut")
@@ -379,7 +379,7 @@ def test_mismatched_oracle_shorter(tmp_path: Path):
         '[[tests]]\nid = "t2"\ndescription = "d"\n\n'
         '[[tests.operations]]\naction = "B"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
 
     oracle = EchoAdapter("oracle")
     iut = EchoAdapter("iut")

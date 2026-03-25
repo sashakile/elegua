@@ -16,7 +16,7 @@ from elegua.oracle import OracleClient
 from elegua.runner import load_toml_tasks, run_tasks
 from elegua.task import TaskStatus
 from elegua.testing import EchoOracle
-from elegua.wolfram.adapter import WolframOracleAdapter
+from elegua.wolfram.adapter import OracleAdapter
 
 pytestmark = pytest.mark.integration
 
@@ -36,8 +36,8 @@ def client(echo_oracle):
 
 @pytest.fixture()
 def adapter(echo_oracle):
-    """WolframOracleAdapter using the echo oracle."""
-    return WolframOracleAdapter(
+    """OracleAdapter using the echo oracle."""
+    return OracleAdapter(
         oracle=OracleClient(echo_oracle.url),
     )
 
@@ -78,14 +78,14 @@ class TestOracleClientHTTP:
 class TestAdapterLifecycleHTTP:
     """Verify adapter initialize/teardown work over real HTTP."""
 
-    def test_context_manager_lifecycle(self, adapter: WolframOracleAdapter) -> None:
+    def test_context_manager_lifecycle(self, adapter: OracleAdapter) -> None:
         with adapter:
             task = load_toml_tasks(Path("tests/fixtures/tracer.toml"))[0]
             token = adapter.execute(task)
             assert token.status == TaskStatus.OK
             assert token.adapter_id == "wolfram-oracle"
 
-    def test_execute_echoes_expression(self, adapter: WolframOracleAdapter) -> None:
+    def test_execute_echoes_expression(self, adapter: OracleAdapter) -> None:
         from elegua.task import EleguaTask
 
         with adapter:
@@ -106,8 +106,8 @@ class TestPipelineHTTP:
         """Load tracer fixture, run through two adapters, compare results."""
         tasks = load_toml_tasks(Path("tests/fixtures/tracer.toml"))
 
-        oracle_adapter = WolframOracleAdapter(oracle=OracleClient(echo_oracle.url))
-        iut_adapter = WolframOracleAdapter(oracle=OracleClient(echo_oracle.url))
+        oracle_adapter = OracleAdapter(oracle=OracleClient(echo_oracle.url))
+        iut_adapter = OracleAdapter(oracle=OracleClient(echo_oracle.url))
 
         oracle_tokens = run_tasks(tasks, adapter=oracle_adapter)
         iut_tokens = run_tasks(tasks, adapter=iut_adapter)

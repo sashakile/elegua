@@ -6,10 +6,10 @@ calculus project and lives here as a test example, not in the elegua core.
 
 Usage::
 
-    from elegua.wolfram.adapter import WolframOracleAdapter
+    from elegua.wolfram.adapter import OracleAdapter
     from xact_builder import build_xact_expr
 
-    adapter = WolframOracleAdapter(expr_builder=build_xact_expr)
+    adapter = OracleAdapter(expr_builder=build_xact_expr)
 """
 
 from __future__ import annotations

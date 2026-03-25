@@ -106,13 +106,13 @@ class TestExceptionChaining:
     """Verify raise X from Y preserves __cause__ in all except blocks (M4)."""
 
     def test_bridge_toml_parse_chains_cause(self, tmp_path):
-        from elegua.bridge import load_sxact_toml
+        from elegua.bridge import load_test_file
         from elegua.errors import SchemaError
 
         bad = tmp_path / "bad.toml"
         bad.write_text("not = [valid toml")
         with pytest.raises(SchemaError) as exc_info:
-            load_sxact_toml(bad)
+            load_test_file(bad)
         assert exc_info.value.__cause__ is not None
 
     def test_runner_toml_parse_chains_cause(self, tmp_path):

@@ -46,9 +46,17 @@ def make_numeric_comparator(tol: float = 1e-6, min_samples: int = 1) -> LayerFn:
         samples_a = _extract_samples(token_a.result)
         samples_b = _extract_samples(token_b.result)
 
-        # Index samples by their variable-value key
-        index_a = {_sample_key(s): s["value"] for s in samples_a if "value" in s}
-        index_b = {_sample_key(s): s["value"] for s in samples_b if "value" in s}
+        # Index samples by their variable-value key (skip non-numeric values)
+        index_a = {
+            _sample_key(s): s["value"]
+            for s in samples_a
+            if "value" in s and isinstance(s["value"], (int, float))
+        }
+        index_b = {
+            _sample_key(s): s["value"]
+            for s in samples_b
+            if "value" in s and isinstance(s["value"], (int, float))
+        }
 
         # Find common sample points
         common_keys = set(index_a) & set(index_b)

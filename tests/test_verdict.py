@@ -143,6 +143,14 @@ def test_normalized_uses_normalizer():
     assert v.status == "pass"
 
 
+def test_normalized_normalizes_both_sides():
+    """Normalizer is applied to expected.normalized too, not just actual."""
+    result = _run_result("  X  ")
+    tc = _test_case(Expected(normalized="  X  "))
+    v = evaluate_expected(result, tc, normalizer=str.strip)
+    assert v.status == "pass"
+
+
 # --- is_zero check ---
 
 

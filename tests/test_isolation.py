@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from elegua.adapter import Adapter, WolframAdapter
-from elegua.bridge import load_sxact_toml
+from elegua.bridge import load_test_file
 from elegua.isolation import IsolatedRunner, TestRunResult
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask, TaskStatus
@@ -20,7 +20,7 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 def test_run_returns_results_per_test():
     runner = IsolatedRunner(WolframAdapter())
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.run(tf)
     assert len(results) == 2
@@ -29,7 +29,7 @@ def test_run_returns_results_per_test():
 
 def test_result_has_test_id():
     runner = IsolatedRunner(WolframAdapter())
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.run(tf)
     assert results[0].test_id == "canon_symmetric"
@@ -38,7 +38,7 @@ def test_result_has_test_id():
 
 def test_result_has_tokens_per_operation():
     runner = IsolatedRunner(WolframAdapter())
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.run(tf)
     # canon_symmetric has 3 operations
@@ -49,7 +49,7 @@ def test_result_has_tokens_per_operation():
 
 def test_all_tokens_are_ok():
     runner = IsolatedRunner(WolframAdapter())
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with runner:
         results = runner.run(tf)
     for r in results:
@@ -83,7 +83,7 @@ def test_adapter_lifecycle_called():
             )
 
     adapter = TrackingAdapter()
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with IsolatedRunner(adapter) as runner:
         runner.run(tf)
 
@@ -105,7 +105,7 @@ def test_setup_bindings_visible_in_tests(tmp_path: Path):
         '[[tests.operations]]\naction = "Read"\n'
         '[tests.operations.args]\nexpr = "$X"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(WolframAdapter())
     with runner:
         results = runner.run(tf)
@@ -148,7 +148,7 @@ def test_store_as_extracts_repr_from_dict(tmp_path: Path):
         '[[tests.operations]]\naction = "Read"\n'
         '[tests.operations.args]\ninput = "$expr1"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(ReprAdapter())
     with runner:
         results = runner.run(tf)
@@ -170,7 +170,7 @@ def test_test_bindings_do_not_leak(tmp_path: Path):
         '[[tests.operations]]\naction = "Read"\n'
         '[tests.operations.args]\nexpr = "$local_var"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(WolframAdapter())
     with pytest.warns(RuntimeWarning, match=r"Unresolved reference \$local_var"), runner:
         results = runner.run(tf)
@@ -190,7 +190,7 @@ def test_skipped_test(tmp_path: Path):
         '[[tests]]\nid = "t1"\ndescription = "d"\nskip = "not ready"\n\n'
         '[[tests.operations]]\naction = "Foo"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(WolframAdapter())
     with runner:
         results = runner.run(tf)
@@ -211,7 +211,7 @@ def test_execution_error_captured():
         def execute(self, task: EleguaTask) -> ValidationToken:
             raise RuntimeError("kernel crashed")
 
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     runner = IsolatedRunner(FailAdapter())
     with runner:
         results = runner.run(tf)
@@ -224,7 +224,7 @@ def test_execution_error_captured():
 
 def test_run_outside_context_raises():
     runner = IsolatedRunner(WolframAdapter())
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     with pytest.raises(RuntimeError, match="must be used as a context manager"):
         runner.run(tf)
 
@@ -235,7 +235,7 @@ def test_run_outside_context_raises():
 def test_empty_test_file(tmp_path: Path):
     f = tmp_path / "empty.toml"
     f.write_text('[meta]\nid = "e"\ndescription = "d"\n')
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(WolframAdapter())
     with runner:
         results = runner.run(tf)
@@ -257,7 +257,7 @@ def test_programming_error_propagates_from_setup():
             # Simulates a programming error (bug in adapter)
             raise TypeError("'NoneType' object is not subscriptable")
 
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     runner = IsolatedRunner(BuggyAdapter())
     with runner, pytest.raises(TypeError, match="NoneType"):
         runner.run(tf)
@@ -274,7 +274,7 @@ def test_operational_error_captured_in_setup():
         def execute(self, task: EleguaTask) -> ValidationToken:
             raise ConnectionRefusedError("Connection refused")
 
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     runner = IsolatedRunner(NetworkAdapter())
     with runner:
         results = runner.run(tf)
@@ -305,7 +305,7 @@ def test_programming_error_propagates_from_test():
             # Test operation has a bug
             raise AttributeError("'NoneType' object has no attribute 'foo'")
 
-    tf = load_sxact_toml(FIXTURES / "sxact_basic.toml")
+    tf = load_test_file(FIXTURES / "sxact_basic.toml")
     runner = IsolatedRunner(BuggyTestAdapter())
     with runner, pytest.raises(AttributeError, match="NoneType"):
         runner.run(tf)
@@ -334,7 +334,7 @@ def test_operational_error_captured_in_test(tmp_path: Path):
         '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
         '[[tests.operations]]\naction = "TestOp"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(FailOnTestAdapter())
     with runner:
         results = runner.run(tf)
@@ -414,7 +414,7 @@ def test_store_as_none_result_emits_warning(tmp_path: Path):
         '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
         '[[tests.operations]]\naction = "Bar"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(NoneResultAdapter())
     with pytest.warns(RuntimeWarning, match="store_as='X' skipped"), runner:
         runner.run(tf)
@@ -448,7 +448,7 @@ def test_setup_error_includes_operation_context(tmp_path: Path):
         '[[tests]]\nid = "t1"\ndescription = "d"\n\n'
         '[[tests.operations]]\naction = "Foo"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(FailOnSetup())
     with runner:
         results = runner.run(tf)
@@ -480,7 +480,7 @@ def test_test_error_includes_operation_context(tmp_path: Path):
         '[[tests.operations]]\naction = "OkOp"\n\n'
         '[[tests.operations]]\naction = "FailHere"\n'
     )
-    tf = load_sxact_toml(f)
+    tf = load_test_file(f)
     runner = IsolatedRunner(FailOnSecondOp())
     with runner:
         results = runner.run(tf)

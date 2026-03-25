@@ -186,5 +186,13 @@ def load_test_file(path: Path) -> TestFile:
     return TestFile(meta=meta, setup=setup, tests=tests)
 
 
-# Backward compatibility alias
-load_sxact_toml = load_test_file
+def load_sxact_toml(path: Path) -> TestFile:
+    """Deprecated: use ``load_test_file`` instead."""
+    import warnings
+
+    warnings.warn(
+        "load_sxact_toml is deprecated, use load_test_file instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return load_test_file(path)

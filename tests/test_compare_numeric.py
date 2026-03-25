@@ -254,3 +254,68 @@ def test_different_number_of_samples_uses_common():
     )
     # Common points match → OK (min_samples=1 satisfied by 2 common points)
     assert compare(a, b) == TaskStatus.OK
+
+
+# --- Non-numeric sample values → MATH_MISMATCH (not TypeError) ---
+
+
+def test_non_numeric_value_string_skipped():
+    """Samples with non-numeric 'value' are excluded, not TypeError."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [{"vars": {"x": 1.0}, "value": "not-a-number"}],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [{"vars": {"x": 1.0}, "value": 1.0}],
+        }
+    )
+    # Non-numeric value excluded → no common points → MATH_MISMATCH
+    assert compare(a, b) == TaskStatus.MATH_MISMATCH
+
+
+def test_non_numeric_value_none_skipped():
+    """Samples with None 'value' are excluded."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [{"vars": {"x": 1.0}, "value": None}],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [{"vars": {"x": 1.0}, "value": 1.0}],
+        }
+    )
+    assert compare(a, b) == TaskStatus.MATH_MISMATCH
+
+
+def test_mixed_numeric_and_non_numeric_values():
+    """Only numeric samples participate in comparison."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [
+                {"vars": {"x": 1.0}, "value": "bad"},
+                {"vars": {"x": 2.0}, "value": 4.0},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [
+                {"vars": {"x": 1.0}, "value": 1.0},
+                {"vars": {"x": 2.0}, "value": 4.0},
+            ],
+        }
+    )
+    # x=1.0 excluded from a (non-numeric), x=2.0 matches → OK
+    assert compare(a, b) == TaskStatus.OK

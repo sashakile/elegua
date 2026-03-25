@@ -34,10 +34,10 @@ class TestSnapshotRecordReplay:
         # Record phase: run against echo oracle
         with EchoOracle() as oracle:
             from elegua.oracle import OracleClient
-            from elegua.wolfram.adapter import WolframOracleAdapter
+            from elegua.wolfram.adapter import OracleAdapter
 
             record_store = SnapshotStore(snap_path)
-            inner = WolframOracleAdapter(oracle=OracleClient(oracle.url))
+            inner = OracleAdapter(oracle=OracleClient(oracle.url))
             recorder = RecordingAdapter(inner, record_store)
             with recorder:
                 recorded = [recorder.execute(t) for t in tasks]
@@ -64,17 +64,15 @@ class TestSnapshotRecordReplay:
         # Record phase
         with EchoOracle() as echo:
             from elegua.oracle import OracleClient
-            from elegua.wolfram.adapter import WolframOracleAdapter
+            from elegua.wolfram.adapter import OracleAdapter
 
             oracle_store = SnapshotStore(oracle_snap)
             iut_store = SnapshotStore(iut_snap)
 
             oracle_adapter = RecordingAdapter(
-                WolframOracleAdapter(oracle=OracleClient(echo.url)), oracle_store
+                OracleAdapter(oracle=OracleClient(echo.url)), oracle_store
             )
-            iut_adapter = RecordingAdapter(
-                WolframOracleAdapter(oracle=OracleClient(echo.url)), iut_store
-            )
+            iut_adapter = RecordingAdapter(OracleAdapter(oracle=OracleClient(echo.url)), iut_store)
 
             run_tasks(tasks, adapter=oracle_adapter)
             run_tasks(tasks, adapter=iut_adapter)

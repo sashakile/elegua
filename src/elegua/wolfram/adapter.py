@@ -178,5 +178,13 @@ class OracleAdapter(Adapter):
         )
 
 
-# Backward compatibility alias
-WolframOracleAdapter = OracleAdapter
+def WolframOracleAdapter(*args: Any, **kwargs: Any) -> OracleAdapter:
+    """Deprecated: use ``OracleAdapter`` instead."""
+    import warnings
+
+    warnings.warn(
+        "WolframOracleAdapter is deprecated, use OracleAdapter instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return OracleAdapter(*args, **kwargs)

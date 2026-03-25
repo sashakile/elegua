@@ -23,7 +23,16 @@ from elegua.task import EleguaTask
 
 # Operational errors that should be captured as test errors.
 # Programming errors (TypeError, AttributeError, etc.) propagate.
-# RuntimeError is included because adapters raise it for connection/server errors.
+#
+# RuntimeError is intentionally included despite its breadth: adapters and
+# OracleClient raise it for connection failures, server unavailability, and
+# lifecycle violations (for example, execute-before-initialize). The trade-off is
+# that a programming bug that happens to raise RuntimeError would be captured
+# as a test error rather than propagating. This is acceptable because:
+#   1. Adapter code is thin (transport + mapping), minimizing RuntimeError risk.
+#   2. Silent capture produces a visible test error message, not silent loss.
+#   3. Narrowing to a custom subclass would require changing every adapter and
+#      OracleClient call site for marginal benefit.
 _OPERATIONAL_ERRORS = (OSError, ConnectionError, RuntimeError, TimeoutError, ValueError)
 
 

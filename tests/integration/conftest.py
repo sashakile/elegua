@@ -15,7 +15,7 @@ import pytest
 from elegua.oracle import OracleClient
 from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.testing import EchoOracle
-from elegua.wolfram.adapter import WolframOracleAdapter
+from elegua.wolfram.adapter import OracleAdapter
 
 SNAPSHOT_DIR = Path("tests/snapshots")
 RECORD_MODE = os.environ.get("ELEGUA_RECORD", "") == "1"
@@ -51,7 +51,7 @@ def oracle_adapter(echo_oracle, snapshot_store):  # type: ignore[no-untyped-def]
     Lifecycle is managed here so tests don't need a context manager.
     """
     if RECORD_MODE:
-        inner = WolframOracleAdapter(oracle=OracleClient(echo_oracle.url))
+        inner = OracleAdapter(oracle=OracleClient(echo_oracle.url))
         adapter = RecordingAdapter(inner, snapshot_store)
     else:
         adapter = ReplayAdapter(snapshot_store)
