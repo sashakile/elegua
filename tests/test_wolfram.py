@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+from elegua.models import ValidationToken
 from elegua.task import EleguaTask, TaskStatus
 from elegua.wolfram.adapter import OracleAdapter
 from tests.xact_builder import build_xact_expr
@@ -460,3 +461,39 @@ def test_wolfram_oracle_adapter_emits_deprecation_warning():
     oracle = FakeOracle()
     with pytest.warns(DeprecationWarning, match="WolframOracleAdapter is deprecated"):
         WolframOracleAdapter(oracle=oracle)
+
+
+# --- Injectable result_mapper ---
+
+
+def test_custom_result_mapper_called():
+    """When result_mapper is provided, execute() delegates to it."""
+    oracle = FakeOracle()
+    oracle.next_result = FakeResult(status="ok", result="42")
+    calls: list[tuple[str, dict, dict]] = []
+
+    def mapper(action: str, payload: dict[str, Any], data: dict[str, Any]) -> ValidationToken:
+        calls.append((action, payload, data))
+        return ValidationToken(adapter_id="custom", status=TaskStatus.OK, result={"custom": True})
+
+    adapter = OracleAdapter(oracle=oracle, result_mapper=mapper)
+    with adapter:
+        task = EleguaTask(action="Evaluate", payload={"expression": "21*2"})
+        token = adapter.execute(task)
+
+    assert len(calls) == 1
+    assert calls[0][0] == "Evaluate"
+    assert token.result == {"custom": True}
+
+
+def test_default_result_mapper_preserved():
+    """When result_mapper is None, default _map_result behavior works."""
+    oracle = FakeOracle()
+    oracle.next_result = FakeResult(status="ok", result="T[-a,-b]", type="Expr")
+    adapter = OracleAdapter(oracle=oracle, result_mapper=None)
+    with adapter:
+        task = EleguaTask(action="Evaluate", payload={"expression": "T[-a,-b]"})
+        token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+    assert token.result is not None
+    assert token.result["repr"] == "T[-a,-b]"

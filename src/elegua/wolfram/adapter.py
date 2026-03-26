@@ -28,6 +28,9 @@ class OracleLike(Protocol):
     def check_clean_state(self) -> tuple[bool, list[str]]: ...
 
 
+ResultMapperFn = Callable[[str, dict[str, Any], dict[str, Any]], ValidationToken]
+
+
 def _default_expr_builder(action: str, payload: dict[str, Any]) -> str:
     """Default builder: use payload['expression'] or the action name as-is."""
     return str(payload.get("expression", action))
@@ -54,6 +57,7 @@ class OracleAdapter(Adapter):
         timeout: int = 60,
         expr_builder: Callable[[str, dict[str, Any]], str] | None = None,
         adapter_id: str = "wolfram-oracle",
+        result_mapper: ResultMapperFn | None = None,
     ) -> None:
         if oracle is None:
             from elegua.oracle import OracleClient
@@ -64,6 +68,7 @@ class OracleAdapter(Adapter):
         self._expr_builder = expr_builder or _default_expr_builder
         self._context_id: str | None = None
         self._adapter_id = adapter_id
+        self._result_mapper = result_mapper
 
     @property
     def adapter_id(self) -> str:
@@ -117,6 +122,8 @@ class OracleAdapter(Adapter):
             context_id=self._context_id,
         )
 
+        if self._result_mapper is not None:
+            return self._result_mapper(task.action, task.payload, data)
         return self._map_result(task.action, task.payload, data)
 
     def _map_result(
