@@ -1,12 +1,13 @@
-"""Tests for evaluate_expected — verdict logic for test outcomes."""
+"""Tests for evaluate_expected and Verdict.from_comparison — verdict logic for test outcomes."""
 
 from __future__ import annotations
 
 from elegua.bridge import Expected, Operation, TestCase
+from elegua.comparison import ComparisonResult
 from elegua.isolation import TestRunResult
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
-from elegua.verdict import evaluate_expected
+from elegua.verdict import Verdict, evaluate_expected
 
 
 def _token(repr_val: str = "", **extra: object) -> ValidationToken:
@@ -292,3 +293,43 @@ def test_non_dict_result_none_uses_empty_string():
     tc = _test_case(Expected(expr=""))
     v = evaluate_expected(result, tc)
     assert v.status == "pass"
+
+
+# --- Verdict.from_comparison() bridge ---
+
+
+def test_from_comparison_ok_maps_to_pass():
+    cr = ComparisonResult(status=TaskStatus.OK, layer=1, layer_name="identity")
+    v = Verdict.from_comparison(cr)
+    assert v.status == "pass"
+    assert v.message is None
+
+
+def test_from_comparison_math_mismatch_maps_to_fail():
+    cr = ComparisonResult(status=TaskStatus.MATH_MISMATCH, layer=3, layer_name="canonical")
+    v = Verdict.from_comparison(cr)
+    assert v.status == "fail"
+    assert "layer 3" in (v.message or "")
+    assert "canonical" in (v.message or "")
+
+
+def test_from_comparison_execution_error_maps_to_error():
+    cr = ComparisonResult(status=TaskStatus.EXECUTION_ERROR, layer=0, layer_name="")
+    v = Verdict.from_comparison(cr)
+    assert v.status == "error"
+    assert "execution_error" in (v.message or "").lower()
+
+
+def test_from_comparison_timeout_maps_to_error():
+    cr = ComparisonResult(status=TaskStatus.TIMEOUT, layer=0, layer_name="")
+    v = Verdict.from_comparison(cr)
+    assert v.status == "error"
+    assert "timeout" in (v.message or "").lower()
+
+
+def test_from_comparison_unknown_status_maps_to_error():
+    """Defensive fallback: any unrecognised status maps to error."""
+    cr = ComparisonResult(status=TaskStatus.PENDING, layer=0, layer_name="")
+    v = Verdict.from_comparison(cr)
+    assert v.status == "error"
+    assert "pending" in (v.message or "").lower()

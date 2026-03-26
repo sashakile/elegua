@@ -209,9 +209,15 @@ def test_layer_with_context_closure():
 # --- L2 ignores numeric_samples (L4 data) ---
 
 
-def test_structural_ignores_numeric_samples():
-    """L2 structural comparison should ignore numeric_samples in results."""
+def test_exclude_keys_strips_before_lower_layers():
+    """Registering L4 with exclude_keys strips those keys from L1/L2 dispatch."""
     pipeline = ComparisonPipeline()
+
+    def numeric_layer(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        return TaskStatus.MATH_MISMATCH
+
+    pipeline.register(4, "numeric", numeric_layer, exclude_keys=frozenset({"numeric_samples"}))
+
     a = _token(
         {
             "repr": "x^2",
@@ -231,12 +237,18 @@ def test_structural_ignores_numeric_samples():
     )
     result = pipeline.compare(a, b)
     assert result.status == TaskStatus.OK
-    assert result.layer <= 2, "Should match at L1 or L2, not require higher layers"
+    assert result.layer <= 2, "Should match at L1 or L2 after key exclusion"
 
 
-def test_structural_ignores_numeric_samples_one_missing():
-    """L2 matches even if only one side has numeric_samples."""
+def test_exclude_keys_one_side_missing():
+    """L1/L2 match even if only one side has the excluded key."""
     pipeline = ComparisonPipeline()
+
+    def numeric_layer(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        return TaskStatus.MATH_MISMATCH
+
+    pipeline.register(4, "numeric", numeric_layer, exclude_keys=frozenset({"numeric_samples"}))
+
     a = _token(
         {
             "repr": "x^2",
@@ -247,3 +259,47 @@ def test_structural_ignores_numeric_samples_one_missing():
     result = pipeline.compare(a, b)
     assert result.status == TaskStatus.OK
     assert result.layer <= 2
+
+
+def test_no_exclude_keys_backward_compat():
+    """Registering a layer without exclude_keys works (no stripping)."""
+    pipeline = ComparisonPipeline(default_layers=False)
+
+    def always_ok(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        return TaskStatus.OK
+
+    pipeline.register(1, "custom", always_ok)
+    a = _token({"x": 1})
+    b = _token({"x": 1})
+    result = pipeline.compare(a, b)
+    assert result.status == TaskStatus.OK
+
+
+def test_multi_layer_exclusion_union():
+    """Exclusions from multiple higher layers are unioned."""
+    pipeline = ComparisonPipeline(default_layers=False)
+    dispatched = {}
+
+    def l1(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        dispatched["l1_a"] = a.result
+        dispatched["l1_b"] = b.result
+        return TaskStatus.OK
+
+    def l3(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        return TaskStatus.MATH_MISMATCH
+
+    def l4(a: ValidationToken, b: ValidationToken) -> TaskStatus:
+        return TaskStatus.MATH_MISMATCH
+
+    pipeline.register(1, "identity", l1)
+    pipeline.register(3, "canonical", l3, exclude_keys=frozenset({"canon_data"}))
+    pipeline.register(4, "numeric", l4, exclude_keys=frozenset({"numeric_samples"}))
+
+    a = _token({"repr": "x", "canon_data": [1], "numeric_samples": [2]})
+    b = _token({"repr": "x", "canon_data": [3], "numeric_samples": [4]})
+    result = pipeline.compare(a, b)
+    assert result.status == TaskStatus.OK
+    assert result.layer == 1
+    # L1 should have received tokens without canon_data or numeric_samples
+    assert "canon_data" not in dispatched["l1_a"]
+    assert "numeric_samples" not in dispatched["l1_a"]

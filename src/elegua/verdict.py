@@ -16,7 +16,9 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 from elegua.bridge import TestCase
+from elegua.comparison import ComparisonResult
 from elegua.isolation import TestRunResult
+from elegua.task import TaskStatus
 
 _REF_RE = re.compile(r"\$(\w+)")
 
@@ -31,6 +33,18 @@ class Verdict:
     actual: str | None = None
     expected: str | None = None
     message: str | None = None
+
+    @classmethod
+    def from_comparison(cls, result: ComparisonResult) -> Verdict:
+        """Map a ComparisonResult to a Verdict, bridging the two comparison systems."""
+        if result.status is TaskStatus.OK:
+            return cls(status="pass")
+        if result.status is TaskStatus.MATH_MISMATCH:
+            return cls(
+                status="fail",
+                message=f"Mismatch at layer {result.layer} ({result.layer_name})",
+            )
+        return cls(status="error", message=f"Comparison status: {result.status}")
 
 
 def evaluate_expected(
