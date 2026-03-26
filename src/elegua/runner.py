@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tomllib
+import warnings
 from pathlib import Path
 
 from elegua.adapter import Adapter, WolframAdapter
@@ -14,8 +15,15 @@ from elegua.task import EleguaTask
 def load_toml_tasks(path: Path) -> list[EleguaTask]:
     """Load tasks from a TOML test file.
 
+    Deprecated: use load_test_file() instead.
+
     Raises SchemaError if the TOML file has no 'tasks' key.
     """
+    warnings.warn(
+        "load_toml_tasks() is deprecated, use load_test_file() instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     with open(path, "rb") as f:
         try:
             data = tomllib.load(f)
@@ -45,10 +53,17 @@ def run_tasks(
 ) -> list[ValidationToken]:
     """Execute tasks through an adapter and return ValidationTokens.
 
+    Deprecated: use IsolatedRunner instead.
+
     Calls adapter.initialize() before execution and adapter.teardown()
     after, even if execution raises. If no adapter is provided, defaults
     to WolframAdapter (stub).
     """
+    warnings.warn(
+        "run_tasks() is deprecated, use IsolatedRunner instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if adapter is None:
         adapter = WolframAdapter()
     with adapter:

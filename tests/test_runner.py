@@ -14,6 +14,8 @@ from elegua.task import EleguaTask, TaskStatus
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
+
 
 def test_load_toml_tasks():
     tasks = load_toml_tasks(FIXTURES / "tracer.toml")
@@ -120,3 +122,16 @@ def test_load_malformed_toml(tmp_path):
     f.write_text("this is not valid [[[ toml")
     with pytest.raises(SchemaError, match="invalid TOML"):
         load_toml_tasks(f)
+
+
+# --- Deprecation warnings ---
+
+
+def test_load_toml_tasks_emits_deprecation():
+    with pytest.warns(DeprecationWarning, match="load_test_file"):
+        load_toml_tasks(FIXTURES / "tracer.toml")
+
+
+def test_run_tasks_emits_deprecation():
+    with pytest.warns(DeprecationWarning, match="IsolatedRunner"):
+        run_tasks([])
