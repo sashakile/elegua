@@ -34,6 +34,9 @@ wolfram = [
     "flask>=3.0",
     "wolframclient>=1.1",
 ]
+sympy = [
+    "sympy>=1.13",
+]
 
 [build-system]
 requires = ["hatchling"]
