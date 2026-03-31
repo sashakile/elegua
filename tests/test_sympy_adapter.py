@@ -164,3 +164,114 @@ def test_timeout_returns_timeout_status():
     elapsed = time.monotonic() - start
     assert token.status == TaskStatus.TIMEOUT
     assert elapsed < 4.0, f"Timeout took too long: {elapsed:.1f}s"
+
+
+# --- Numeric sample generation ---
+
+
+def test_sample_points_happy_path():
+    """Constructor sample_points generates numeric_samples in result."""
+    adapter = SympyAdapter(
+        sample_points=[{"x": 0.5}, {"x": 1.0}, {"x": 2.0}],
+    )
+    task = EleguaTask(
+        action="Integrate",
+        payload={"expression": "x**2", "variable": "x"},
+    )
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+    samples = token.result["numeric_samples"]
+    assert len(samples) == 3
+    for s in samples:
+        assert "vars" in s
+        assert "value" in s
+        assert isinstance(s["value"], float)
+
+
+def test_sample_points_skips_pole():
+    """Points causing domain errors (for example, 1/x at x=0) are skipped."""
+    adapter = SympyAdapter(
+        sample_points=[{"x": 0.0}, {"x": 1.0}],
+    )
+    task = EleguaTask(
+        action="Simplify",
+        payload={"expression": "1/x"},
+    )
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+    samples = token.result["numeric_samples"]
+    assert len(samples) == 1
+    assert samples[0]["vars"] == {"x": 1.0}
+    assert samples[0]["value"] == 1.0
+
+
+def test_sample_points_skips_nan_inf():
+    """Points producing nan or inf are skipped."""
+    adapter = SympyAdapter(
+        sample_points=[{"x": 0.0}, {"x": 1.0}],
+    )
+    # log(0) → -inf, log(1) → 0
+    task = EleguaTask(
+        action="Simplify",
+        payload={"expression": "log(x)"},
+    )
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+    samples = token.result["numeric_samples"]
+    assert len(samples) == 1
+    assert samples[0]["vars"] == {"x": 1.0}
+
+
+def test_sample_points_skips_complex():
+    """Points producing complex results are skipped."""
+    adapter = SympyAdapter(
+        sample_points=[{"x": -1.0}, {"x": 1.0}],
+    )
+    # sqrt(-1) → complex, sqrt(1) → 1.0
+    task = EleguaTask(
+        action="Simplify",
+        payload={"expression": "sqrt(x)"},
+    )
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+    samples = token.result["numeric_samples"]
+    assert len(samples) == 1
+    assert samples[0]["vars"] == {"x": 1.0}
+    assert samples[0]["value"] == 1.0
+
+
+def test_no_sample_points_no_key():
+    """Without sample_points configured, result has no numeric_samples key."""
+    adapter = SympyAdapter()
+    task = EleguaTask(
+        action="Simplify",
+        payload={"expression": "x + 1"},
+    )
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.OK
+    assert "numeric_samples" not in token.result
+
+
+def test_l4_equivalent_forms():
+    """L4 integration test: log(a)+log(b) vs log(a*b) produce same samples."""
+    adapter = SympyAdapter(
+        sample_points=[{"a": 2.0, "b": 3.0}, {"a": 1.0, "b": 5.0}],
+    )
+    # Two equivalent expressions
+    task_a = EleguaTask(
+        action="Simplify",
+        payload={"expression": "log(a) + log(b)"},
+    )
+    task_b = EleguaTask(
+        action="Simplify",
+        payload={"expression": "log(a*b)"},
+    )
+    token_a = adapter.execute(task_a)
+    token_b = adapter.execute(task_b)
+
+    samples_a = token_a.result["numeric_samples"]
+    samples_b = token_b.result["numeric_samples"]
+    assert len(samples_a) == 2
+    assert len(samples_b) == 2
+    for sa, sb in zip(samples_a, samples_b, strict=True):
+        assert abs(sa["value"] - sb["value"]) < 1e-10

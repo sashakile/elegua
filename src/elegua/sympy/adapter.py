@@ -6,6 +6,7 @@ timeout and expression parsing.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from typing import Any
 
@@ -51,9 +52,11 @@ class SympyAdapter(Adapter):
         self,
         timeout: float = 30.0,
         parse_mode: str = "auto",
+        sample_points: list[dict[str, float]] | None = None,
     ) -> None:
         self._timeout = timeout
         self._parse_mode = parse_mode
+        self._sample_points = sample_points
 
     @property
     def adapter_id(self) -> str:
@@ -105,12 +108,39 @@ class SympyAdapter(Adapter):
             "properties": {},
         }
 
+        if self._sample_points and isinstance(result_expr, sympy.Basic):
+            result_dict["numeric_samples"] = self._generate_samples(result_expr)
+
         return ValidationToken(
             adapter_id=self.adapter_id,
             status=TaskStatus.OK,
             result=result_dict,
             metadata=metadata,
         )
+
+    def _generate_samples(
+        self,
+        result_expr: sympy.Basic,
+    ) -> list[dict[str, Any]]:
+        """Evaluate result_expr at sample_points via lambdify."""
+        variables = sorted(result_expr.free_symbols, key=lambda s: str(s))
+        if not variables:
+            return []
+        fn = sympy.lambdify(variables, result_expr, modules="numpy")
+        samples: list[dict[str, Any]] = []
+        for point in self._sample_points:  # type: ignore[union-attr]
+            try:
+                args = [point[str(v)] for v in variables]
+                val = complex(fn(*args))
+                if val.imag != 0:
+                    continue
+                fval = float(val.real)
+                if not math.isfinite(fval):
+                    continue
+                samples.append({"vars": point, "value": fval})
+            except Exception:
+                pass
+        return samples
 
     def _run_with_timeout(
         self,
