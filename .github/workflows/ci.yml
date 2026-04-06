@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv sync
+      - run: uv sync --extra sympy
       - run: uv run ruff check src/ tests/
       - run: uv run ruff format --check src/ tests/
       - run: uv run pyright src/
@@ -41,7 +41,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
-      - run: uv sync
+      - run: uv sync --extra sympy
       - run: uv run pytest --cov=elegua --cov-report=term-missing -q
 
   integration:

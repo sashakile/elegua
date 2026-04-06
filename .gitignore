@@ -23,7 +23,9 @@ htmlcov/
 
 # Vale (downloaded styles, keep config + vocab)
 .vale/styles/Google/
-.vale/styles/config/vocabularies/
 
 # Docs build output
 site/
+
+# Beads / Dolt files (added by bd init)
+.beads-credential-key
