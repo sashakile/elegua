@@ -1,7 +1,7 @@
 {
   "database": "dolt",
   "backend": "dolt",
-  "dolt_mode": "server",
+  "dolt_mode": "embedded",
   "dolt_database": "elegua",
   "project_id": "0f3af79a-d7a8-4620-b746-63f364adbbc0"
 }
