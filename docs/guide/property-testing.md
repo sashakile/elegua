@@ -1,6 +1,6 @@
 # Property-based testing
 
-Property-based testing is Layer 2 of the [testing architecture](../specs/testing-architecture.md). It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
+Property-based testing is Layer 2 of the [testing architecture](../architecture.md). It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
 
 ## Property spec format
 
