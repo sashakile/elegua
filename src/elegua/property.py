@@ -1,11 +1,12 @@
-"""Layer 2 Property Runner — Hypothesis-backed property-based testing.
+"""Hypothesis-backed property-based testing utilities.
 
 Loads TOML property specs, maps generator types to Hypothesis strategies,
 and validates laws with full shrinking, example database, and composable
 strategy support.
 
-PCG64 cross-platform sampling is NOT used here — it lives in
-compare_numeric.py for L4 cross-CAS numeric comparison.
+This module is separate from the default comparison pipeline. Use it for
+property checks over generated inputs; use ``compare_numeric.py`` when you
+need an L4 numeric comparator inside ``ComparisonPipeline``.
 """
 
 from __future__ import annotations

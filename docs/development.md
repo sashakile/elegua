@@ -2,7 +2,7 @@
 
 How to set up, lint, test, and contribute to Eleguá.
 
-## Setup
+## Prepare the contributor environment
 
 ```bash
 just setup
@@ -10,7 +10,7 @@ just setup
 
 This runs `uv sync`, `vale sync`, and configures `git config core.hooksPath .hooks`.
 
-## Commands
+## Daily development commands
 
 | Command | What it does |
 |---------|-------------|
@@ -27,7 +27,7 @@ This runs `uv sync`, `vale sync`, and configures `git config core.hooksPath .hoo
 | `just docs-build` | Build docs to `site/` |
 | `just docs-deploy` | Deploy docs to GitHub Pages |
 
-## Git hooks
+## What the git hooks run
 
 Hooks live in `.hooks/` (tracked in git). They are activated by `just setup` via `git config core.hooksPath .hooks`.
 
@@ -43,7 +43,7 @@ Hooks live in `.hooks/` (tracked in git). They are activated by `just setup` via
 
 1. `pytest` — full test suite
 
-## CI
+## What CI checks on every push
 
 GitHub Actions runs on push and PR to main:
 
@@ -52,7 +52,7 @@ GitHub Actions runs on push and PR to main:
 - **vale** — prose lint
 - **test** — pytest across Python 3.11, 3.12, 3.13
 
-## Code style
+## Code-style rules
 
 - **Line length:** 100
 - **Lint rules:** E, W, F, I, UP, B, SIM, RUF (see `pyproject.toml`)
@@ -60,7 +60,7 @@ GitHub Actions runs on push and PR to main:
 - **Enum style:** `StrEnum` (not `str, Enum`)
 - **Immutability:** `model_copy(update={...})` instead of mutation
 
-## Testing
+## Testing expectations
 
 - All code must have tests
 - Target: 100% line coverage
@@ -68,7 +68,7 @@ GitHub Actions runs on push and PR to main:
 - Edge cases and error paths must be covered
 - Parametrize related cases (see `test_terminal_states_reject_all_transitions`)
 
-## Adding a new module
+## TDD flow for a new module
 
 1. Create `src/elegua/mymodule.py`
 2. Create `tests/test_mymodule.py` with failing tests (red)

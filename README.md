@@ -11,30 +11,32 @@ When you port a symbolic math library to a new language, how do you prove the ne
 
 ## What Eleguá does
 
-Eleguá orchestrates validation tasks across multiple implementations of the same mathematical system. It runs the same symbolic action on a high-fidelity Oracle (ground truth) and one or more Implementations Under Test, then compares results through a 4-layer pipeline that cascades from fast structural checks to deep property-based testing.
+Eleguá orchestrates validation tasks across multiple implementations of the same mathematical system. It runs the same symbolic action on a high-fidelity Oracle (ground truth) and one or more Implementations Under Test, then compares results through a 4-layer pipeline that cascades from fast structural checks to deeper semantic and invariant-based comparison.
 
 ```
 TOML fixture → EleguaTask → Adapter.execute() → ValidationToken → Comparison Pipeline → pass/fail
 ```
 
-## Getting started
+## Evaluate Eleguá
 
-### Prerequisites
+### Minimal prerequisites
 
 - **Python 3.11+** — [python.org/downloads](https://www.python.org/downloads/)
 - **uv** — `curl -LsSf https://astral.sh/uv/install.sh | sh` ([docs](https://docs.astral.sh/uv/))
-- **just** — `cargo install just` or `brew install just` ([docs](https://just.systems/))
-- **typos** — `cargo install typos-cli` or `brew install typos-cli` ([repository](https://github.com/crate-ci/typos))
-- **vale** — `brew install vale` or download from [vale.sh/docs/install](https://vale.sh/docs/install/) ([docs](https://vale.sh/))
 
-### Install and verify
+### Install and run one comparison
 
 ```bash
 git clone git@github.com:sashakile/elegua.git
 cd elegua
-just setup    # installs deps, syncs vale styles, configures git hooks
-just check    # lint, format, typecheck, typos, vale
-just test     # full test suite with 100% coverage
+uv sync
+uv run python -c 'from elegua.adapter import WolframAdapter; from elegua.comparison import compare_pipeline; from elegua.task import EleguaTask; task = EleguaTask(action="Echo", payload={"expr": "x + y"}); a = WolframAdapter().execute(task); b = WolframAdapter().execute(task); result = compare_pipeline(a, b); print(result.layer, result.layer_name, result.status.value)'
+```
+
+Expected output:
+
+```text
+1 identity ok
 ```
 
 See the [full documentation](https://sashakile.github.io/elegua/) for the user guide, architecture overview, and API reference.
@@ -53,6 +55,8 @@ just ci         # full local CI: check + test
 **Git hooks** (installed by `just setup`): pre-commit runs ruff, pyright, typos, and vale; pre-push runs pytest.
 
 **CI** runs on push and PR to main: lint, typecheck, typos, vale, and test matrix across Python 3.11–3.13.
+
+Contributor tooling such as `just`, `typos`, and `vale` is only needed for development work on this repository, not for the minimal evaluation path above.
 
 ## License
 

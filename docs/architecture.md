@@ -40,7 +40,7 @@ The pipeline cascades through layers, stopping at the first that confirms equiva
 | **1. Identity** | Structural equality | Instant validation | `result_a == result_b` |
 | **2. Structural** | Sorted canonical form | AST isomorphism | `canonical(a) == canonical(b)` |
 | **3. Canonical** | Normalizer rules | Semantic equivalence | `normalize(a) == normalize(b)` |
-| **4. Invariant** | Numerical / PBT | Mathematical proof | `f(a, args) ≈ f(b, args)` |
+| **4. Invariant** | Numeric sampling / domain checks | Mathematical evidence | `f(a, args) ≈ f(b, args)` |
 
 Layers 1-2 are implemented in the core. Layers 3-4 are domain-specific extension points.
 
@@ -57,7 +57,7 @@ Layers 1-2 are implemented in the core. Layers 3-4 are domain-specific extension
 | `comparison` | 4-layer comparison pipeline, `ComparisonResult` |
 | `runner` | TOML test loader, parameterized task executor |
 | `blobstore` | SHA-256 content-addressed storage for large payloads |
-| `property` | Property-based test runner with PCG64 seeds |
+| `property` | Hypothesis-based property test runner for generated law checks |
 
 ## Design principles
 

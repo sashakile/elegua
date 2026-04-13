@@ -1,6 +1,6 @@
 # Property-based testing
 
-Property-based testing is Layer 2 of the [testing architecture](../architecture.md). It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
+Property-based testing is a companion workflow to the [comparison pipeline](comparison.md), not one of the default built-in layers. It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
 
 ## Property spec format
 
@@ -181,6 +181,6 @@ registry.register("integer", st.integers(-1000, 1000))
 
 `GeneratorRegistry` still works but emits a `DeprecationWarning`.
 
-## Note on L4 numeric comparison
+## Relationship to L4 numeric comparison
 
-PCG64 cross-platform deterministic sampling is used for L4 numeric comparison (`compare_numeric.py`), not for property-based testing. These are separate concerns — Hypothesis owns PBT randomness, PCG64 owns cross-CAS sample point generation.
+PCG64 cross-platform deterministic sampling is used for L4 numeric comparison (`compare_numeric.py`), not for property-based testing. These are separate concerns: Hypothesis owns property-test randomness and shrinking, while the L4 comparator owns cross-CAS sample-point agreement inside `ComparisonPipeline`.

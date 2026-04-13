@@ -58,7 +58,7 @@ token = ValidationToken(
     adapter_id="wolfram",
     status=TaskStatus.OK,
     result={"fn": "Tensor", "args": ["a", "b"]},
-    metadata={"duration_ms": 120},
+    metadata={"execution_time_ms": 120},
 )
 ```
 

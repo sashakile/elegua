@@ -1,6 +1,6 @@
 # Oracle servers
 
-An oracle server wraps a compute kernel (Wolfram, Julia, Sage) in an HTTP server that implements the oracle protocol. The `OracleClient` in the core talks to any server that implements this contract. See [Architecture](../architecture.md) for how oracle servers fit into the three-tier execution model.
+An oracle server wraps a compute kernel (Wolfram, Julia, Sage) in an HTTP server that implements the oracle protocol. For new integrations, the recommended path is `OracleAdapter`: point it at a compatible server, provide any domain-specific expression mapping you need, and let the adapter handle lifecycle and token mapping. See [Architecture](../architecture.md) for how oracle servers fit into the three-tier execution model.
 
 ## The oracle protocol
 
@@ -49,7 +49,7 @@ Timeout response:
 
 The `/evaluate` endpoint uses the same format as `/evaluate-with-init` but without `context_id` or init script loading.
 
-## Using `elegua[wolfram]`
+## Wolfram-specific implementation
 
 The `elegua[wolfram]` optional extra ships a ready-made Wolfram kernel oracle server:
 
@@ -65,7 +65,7 @@ just oracle-up    # starts on localhost:8765
 just oracle-down  # stops the container
 ```
 
-### Configuring for your domain
+### Configuring the Wolfram server for your domain
 
 The Wolfram oracle accepts environment variables for domain-specific setup:
 
@@ -80,9 +80,9 @@ ELEGUA_WOLFRAM_CLEANUP='Manifolds={}; Tensors={}; "cleanup-ok"' \
 python -m elegua.wolfram serve
 ```
 
-## Building your own oracle server
+## Build your own oracle server
 
-To support a different compute engine, implement the 6 endpoints listed in the protocol table. Use `src/elegua/wolfram/server.py` as a production reference — it is a Flask server with configurable init/cleanup. For testing, the `EchoOracle` provides a minimal implementation:
+To support a different compute engine, implement the 6 endpoints listed in the protocol table. The protocol is the stable contract; the Wolfram server is just one implementation of it. For protocol-level testing, `EchoOracle` provides a minimal implementation:
 
 ```python
 from elegua.testing import EchoOracle
@@ -95,47 +95,61 @@ with EchoOracle(port=8765) as oracle:
 
 ### Connecting your server to the pipeline
 
-Once your server is running, point `OracleClient` at it and wrap it in a custom adapter. Subclass `Adapter` and delegate to `OracleClient`:
+Once your server is running, prefer `OracleAdapter` over building a new
+transport adapter from scratch. It already handles health checks, cleanup,
+context IDs, timeout mapping, and `ValidationToken` creation.
 
 ```python
-from elegua.adapter import Adapter
-from elegua.models import ValidationToken
-from elegua.oracle import OracleClient
-from elegua.task import EleguaTask, TaskStatus
+from elegua.wolfram.adapter import OracleAdapter
 
-class MyEngineAdapter(Adapter):
-    def __init__(self, base_url: str = "http://localhost:8765") -> None:
-        self._client = OracleClient(base_url)
-
-    @property
-    def adapter_id(self) -> str:
-        return "my-engine"
-
-    def initialize(self) -> None:
-        self._client.health_or_raise()
-
-    def teardown(self) -> None:
-        self._client.cleanup()
-
-    def execute(self, task: EleguaTask) -> ValidationToken:
-        result = self._client.evaluate_with_xact(task.payload["expression"])
-        status = TaskStatus.OK if result["status"] == "ok" else TaskStatus.EXECUTION_ERROR
-        return ValidationToken(
-            adapter_id=self.adapter_id,
-            status=status,
-            result={"repr": result.get("result", "")},
-        )
+adapter = OracleAdapter(
+    base_url="http://localhost:8765",
+    adapter_id="my-engine",
+    expr_builder=lambda action, payload: payload["expression"],
+)
 ```
 
-For Wolfram-based engines specifically, use the ready-made `WolframOracleAdapter` instead — see [Writing an adapter](adapters.md) for more on the adapter interface.
+If your server returns a different response shape, pass a `result_mapper` that
+converts the response into a `ValidationToken`:
+
+```python
+from elegua.models import ValidationToken
+from elegua.task import TaskStatus
+from elegua.wolfram.adapter import OracleAdapter
+
+def result_mapper(action: str, payload: dict, data: dict) -> ValidationToken:
+    return ValidationToken(
+        adapter_id="my-engine",
+        status=TaskStatus.OK if data["status"] == "ok" else TaskStatus.EXECUTION_ERROR,
+        result={"repr": data.get("result", "")},
+        metadata={"execution_time_ms": data.get("timing_ms", 0)},
+    )
+
+adapter = OracleAdapter(
+    base_url="http://localhost:8765",
+    adapter_id="my-engine",
+    expr_builder=lambda action, payload: payload["expression"],
+    result_mapper=result_mapper,
+)
+```
+
+!!! note
+    `WolframOracleAdapter` is deprecated. Use `OracleAdapter` for new work, even for Wolfram-backed servers.
+
+### When to use `OracleClient` directly
+
+Drop below `OracleAdapter` only if you need transport behavior that the adapter
+cannot express. The `OracleClient` method names still reflect the Wolfram-first
+history of the module, so it is better treated as a lower-level implementation
+detail than as the main extension point for new integrations.
 
 ## Error recovery
 
-If an evaluation times out or the kernel crashes, the server should automatically restart the kernel and return an error or timeout status. The Wolfram oracle does this: on timeout, it kills the kernel, starts a fresh one, and returns `{"status": "timeout"}`. The `/restart` endpoint provides manual recovery if automatic restart fails.
+If an evaluation times out or the kernel crashes, the server should automatically restart the kernel and return an error or timeout status. The Wolfram implementation does this: on timeout, it kills the kernel, starts a fresh one, and returns `{"status": "timeout"}`. The `/restart` endpoint provides manual recovery if automatic restart fails.
 
 ## Context isolation
 
-When `context_id` is provided in `/evaluate-with-init`, the server should evaluate the expression in an isolated scope so that symbols defined by one test do not leak into another. The Wolfram oracle achieves this with `Block` + `ToExpression` wrapping. Your server can use whatever isolation mechanism your kernel supports.
+When `context_id` is provided in `/evaluate-with-init`, the server should evaluate the expression in an isolated scope so that symbols defined by one test do not leak into another. The Wolfram implementation achieves this with `Block` + `ToExpression` wrapping. Your server can use whatever isolation mechanism your kernel supports.
 
 ## Snapshot record and replay
 

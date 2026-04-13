@@ -2,35 +2,37 @@
 
 This guide walks you through installing Eleguá and running a complete validation — from TOML fixture to comparison verdict.
 
-## Prerequisites
+## Minimal prerequisites
 
 You need the following installed:
 
 - **Python 3.11 or later** — [python.org/downloads](https://www.python.org/downloads/)
 - **uv** — `curl -LsSf https://astral.sh/uv/install.sh | sh` ([docs](https://docs.astral.sh/uv/))
-- **just** — `cargo install just` or `brew install just` ([docs](https://just.systems/))
-- **typos** — `cargo install typos-cli` or `brew install typos-cli` ([repository](https://github.com/crate-ci/typos))
-- **vale** — `brew install vale` or download from [vale.sh/docs/install](https://vale.sh/docs/install/) ([docs](https://vale.sh/))
+- **just**, **typos**, and **vale** are only needed if you plan to contribute to the repository itself.
 
-!!! tip "Don't have Cargo?"
-    If you don't have Rust/Cargo installed, use `brew install just typos-cli` on macOS, or check each tool's install page for binary downloads.
-
-## Installation
+## Install the package
 
 ```bash
 git clone git@github.com:sashakile/elegua.git
 cd elegua
-just setup
+uv sync
 ```
 
-This installs all Python dependencies, syncs vale styles, and configures git hooks.
+This installs the package and its Python dependencies for local use.
 
-!!! note "If `just setup` fails"
-    The most common cause is a missing prerequisite. Run `just setup` again after installing any missing tool — it is idempotent.
+## Optional contributor tooling
 
-## Verify the setup
+If you plan to work on the repository itself, install the contributor tools used
+by the local checks and git hooks:
+
+- **just** — `cargo install just` or `brew install just` ([docs](https://just.systems/))
+- **typos** — `cargo install typos-cli` or `brew install typos-cli` ([repository](https://github.com/crate-ci/typos))
+- **vale** — `brew install vale` or download from [vale.sh/docs/install](https://vale.sh/docs/install/) ([docs](https://vale.sh/))
+
+Then run:
 
 ```bash
+just setup    # installs repo tooling, syncs vale styles, configures git hooks
 just check    # lint, format, typecheck, typos, vale
 just test     # full test suite with 100% coverage
 ```
@@ -87,7 +89,7 @@ wolfram vs wolfram: layer 1 (identity) → ok
 wolfram vs wolfram: layer 1 (identity) → ok
 ```
 
-Both tasks match at layer 1 (identity) because the same adapter produces identical output. When you swap in a real IUT adapter, mismatches cascade through deeper layers — structural, canonical, and property-based — until equivalence is confirmed or a mismatch is reported.
+Both tasks match at layer 1 (identity) because the same adapter produces identical output. When you swap in a real IUT adapter, mismatches can cascade through deeper layers — structural, canonical, and invariant-based comparison — until equivalence is confirmed or a mismatch is reported.
 
 !!! note "The WolframAdapter is a stub"
     The built-in `WolframAdapter` echoes the input payload as its result. It exists to prove the architecture works end-to-end. Replace it with a real adapter that connects to your symbolic engine — see [Writing an adapter](guide/adapters.md).

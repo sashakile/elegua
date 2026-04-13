@@ -4,7 +4,7 @@ The comparison pipeline determines whether two `ValidationToken` results are mat
 
 **Prerequisite:** you need two `ValidationToken` objects — one from the Oracle adapter and one from the IUT adapter. See [Writing an adapter](adapters.md) for how to produce them, or [Task lifecycle](tasks.md) for the data model.
 
-## Usage
+## Compare two validation tokens
 
 ```python
 from elegua.comparison import ComparisonPipeline
@@ -43,11 +43,11 @@ status = compare_structural(token_a, token_b)
 !!! note
     Layer 2 sorts all list items, which treats every operation as commutative. Non-commutative operations (like subtraction) may produce false positives. Register domain-specific normalizers in Layers 3-4 to handle these cases.
 
-## Layers 3-4 — Extension points
+## Register semantic and invariant layers
 
-**Layer 3 (Canonical)** uses pluggable normalizer rules for semantic equivalence. **Layer 4 (Invariant)** uses numerical sampling and property-based testing. Both are domain-specific — register them on a `ComparisonPipeline` instance. See [Property testing](property-testing.md) for layer 4 details.
+**Layer 3 (Canonical)** uses pluggable normalizer rules for semantic equivalence. **Layer 4 (Invariant)** uses pluggable invariant checks such as numeric sample comparison. Both are domain-specific — register them on a `ComparisonPipeline` instance. Property-based testing is a separate Hypothesis-based tool that can complement pipeline work; see [Property testing](property-testing.md).
 
-## ComparisonResult
+## Read the comparison result
 
 The pipeline returns a `ComparisonResult` dataclass:
 

@@ -2,11 +2,11 @@
 
 Payloads over 1 MB are automatically stored on disk by SHA-256 hash, keeping tokens lightweight. Use `maybe_store()` and `maybe_resolve()` for transparent handling.
 
-## Overview
+## When blob storage is used
 
 Symbolic expressions in computational mathematics can exceed 1 MB in serialized form. The blob store handles large payloads by storing them on disk, referenced by SHA-256 hash.
 
-## How it works
+## On-disk layout and blob references
 
 Payloads exceeding 1 MB are stored in a two-level directory structure:
 
@@ -22,7 +22,7 @@ The token stores a reference instead of the full payload:
 {"blob": "abcdef0123456789..."}
 ```
 
-## Usage
+## Create a `BlobStore`
 
 ```python
 from pathlib import Path
@@ -60,7 +60,7 @@ store.should_store(small_payload)  # False
 store.should_store(large_payload)  # True
 ```
 
-## Properties
+## Blob-store guarantees
 
 - **Deterministic** — the same payload always produces the same hash
 - **Content-addressed** — duplicate payloads share the same file
