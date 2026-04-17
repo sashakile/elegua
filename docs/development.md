@@ -1,6 +1,6 @@
 # Development
 
-How to set up, lint, test, and contribute to Eleguá.
+**Set up the contributor environment and run lint, test, and CI checks locally so you can submit clean PRs.**
 
 ## Prepare the contributor environment
 

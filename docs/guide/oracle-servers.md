@@ -1,6 +1,10 @@
 # Oracle servers
 
-An oracle server wraps a compute kernel (Wolfram, Julia, Sage) in an HTTP server that implements the oracle protocol. For new integrations, the recommended path is `OracleAdapter`: point it at a compatible server, provide any domain-specific expression mapping you need, and let the adapter handle lifecycle and token mapping. See [Architecture](../architecture.md) for how oracle servers fit into the three-tier execution model.
+**An oracle server exposes a compute kernel over HTTP so Eleguá can execute symbolic actions remotely.**
+
+An oracle server wraps a compute kernel (Wolfram, Julia, Sage) in an HTTP server that implements the oracle protocol.
+
+For new integrations, use `OracleAdapter` — point it at a compatible server, provide any domain-specific expression mapping, and the adapter handles lifecycle and token mapping. See [Architecture](../architecture.md) for how oracle servers fit into the three-tier execution model.
 
 ## The oracle protocol
 

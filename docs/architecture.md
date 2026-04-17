@@ -1,5 +1,7 @@
 # Architecture
 
+**Eleguá's three-tier model and 4-layer pipeline prove that two symbolic math implementations produce equivalent results.**
+
 Eleguá's architecture solves a specific problem: when porting a symbolic math library across languages, you need to prove that the port produces equivalent results to the original — not just for simple cases, but for the full space of symbolic expressions.
 
 ## Three-tier execution model
@@ -47,19 +49,7 @@ Layers 1-2 are implemented in the core. Layers 3-4 are domain-specific extension
 !!! note "Known limitation"
     Layer 2 treats all list orderings as equivalent via sorted canonical form. This means non-commutative operations (like subtraction) may produce false positives. Layers 3-4 catch these cases when domain-specific normalizers are registered.
 
-## Core modules
-
-| Module | Responsibility |
-|--------|---------------|
-| `task` | `EleguaTask` model, `TaskStatus` enum, state machine |
-| `models` | `ActionPayload` (input) and `ValidationToken` (output) |
-| `adapter` | `Adapter` ABC, `WolframAdapter` stub |
-| `comparison` | 4-layer comparison pipeline, `ComparisonResult` |
-| `runner` | TOML test loader, parameterized task executor |
-| `blobstore` | SHA-256 content-addressed storage for large payloads |
-| `property` | Hypothesis-based property test runner for generated law checks |
-
-## Design principles
+## Eleguá design principles
 
 - **Domain-agnostic core** — the orchestrator has no knowledge of tensor calculus, integration rules, or any specific mathematical domain
 - **Immutability** — `Adapter.execute()` returns a new `ValidationToken` and must not mutate the input task

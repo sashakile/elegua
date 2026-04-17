@@ -15,30 +15,19 @@ In short, define test cases in TOML, write an Adapter for each implementation, a
 - **SHA-256 blob store** — transparent handling of large symbolic expressions
 - **State machine enforcement** — validated task lifecycle transitions
 
-## Try the package locally
-
-```bash
-git clone git@github.com:sashakile/elegua.git
-cd elegua
-uv sync
-uv run python -c 'from elegua.adapter import WolframAdapter; from elegua.comparison import compare_pipeline; from elegua.task import EleguaTask; task = EleguaTask(action="Echo", payload={"expr": "x + y"}); a = WolframAdapter().execute(task); b = WolframAdapter().execute(task); result = compare_pipeline(a, b); print(result.layer, result.layer_name, result.status.value)'
-```
-
 ## Execution model at a glance
 
 ```
 TOML fixture → EleguaTask → Adapter.execute() → ValidationToken → Comparison Pipeline → pass/fail
 ```
 
-1. Load test definitions from TOML files
-2. Instantiate `EleguaTask` objects with action and payload
-3. Execute through one or more `Adapter` implementations
-4. Compare `ValidationToken` results through the 4-layer pipeline
-5. Report pass/fail with the layer that resolved equivalence
-
 ## Read next
 
-- [Getting started](getting-started.md) — install prerequisites and run your first comparison
-- [Architecture](architecture.md) — understand the three-tier model and design decisions
-- [User guide](guide/tasks.md) — work with tasks, adapters, and comparison layers
-- [API reference](reference/) — auto-generated from source
+New to Eleguá? Follow this order:
+
+1. [Getting started](getting-started.md) — install and run your first comparison
+2. [Architecture](architecture.md) — understand the three-tier model
+3. [Task lifecycle](guide/tasks.md) → [Writing an adapter](guide/adapters.md) → [Comparison pipeline](guide/comparison.md)
+4. [API reference](reference/) — auto-generated from source
+
+The remaining guide pages ([TOML format](guide/toml-format.md), [Property testing](guide/property-testing.md), [Blob store](guide/blob-store.md), [Oracle servers](guide/oracle-servers.md)) can be read in any order as needed.

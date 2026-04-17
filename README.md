@@ -30,13 +30,21 @@ TOML fixture → EleguaTask → Adapter.execute() → ValidationToken → Compar
 git clone git@github.com:sashakile/elegua.git
 cd elegua
 uv sync
-uv run python -c 'from elegua.adapter import WolframAdapter; from elegua.comparison import compare_pipeline; from elegua.task import EleguaTask; task = EleguaTask(action="Echo", payload={"expr": "x + y"}); a = WolframAdapter().execute(task); b = WolframAdapter().execute(task); result = compare_pipeline(a, b); print(result.layer, result.layer_name, result.status.value)'
 ```
 
-Expected output:
+Then run a quick comparison:
 
-```text
-1 identity ok
+```python
+from elegua.adapter import WolframAdapter
+from elegua.comparison import compare_pipeline
+from elegua.task import EleguaTask
+
+task = EleguaTask(action="Echo", payload={"expr": "x + y"})
+a = WolframAdapter().execute(task)
+b = WolframAdapter().execute(task)
+result = compare_pipeline(a, b)
+print(result.layer, result.layer_name, result.status.value)
+# => 1 identity ok
 ```
 
 See the [full documentation](https://sashakile.github.io/elegua/) for the user guide, architecture overview, and API reference.

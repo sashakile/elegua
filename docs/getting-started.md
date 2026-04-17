@@ -1,5 +1,7 @@
 # Getting started
 
+**Install Eleguá and run your first comparison in under five minutes.**
+
 This guide walks you through installing Eleguá and running a complete validation — from TOML fixture to comparison verdict.
 
 ## Minimal prerequisites
@@ -58,38 +60,55 @@ action = "Contract"
 expr = "T[a, b] * g[-a, -b]"
 ```
 
-Load the fixture, execute it through two adapters, and compare the results:
+### Step 1 — Load tasks from TOML
 
 ```python
 from pathlib import Path
+from elegua.runner import load_toml_tasks
 
-from elegua.adapter import WolframAdapter
-from elegua.comparison import ComparisonPipeline
-from elegua.runner import load_toml_tasks, run_tasks
-
-# 1. Load tasks from the TOML fixture
 tasks = load_toml_tasks(Path("tests/fixtures/tracer.toml"))
+for task in tasks:
+    print(f"{task.action}: {task.payload}")
+```
 
-# 2. Execute through two adapters (both use the WolframAdapter stub for now)
+```text
+DefTensor: {'name': 'T', 'indices': ['a', 'b']}
+Contract: {'expr': 'T[a, b] * g[-a, -b]'}
+```
+
+### Step 2 — Execute through an adapter
+
+```python
+from elegua.adapter import WolframAdapter
+from elegua.runner import run_tasks
+
 oracle_tokens = run_tasks(tasks, adapter=WolframAdapter())
+for token in oracle_tokens:
+    print(f"{token.adapter_id}: {token.status.value} → {token.result}")
+```
+
+```text
+wolfram: ok → {'name': 'T', 'indices': ['a', 'b']}
+wolfram: ok → {'expr': 'T[a, b] * g[-a, -b]'}
+```
+
+### Step 3 — Compare two runs
+
+```python
+from elegua.comparison import compare_pipeline
+
 iut_tokens = run_tasks(tasks, adapter=WolframAdapter())
-
-# 3. Compare each pair through the 4-layer pipeline
-pipeline = ComparisonPipeline()
 for oracle, iut in zip(oracle_tokens, iut_tokens, strict=True):
-    result = pipeline.compare(oracle, iut)
-    print(f"{oracle.adapter_id} vs {iut.adapter_id}: "
-          f"layer {result.layer} ({result.layer_name}) → {result.status.value}")
+    result = compare_pipeline(oracle, iut)
+    print(f"layer {result.layer} ({result.layer_name}) → {result.status.value}")
 ```
 
-Expected output:
-
-```
-wolfram vs wolfram: layer 1 (identity) → ok
-wolfram vs wolfram: layer 1 (identity) → ok
+```text
+layer 1 (identity) → ok
+layer 1 (identity) → ok
 ```
 
-Both tasks match at layer 1 (identity) because the same adapter produces identical output. When you swap in a real IUT adapter, mismatches can cascade through deeper layers — structural, canonical, and invariant-based comparison — until equivalence is confirmed or a mismatch is reported.
+Both tasks match at layer 1 (identity) because the same adapter produces identical output. `compare_pipeline()` runs the default L1+L2 layers. When you need custom layers (L3/L4), instantiate a `ComparisonPipeline` directly — see [Comparison pipeline](guide/comparison.md).
 
 !!! note "The WolframAdapter is a stub"
     The built-in `WolframAdapter` echoes the input payload as its result. It exists to prove the architecture works end-to-end. Replace it with a real adapter that connects to your symbolic engine — see [Writing an adapter](guide/adapters.md).
@@ -99,4 +118,5 @@ Both tasks match at layer 1 (identity) because the same adapter produces identic
 - [Task lifecycle](guide/tasks.md) — understand `EleguaTask`, `ValidationToken`, and state transitions
 - [Writing an adapter](guide/adapters.md) — connect Eleguá to your own symbolic engine
 - [Comparison pipeline](guide/comparison.md) — how the 4-layer cascade works
+- [Blob store](guide/blob-store.md) — automatic handling of large payloads (> 1 MB)
 - [Architecture](architecture.md) — the three-tier model and design principles

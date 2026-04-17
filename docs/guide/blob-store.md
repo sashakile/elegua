@@ -1,6 +1,8 @@
 # Blob store
 
-Payloads over 1 MB are automatically stored on disk by SHA-256 hash, keeping tokens lightweight. Use `maybe_store()` and `maybe_resolve()` for transparent handling.
+**The blob store offloads large payloads to disk by SHA-256 hash so validation tokens stay lightweight.**
+
+Payloads over 1 MB are automatically stored on disk, keeping tokens lightweight. Use `maybe_store()` and `maybe_resolve()` for transparent handling.
 
 ## When blob storage is used
 

@@ -1,8 +1,8 @@
 # Writing an adapter
 
-An adapter is how Eleguá talks to a symbolic engine. Subclass `Adapter`, implement `execute()`, and Eleguá handles the rest — task dispatch, comparison, and reporting.
+**Subclass `Adapter` and implement `execute()` so Eleguá can talk to your symbolic engine.**
 
-Adapters connect Eleguá to external symbolic engines. Each adapter translates an `EleguaTask` into a call to its engine and returns a `ValidationToken` with the result.
+Each adapter translates an `EleguaTask` into a call to its engine and returns a `ValidationToken` with the result.
 
 ## The Adapter interface
 

@@ -1,6 +1,8 @@
 # TOML test format
 
-Test cases and property specs are defined in TOML. Task files describe actions to execute; property files describe mathematical laws to validate by sampling.
+**Define test cases and property specs in TOML so your validation suite is declarative and language-agnostic.**
+
+Task files describe actions to execute; property files describe mathematical laws to validate by sampling.
 
 ## Task files
 

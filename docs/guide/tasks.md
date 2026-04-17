@@ -1,6 +1,8 @@
 # Task lifecycle
 
-`EleguaTask` carries an action through a state machine from `PENDING` to a terminal verdict. `ValidationToken` is what adapters return after execution.
+**`EleguaTask` carries an action through an enforced state machine so you can track execution from `PENDING` to a terminal verdict.**
+
+`ValidationToken` is what adapters return after execution.
 
 ## EleguaTask
 
@@ -40,20 +42,27 @@ task.transition(TaskStatus.OK)  # raises: cannot go from PENDING to OK
 
 ## ActionPayload and ValidationToken
 
-These are the spec-defined interchange models:
+These are the spec-defined interchange models.
+
+`ActionPayload` is a spec-level type that describes the input to an adapter. In most workflows you won't construct one yourself — the runner builds `EleguaTask` objects from TOML and passes them directly to `Adapter.execute()`. `ActionPayload` exists for tooling and serialization scenarios where you need a standalone input envelope.
 
 ```python
-from elegua.models import ActionPayload, ValidationToken
+from elegua.models import ActionPayload
 
-# Input to an adapter
 payload = ActionPayload(
     action="DefTensor",
     payload={"name": "T"},
     domain="tensor_calculus",
     manifest="manifest.toml",
 )
+```
 
-# Output from an adapter
+`ValidationToken` is what adapters return after execution. You interact with these directly when comparing results:
+
+```python
+from elegua.models import ValidationToken
+from elegua.task import TaskStatus
+
 token = ValidationToken(
     adapter_id="wolfram",
     status=TaskStatus.OK,
@@ -64,4 +73,5 @@ token = ValidationToken(
 
 ## Next steps
 
-See [Writing an adapter](adapters.md) to connect Eleguá to your own symbolic engine.
+- [Writing an adapter](adapters.md) — connect Eleguá to your own symbolic engine
+- [Blob store](blob-store.md) — how large `result` payloads are offloaded to disk automatically
