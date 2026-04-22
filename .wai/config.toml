@@ -1,0 +1,9 @@
+plugins = []
+
+[project]
+name = "elegua"
+version = "2026.4.7"
+description = ""
+tool_commit = "bf66bc0"
+
+[llm]
