@@ -21,13 +21,24 @@ In short, define test cases in TOML, write an Adapter for each implementation, a
 TOML fixture → EleguaTask → Adapter.execute() → ValidationToken → Comparison Pipeline → pass/fail
 ```
 
-## Read next
+## Choose your path
 
-New to Eleguá? Follow this order:
+Based on your goal, consider the following entry points:
 
-1. [Getting started](getting-started.md) — install and run your first comparison
-2. [Architecture](architecture.md) — understand the three-tier model
-3. [Task lifecycle](guide/tasks.md) → [Writing an adapter](guide/adapters.md) → [Comparison pipeline](guide/comparison.md)
-4. [API reference](reference/) — auto-generated from source
+### 1. Evaluate Eleguá
+If you want to run a quick test using the built-in stubs:
+- [Getting started](getting-started.md) — install and run your first comparison
+- [Architecture](architecture.md) — understand the three-tier model
+
+### 2. Build an adapter
+If you want to connect Eleguá to your own symbolic engine:
+- [Task lifecycle](guide/tasks.md)
+- [Writing an adapter](guide/adapters.md)
+- [Comparison pipeline](guide/comparison.md)
+
+### 3. Contribute
+If you want to help develop the Eleguá core harness:
+- [Development](development.md) — set up the local contributor environment
+- [API reference](reference/) — auto-generated from source
 
 The remaining guide pages ([TOML format](guide/toml-format.md), [Property testing](guide/property-testing.md), [Blob store](guide/blob-store.md), [Oracle servers](guide/oracle-servers.md)) can be read in any order as needed.
