@@ -15,9 +15,9 @@ This runs `uv sync`, `vale sync`, and configures `git config core.hooksPath .hoo
 | Command | What it does |
 |---------|-------------|
 | `just setup` | Install deps, sync vale, configure hooks |
-| `just check` | Run all checks (lint, format, typecheck, typos, vale) |
+| `just check` | Run all pre-commit checks |
 | `just fix` | Auto-fix lint and format issues |
-| `just test` | Run tests (accepts args: `just test -v -k blob`) |
+| `just test` | Run tests (pass args: `just test -v -k blob`) |
 | `just cov` | Run tests with coverage report |
 | `just ci` | Full local CI: check + test |
 | `just lint` | ruff lint only |

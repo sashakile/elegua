@@ -10,7 +10,6 @@ You need the following installed:
 
 - **Python 3.11 or later** — [python.org/downloads](https://www.python.org/downloads/)
 - **uv** — `curl -LsSf https://astral.sh/uv/install.sh | sh` ([docs](https://docs.astral.sh/uv/))
-- **just**, **typos**, and **vale** are only needed if you plan to contribute to the repository itself.
 
 ## Install the package
 
@@ -34,9 +33,10 @@ by the local checks and git hooks:
 Then run:
 
 ```bash
-just setup    # installs repo tooling, syncs vale styles, configures git hooks
-just check    # lint, format, typecheck, typos, vale
-just test     # full test suite with 100% coverage
+just setup    # install deps, sync vale, configure hooks
+just check    # run all pre-commit checks
+just test     # run tests
+just cov      # run tests with coverage report
 ```
 
 ## Run your first comparison

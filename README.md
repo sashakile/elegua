@@ -52,11 +52,11 @@ See the [full documentation](https://sashakile.github.io/elegua/) for the user g
 ## Development
 
 ```bash
-just setup      # one-time: install deps + git hooks
+just setup      # install deps, sync vale, configure hooks
 just check      # run all pre-commit checks
 just fix        # auto-fix lint and format issues
 just test       # run tests (pass args: just test -v -k blob)
-just cov        # tests with coverage report
+just cov        # run tests with coverage report
 just ci         # full local CI: check + test
 ```
 
