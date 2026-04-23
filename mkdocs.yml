@@ -59,15 +59,18 @@ plugins:
 
 nav:
   - Home: index.md
-  - Architecture: architecture.md
-  - Getting Started: getting-started.md
-  - User Guide:
+  - Evaluate Eleguá:
+      - Getting Started: getting-started.md
+      - Architecture: architecture.md
+  - Build an adapter:
       - Task Lifecycle: guide/tasks.md
       - Writing Adapters: guide/adapters.md
       - Comparison Pipeline: guide/comparison.md
+  - Core Features:
       - Property Testing: guide/property-testing.md
       - Oracle Servers: guide/oracle-servers.md
       - Blob Store: guide/blob-store.md
       - TOML Format: guide/toml-format.md
-  - Development: development.md
-  - API Reference: reference/
+  - Contribute:
+      - Development: development.md
+      - API Reference: reference/
