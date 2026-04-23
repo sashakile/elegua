@@ -14,7 +14,7 @@ You need the following installed:
 ## Install the package
 
 ```bash
-git clone git@github.com:sashakile/elegua.git
+git clone https://github.com/sashakile/elegua.git  # or git@github.com:sashakile/elegua.git
 cd elegua
 uv sync
 ```

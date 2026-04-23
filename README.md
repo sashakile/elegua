@@ -27,7 +27,7 @@ Run your first comparison using the built-in stubs in under five minutes.
 **Install and run one comparison:**
 
 ```bash
-git clone git@github.com:sashakile/elegua.git
+git clone https://github.com/sashakile/elegua.git  # or git@github.com:sashakile/elegua.git
 cd elegua
 uv sync
 ```
