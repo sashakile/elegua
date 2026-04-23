@@ -16,11 +16,11 @@ Initial release of the Eleguá multi-tier test harness.
   `ActionPayload` and `ValidationToken` interchange models.
 - **4-layer comparison pipeline** — cascading equivalence checks: identity (L1),
   structural via sorted canonical form (L2), canonical normalizer rules (L3),
-  and property-based testing (L4). `ComparisonPipeline` supports pluggable
+  and invariant/numeric comparison (L4). `ComparisonPipeline` supports pluggable
   layer registration.
-- **Property-based testing** — `PropertyRunner` with PCG64-seeded reproducible
-  sampling, TOML property specs, and `GeneratorRegistry` for domain-specific
-  generators.
+- **Property-based testing** — Hypothesis-based `PropertyRunner` with automatic
+  shrinking, TOML property specs, and `StrategyRegistry` for domain-specific
+  strategies. *(Note: earlier PCG64-seeded approach is now part of L4 comparison, not property testing).*
 - **Adapter lifecycle** — `Adapter` ABC with `initialize()`/`teardown()` hooks,
   context manager support, and teardown-exception suppression.
   `WolframAdapter` stub for tracer-bullet validation.
