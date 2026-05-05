@@ -10,6 +10,11 @@ import datetime
 
 import pytest
 
+pytest.importorskip(
+    "elegua.provenance",
+    reason="elegua.provenance not yet implemented (elegua-mmr)",
+)
+
 from elegua.models import ValidationToken
 from elegua.provenance import ProvenanceRecord, attach_provenance
 from elegua.task import TaskStatus

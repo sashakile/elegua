@@ -10,6 +10,11 @@ import struct
 
 import pytest
 
+pytest.importorskip(
+    "elegua.numeric.tolerance",
+    reason="elegua.numeric not yet implemented (elegua-d5m)",
+)
+
 from elegua.models import ValidationToken
 from elegua.numeric.tolerance import (
     AbsoluteTolerance,

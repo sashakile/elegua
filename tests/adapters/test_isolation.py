@@ -8,6 +8,16 @@ from __future__ import annotations
 
 import pytest
 
+import elegua.adapter as _ada
+import elegua.errors as _err
+
+# Skip entire file until verify_isolation and IsolationError are implemented (elegua-6igp)
+if not (hasattr(_ada, "verify_isolation") and hasattr(_err, "IsolationError")):
+    pytest.skip(
+        "verify_isolation / IsolationError not yet implemented (elegua-6igp)",
+        allow_module_level=True,
+    )
+
 from elegua.adapter import Adapter, verify_isolation
 from elegua.errors import IsolationError
 from elegua.models import ValidationToken

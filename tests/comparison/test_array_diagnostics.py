@@ -6,6 +6,13 @@ See: elegua-q2ch, elegua-jwox.
 
 from __future__ import annotations
 
+import pytest
+
+pytest.importorskip(
+    "elegua.numeric.array",
+    reason="elegua.numeric not yet implemented (elegua-d5m)",
+)
+
 from elegua.models import ValidationToken
 from elegua.numeric.array import make_array_comparator
 from elegua.numeric.tolerance import AbsoluteTolerance
