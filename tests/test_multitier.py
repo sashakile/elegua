@@ -328,8 +328,8 @@ class _ShortIsolatedRunner:
     def __exit__(self, *exc):
         self._real.__exit__(*exc)
 
-    def run(self, test_file):
-        results = self._real.run(test_file)
+    def run(self, test_file, tier_role: str = "iut"):
+        results = self._real.run(test_file, tier_role=tier_role)
         return [r for i, r in enumerate(results) if i not in self._drop]
 
 

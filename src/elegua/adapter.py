@@ -15,6 +15,16 @@ class Adapter(abc.ABC):
     @abc.abstractmethod
     def adapter_id(self) -> str: ...
 
+    @property
+    def capabilities(self) -> frozenset[str]:
+        """Capabilities this adapter provides.
+
+        Override to declare supported capabilities (for example ``gradient``,
+        ``deterministic``, ``seedable``). Defaults to empty set — no
+        declared capabilities.
+        """
+        return frozenset()
+
     def initialize(self) -> None:  # noqa: B027
         """Set up adapter resources (kernel, connection, etc.).
 

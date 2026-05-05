@@ -17,6 +17,7 @@ from typing import Self
 
 from elegua.adapter import Adapter
 from elegua.bridge import Operation, TestCase, TestFile
+from elegua.capabilities import check_capabilities
 from elegua.context import ExecutionContext
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask
@@ -86,13 +87,32 @@ class IsolatedRunner:
             )
         self._ready = False
 
-    def run(self, test_file: TestFile) -> list[TestRunResult]:
+    def run(self, test_file: TestFile, tier_role: str = "iut") -> list[TestRunResult]:
         """Run all tests with setup-first, per-test isolation.
 
         Raises RuntimeError if called outside a ``with`` block.
+
+        If *test_file* declares capability requirements and this adapter does
+        not satisfy them (after applying any tier-specific exemptions), all
+        tests are returned as skipped with a structured reason rather than
+        executing.
         """
         if not self._ready:
             raise RuntimeError("IsolatedRunner must be used as a context manager")
+
+        exempts = test_file.meta.tier_overrides.get(tier_role, frozenset())
+        ok, missing = check_capabilities(
+            self._adapter.capabilities,
+            test_file.meta.requires,
+            exempts,
+        )
+        if not ok:
+            missing_list = ", ".join(sorted(missing))
+            reason = f"adapter {self._adapter.adapter_id!r} missing capabilities: {missing_list}"
+            return [
+                TestRunResult(test_id=tc.id, skipped=True, skip_reason=reason)
+                for tc in test_file.tests
+            ]
 
         try:
             self._run_setup(test_file.setup)

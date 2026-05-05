@@ -76,8 +76,8 @@ class MultiTierRunner:
         if not self._ready:
             raise RuntimeError("MultiTierRunner must be used as a context manager")
 
-        oracle_results = self._oracle_runner.run(test_file)
-        iut_results = self._iut_runner.run(test_file)
+        oracle_results = self._oracle_runner.run(test_file, tier_role="oracle")
+        iut_results = self._iut_runner.run(test_file, tier_role="iut")
 
         verifications: list[VerificationResult] = []
         for oracle_r, iut_r in zip_longest(oracle_results, iut_results):

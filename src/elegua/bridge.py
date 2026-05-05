@@ -29,6 +29,9 @@ class TestFileMeta:
     layer: int = 1
     oracle_is_axiom: bool = True
     skip: str | None = None
+    requires: frozenset[str] = field(default_factory=frozenset)
+    prefers: frozenset[str] = field(default_factory=frozenset)
+    tier_overrides: dict[str, frozenset[str]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -171,6 +174,12 @@ def load_test_file(path: Path) -> TestFile:
     if "description" not in meta_raw:
         raise SchemaError(f"{path}: meta missing required 'description' field")
 
+    tier_overrides_raw: dict[str, Any] = meta_raw.get("tier_overrides", {})
+    tier_overrides = {
+        role: frozenset(override.get("exempts", []))
+        for role, override in tier_overrides_raw.items()
+    }
+
     meta = TestFileMeta(
         id=meta_raw["id"],
         description=meta_raw["description"],
@@ -178,6 +187,9 @@ def load_test_file(path: Path) -> TestFile:
         layer=meta_raw.get("layer", 1),
         oracle_is_axiom=meta_raw.get("oracle_is_axiom", True),
         skip=meta_raw.get("skip"),
+        requires=frozenset(meta_raw.get("requires", [])),
+        prefers=frozenset(meta_raw.get("prefers", [])),
+        tier_overrides=tier_overrides,
     )
 
     setup = [_parse_operation(op) for op in data.get("setup", [])]
