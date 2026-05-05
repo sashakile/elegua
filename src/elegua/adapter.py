@@ -5,6 +5,7 @@ from __future__ import annotations
 import abc
 from typing import Self
 
+from elegua.errors import IsolationError
 from elegua.models import ValidationToken
 from elegua.task import EleguaTask, TaskStatus
 
@@ -51,6 +52,20 @@ class Adapter(abc.ABC):
                 "suppressing to preserve original exception"
             )
             warnings.warn(msg, RuntimeWarning, stacklevel=2)
+
+
+_ISOLATION_PROBE_TASK = EleguaTask(action="__isolation_probe__", payload={})
+
+
+def verify_isolation(adapter: Adapter, task: EleguaTask | None = None) -> None:
+    """Raise IsolationError if the adapter produces different results on repeated calls."""
+    probe = task if task is not None else _ISOLATION_PROBE_TASK
+    r1 = adapter.execute(probe)
+    r2 = adapter.execute(probe)
+    if r1.result != r2.result or r1.status != r2.status:
+        raise IsolationError(
+            f"Adapter {adapter.adapter_id!r} shows state leakage between executions"
+        )
 
 
 class WolframAdapter(Adapter):

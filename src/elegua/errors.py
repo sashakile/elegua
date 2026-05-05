@@ -23,3 +23,7 @@ class AdapterError(EleguaError):
 
 class OracleError(AdapterError):
     """Oracle-specific failures."""
+
+
+class IsolationError(EleguaError):
+    """Raised when an adapter shows state leakage between executions."""
