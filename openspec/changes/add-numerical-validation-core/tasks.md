@@ -31,7 +31,7 @@
 ## 6. Numerical array blob support
 - [ ] 6.1 Add failing tests for NPY array blob manifests, checksums, lazy manifest reads, and round-trip retrieval.
 - [ ] 6.2 Implement `put_array` / `get_array` with NPY backend and optional Zarr support.
-- [ ] 6.3 Integrate top-K array disagreement reports with the numeric layer.
+- [x] 6.3 Integrate top-K array disagreement reports with the numeric layer.
 
 ## 7. Parallel execution and pooling
 - [ ] 7.1 Add failing tests for parallel cross-adapter dispatch, partial failure reporting, and bounded pool behavior.

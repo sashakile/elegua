@@ -9,14 +9,22 @@ Layer 4 (Invariant): pluggable — register via ComparisonPipeline.register().
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import asdict, dataclass, field, is_dataclass
+from typing import Any, Protocol
 
 from elegua.errors import SchemaError
 from elegua.models import ValidationToken
 from elegua.task import TaskStatus
 
-LayerFn = Callable[[ValidationToken, ValidationToken], TaskStatus]
+
+class DiagnosticLayerResult(Protocol):
+    """Layer result carrying structured diagnostics alongside status."""
+
+    status: TaskStatus
+
+
+LayerResult = TaskStatus | DiagnosticLayerResult
+LayerFn = Callable[[ValidationToken, ValidationToken], LayerResult]
 
 
 @dataclass(frozen=True)
@@ -26,6 +34,7 @@ class ComparisonResult:
     status: TaskStatus
     layer: int
     layer_name: str = ""
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
 def compare_identity(token_a: ValidationToken, token_b: ValidationToken) -> TaskStatus:
@@ -65,6 +74,28 @@ def _strip_keys(result: dict[str, Any] | None, keys: frozenset[str]) -> dict[str
     if result is None or not keys or not keys.intersection(result):
         return result
     return {k: v for k, v in result.items() if k not in keys}
+
+
+def _layer_status(result: LayerResult) -> TaskStatus:
+    """Extract a TaskStatus from either a plain status or diagnostic result."""
+    if isinstance(result, TaskStatus):
+        return result
+    status = getattr(result, "status", None)
+    if isinstance(status, TaskStatus):
+        return status
+    return TaskStatus.MATH_MISMATCH
+
+
+def _layer_diagnostics(result: LayerResult) -> dict[str, Any]:
+    """Extract structured diagnostics from result objects without full payload dumps."""
+    if isinstance(result, TaskStatus):
+        return {}
+    if is_dataclass(result):
+        data = asdict(result)
+        data.pop("status", None)
+        return data
+    diagnostics = getattr(result, "diagnostics", None)
+    return diagnostics if isinstance(diagnostics, dict) else {}
 
 
 class ComparisonPipeline:
@@ -119,6 +150,8 @@ class ComparisonPipeline:
 
         last_layer = 0
         last_name = ""
+        last_diagnostics: dict[str, Any] = {}
+        mismatch_diagnostics: dict[str, Any] = {}
         for layer in self._layers:
             last_layer = layer.num
             last_name = layer.name
@@ -145,12 +178,22 @@ class ComparisonPipeline:
                 result = layer.fn(stripped_a, stripped_b)
             except Exception as exc:
                 raise RuntimeError(f"Layer {layer.num} ({layer.name!r}) raised: {exc}") from exc
-            if result == TaskStatus.OK:
+            status = _layer_status(result)
+            last_diagnostics = _layer_diagnostics(result)
+            if last_diagnostics:
+                mismatch_diagnostics = last_diagnostics
+            if status == TaskStatus.OK:
                 return ComparisonResult(
-                    status=TaskStatus.OK, layer=layer.num, layer_name=layer.name
+                    status=TaskStatus.OK,
+                    layer=layer.num,
+                    layer_name=layer.name,
+                    diagnostics=last_diagnostics,
                 )
         return ComparisonResult(
-            status=TaskStatus.MATH_MISMATCH, layer=last_layer, layer_name=last_name
+            status=TaskStatus.MATH_MISMATCH,
+            layer=last_layer,
+            layer_name=last_name,
+            diagnostics=last_diagnostics or mismatch_diagnostics,
         )
 
 
