@@ -11,6 +11,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.xfail(
+    strict=True,
+    reason="elegua run filters not yet implemented (elegua-38bh)",
+)
+
 # algebra fixture: tagged 'algebra', no special capability requirements
 _FIXTURE_ALGEBRA = """
 [meta]

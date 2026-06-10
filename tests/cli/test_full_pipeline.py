@@ -10,6 +10,13 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.xfail(
+    strict=True,
+    reason="elegua run --full-pipeline not yet implemented (elegua-t5ih)",
+)
+
 FIXTURE = """
 [meta]
 id = "full-pipeline-matrix"
