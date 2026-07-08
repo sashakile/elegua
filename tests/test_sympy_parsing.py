@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import pytest
+
+pytest.importorskip("sympy")
+
 import sympy
 
 from elegua.sympy.parsing import parse_expression

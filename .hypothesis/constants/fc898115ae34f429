@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/multiprocessing/context.py
+# hypothesis_version: 6.151.9
+
+['darwin', 'fork', 'forkserver', 'frozen', 'reduction', 'spawn', 'spawning_popen', 'win32']

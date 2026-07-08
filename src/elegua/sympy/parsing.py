@@ -74,11 +74,7 @@ def _parse_python(text: str) -> sympy.Expr:
     ``global_dict`` to block builtins access.
     """
     # Build a restricted namespace: only public sympy names, no __builtins__
-    _SAFE_LOCALS = {
-        name: obj
-        for name, obj in vars(sympy).items()
-        if not name.startswith("_")
-    }
+    _SAFE_LOCALS = {name: obj for name, obj in vars(sympy).items() if not name.startswith("_")}
     _SAFE_LOCALS.pop("__builtins__", None)
     try:
         result = parse_expr(text, local_dict=_SAFE_LOCALS, global_dict={})

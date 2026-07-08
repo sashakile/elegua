@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import pytest
+
 from elegua.adapter import Adapter
+
+pytest.importorskip("sympy")
+
 from elegua.sympy.adapter import SympyAdapter
 from elegua.task import EleguaTask, TaskStatus
 
