@@ -36,20 +36,26 @@ expr = "T[a, b] * g[-a, -b]"
 
 ```python
 from pathlib import Path
-from elegua.runner import load_toml_tasks
+from elegua.bridge import load_test_file
 
-tasks = load_toml_tasks(Path("tests/fixtures/tracer.toml"))
-for task in tasks:
-    print(f"{task.action}: {task.payload}")
+test_file = load_test_file(Path("tests/fixtures/sxact_basic.toml"))
+for test in test_file.tests:
+    for op in test.operations:
+        print(f"{op.action}: {op.args}")
 ```
 
 ### Validation
 
-- Missing `tasks` key raises `SchemaError`
-- Missing `action` field on any task raises `SchemaError` with the task index
+- Missing `meta` key raises `SchemaError`
+- Missing `id` or `description` in `[meta]` raises `SchemaError`
+- Missing `action` field on any operation raises `SchemaError`
 - Empty `action` string is treated as missing
 
 `SchemaError` is a subclass of both `EleguaError` and `ValueError`, so `except ValueError` catches it too.
+
+!!! tip "Legacy format"
+    Older task files like `tests/fixtures/tracer.toml` use a flat `[[tasks]]` format without setup or named tests.
+    The `elegua run` CLI command and `load_test_file()` both support the legacy format.
 
 ## Property files
 

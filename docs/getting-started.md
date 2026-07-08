@@ -4,7 +4,7 @@
 
 This guide walks you through installing Eleguá and running a complete validation — from TOML fixture to comparison verdict.
 
-## Minimal prerequisites
+## Prerequisites
 
 You need the following installed:
 
@@ -41,82 +41,95 @@ just cov      # run tests with coverage report
 
 ## Run your first comparison
 
-The repository ships with a test fixture at `tests/fixtures/tracer.toml`:
+The repository ships with a test fixture at `tests/fixtures/sxact_basic.toml`:
 
 ```toml
 [meta]
-name = "DefTensor+Contract round-trip"
-description = "Define a rank-2 tensor and contract it"
+id              = "bridge/basic"
+description     = "Bridge loader smoke test"
+tags            = ["bridge", "layer:1"]
+layer           = 1
+oracle_is_axiom = true
 
-[[tasks]]
-action = "DefTensor"
-[tasks.payload]
-name = "T"
-indices = ["a", "b"]
+[[setup]]
+action   = "DefManifold"
+store_as = "M"
+[setup.args]
+name      = "M"
+dimension = 4
+indices   = ["a", "b", "c", "d"]
 
-[[tasks]]
-action = "Contract"
-[tasks.payload]
-expr = "T[a, b] * g[-a, -b]"
+[[tests]]
+id          = "canon_symmetric"
+description = "Symmetric swap canonicalizes to zero"
+
+[[tests.operations]]
+action   = "Evaluate"
+store_as = "diff"
+[tests.operations.args]
+expression = "T[-a,-b] - T[-b,-a]"
 ```
 
-### Step 1 — Load tasks from TOML
+Each test file declares a **meta** section, optional **setup** operations, and named **tests** with operations and optional expected outcomes.
+
+### Step 1 — Load and run a fixture
 
 ```python
 from pathlib import Path
-from elegua.runner import load_toml_tasks
-
-tasks = load_toml_tasks(Path("tests/fixtures/tracer.toml"))
-for task in tasks:
-    print(f"{task.action}: {task.payload}")
-```
-
-```text
-DefTensor: {'name': 'T', 'indices': ['a', 'b']}
-Contract: {'expr': 'T[a, b] * g[-a, -b]'}
-```
-
-### Step 2 — Execute through an adapter
-
-```python
+from elegua.bridge import load_test_file
 from elegua.adapter import WolframAdapter
-from elegua.runner import run_tasks
+from elegua.isolation import IsolatedRunner
 
-oracle_tokens = run_tasks(tasks, adapter=WolframAdapter())
-for token in oracle_tokens:
-    print(f"{token.adapter_id}: {token.status.value} → {token.result}")
+test_file = load_test_file(Path("tests/fixtures/sxact_basic.toml"))
+
+with IsolatedRunner(WolframAdapter()) as runner:
+    results = runner.run(test_file)
+
+for r in results:
+    status = "skipped" if r.skipped else "ok" if not r.error else "error"
+    print(f"{r.test_id}: {status}")
 ```
 
 ```text
-wolfram: ok → {'name': 'T', 'indices': ['a', 'b']}
-wolfram: ok → {'expr': 'T[a, b] * g[-a, -b]'}
+canon_symmetric: ok
+registry_check: ok
 ```
 
-### Step 3 — Compare two runs
+### Step 2 — Compare oracle vs IUT
 
 ```python
-from elegua.comparison import compare_pipeline
+from elegua.multitier import MultiTierRunner
+from elegua.comparison import ComparisonPipeline
 
-iut_tokens = run_tasks(tasks, adapter=WolframAdapter())
-for oracle, iut in zip(oracle_tokens, iut_tokens, strict=True):
-    result = compare_pipeline(oracle, iut)
-    print(f"layer {result.layer} ({result.layer_name}) → {result.status.value}")
+pipeline = ComparisonPipeline()
+
+with MultiTierRunner(WolframAdapter(), WolframAdapter(), pipeline=pipeline) as runner:
+    results = runner.verify(test_file)
+
+for vr in results:
+    status = vr.comparison.status.value
+    print(f"{vr.test_id}: {status}")
 ```
 
 ```text
-layer 1 (identity) → ok
-layer 1 (identity) → ok
+canon_symmetric: ok
+registry_check: ok
 ```
 
-Both tasks match at layer 1 (identity) because the same adapter produces identical output. `compare_pipeline()` runs the default L1+L2 layers. When you need custom layers (L3/L4), instantiate a `ComparisonPipeline` directly — see [Comparison pipeline](guide/comparison.md).
+`MultiTierRunner` runs the same fixture through two different adapters and compares their outputs using the 4-layer `ComparisonPipeline`. When both adapters agree, the result is `ok`. When they diverge, the pipeline identifies which layer detected the mismatch and provides diagnostics.
+
+!!! tip "Legacy format"
+    Older fixtures like `tests/fixtures/tracer.toml` use a flat `[[tasks]]` format. The `elegua run` CLI command (\u2014oracle \u2014iut) handles both formats transparently.
 
 !!! note "The WolframAdapter is a stub"
-    The built-in `WolframAdapter` echoes the input payload as its result. It exists to prove the architecture works end-to-end. Replace it with a real adapter that connects to your symbolic engine — see [Writing an adapter](guide/adapters.md).
+    The built-in `WolframAdapter` echoes the input payload as its result. It exists to prove the architecture works end-to-end. Replace it with a real adapter that connects to your symbolic engine \u2014 see [Writing an adapter](guide/adapters.md).
 
 ## Next steps
 
 - [Task lifecycle](guide/tasks.md) — understand `EleguaTask`, `ValidationToken`, and state transitions
 - [Writing an adapter](guide/adapters.md) — connect Eleguá to your own symbolic engine
 - [Comparison pipeline](guide/comparison.md) — how the 4-layer cascade works
-- [Blob store](guide/blob-store.md) — automatic handling of large payloads (> 1 MB)
-- [Architecture](architecture.md) — the three-tier model and design principles
+
+## Summary
+
+You have installed Eleguá, loaded a TOML fixture, run it through an adapter, and compared two runs using the multi-tier runner. This is the core workflow: declare operations in TOML, execute them through adapters, and compare results.
