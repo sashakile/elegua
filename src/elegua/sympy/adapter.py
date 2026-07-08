@@ -7,6 +7,7 @@ timeout and expression parsing.
 from __future__ import annotations
 
 import math
+import pickle
 from collections.abc import Callable
 from typing import Any
 
@@ -20,14 +21,11 @@ from elegua.task import EleguaTask, TaskStatus
 ActionHandler = Callable[[sympy.Expr, dict[str, Any]], sympy.Expr]
 
 
-import pickle
-
-
 def _timeout_worker(
     action_name: str,
     expr_bytes: bytes,
     payload: dict[str, Any],
-    result_queue: "Any",
+    result_queue: Any,
 ) -> None:
     """Execute CAS action in a subprocess. Module-level for picklability.
 
