@@ -152,6 +152,41 @@ def test_unevaluated_integral_flagged():
 # --- Timeout ---
 
 
+def test_timeout_no_leaked_threads_after_return():
+    """After timeout, no daemon threads remain that were spawned by the adapter."""
+    import threading
+    import time
+
+    # Use a task that would take very long
+    adapter = SympyAdapter(timeout=0.5)
+    task = EleguaTask(
+        action="Integrate",
+        payload={
+            "expression": "exp(sin(x**3) + cos(x**5)) * tan(x**7)",
+            "variable": "x",
+        },
+    )
+
+    # Count threads before
+    names_before = {t.name for t in threading.enumerate()}
+
+    token = adapter.execute(task)
+    assert token.status == TaskStatus.TIMEOUT
+
+    # Small delay for cleanup
+    time.sleep(1.0)
+
+    names_after = {t.name for t in threading.enumerate()}
+    # The daemon thread from the old implementation is named "Thread-N (target)"
+    # After the fix, no such thread should remain
+    leaked = {n for n in names_after - names_before}
+    # Filter out benign system threads
+    leaked = {n for n in leaked
+              if not any(ignore in n.lower()
+                        for ignore in ["pytest", "pydev", "asyncio", "mainthread"])}
+    assert len(leaked) == 0, f"Leaked threads after timeout: {leaked}"
+
+
 def test_timeout_returns_timeout_status():
     """Timeout on long-running operation returns TIMEOUT within bound."""
     import time

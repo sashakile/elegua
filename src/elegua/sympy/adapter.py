@@ -20,6 +20,30 @@ from elegua.task import EleguaTask, TaskStatus
 ActionHandler = Callable[[sympy.Expr, dict[str, Any]], sympy.Expr]
 
 
+import pickle
+
+
+def _timeout_worker(
+    action_name: str,
+    expr_bytes: bytes,
+    payload: dict[str, Any],
+    result_queue: "Any",
+) -> None:
+    """Execute CAS action in a subprocess. Module-level for picklability.
+
+    Receives a serialized expression, looks up the action, executes it,
+    and puts the result (or exception) on the queue.
+    This function must be at module level to be pickled by multiprocessing.
+    """
+    try:
+        expr = pickle.loads(expr_bytes)
+        handler = _ACTIONS[action_name]
+        result = handler(expr, payload)
+        result_queue.put(result)
+    except Exception as exc:
+        result_queue.put(exc)
+
+
 def _var(payload: dict[str, Any]) -> sympy.Symbol:
     """Extract the integration/differentiation variable from payload."""
     return sympy.Symbol(payload["variable"])
@@ -84,7 +108,7 @@ class SympyAdapter(Adapter):
             )
 
         try:
-            result_expr = self._run_with_timeout(handler, expr, task.payload)
+            result_expr = self._run_with_timeout(task.action, expr, task.payload)
         except TimeoutError:
             return ValidationToken(
                 adapter_id=self.adapter_id,
@@ -145,28 +169,36 @@ class SympyAdapter(Adapter):
 
     def _run_with_timeout(
         self,
-        handler: ActionHandler,
+        action_name: str,
         expr: sympy.Expr,
         payload: dict[str, Any],
     ) -> sympy.Expr:
-        """Run handler with timeout using a daemon thread."""
-        import threading
+        """Run handler with timeout using a subprocess.
 
-        result_container: list[Any] = []
-        error_container: list[Exception] = []
+        Uses ``multiprocessing.Process`` so the runaway computation can be
+        terminated (killed) on timeout, preventing leaked threads.
+        """
+        import multiprocessing as mp
 
-        def target() -> None:
-            try:
-                result_container.append(handler(expr, payload))
-            except Exception as exc:
-                error_container.append(exc)
+        expr_bytes = pickle.dumps(expr)
+        result_queue = mp.Queue()
 
-        thread = threading.Thread(target=target, daemon=True)
-        thread.start()
-        thread.join(timeout=self._timeout)
+        proc = mp.Process(
+            target=_timeout_worker,
+            args=(action_name, expr_bytes, payload, result_queue),
+        )
+        proc.start()
+        proc.join(timeout=self._timeout)
 
-        if thread.is_alive():
+        if proc.is_alive():
+            proc.terminate()
+            proc.join(timeout=2.0)
+            if proc.is_alive():
+                proc.kill()
+                proc.join()
             raise TimeoutError
-        if error_container:
-            raise error_container[0]
-        return result_container[0]
+
+        result = result_queue.get_nowait()
+        if isinstance(result, Exception):
+            raise result
+        return result
