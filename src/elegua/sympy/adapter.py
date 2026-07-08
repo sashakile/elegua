@@ -136,8 +136,9 @@ class SympyAdapter(Adapter):
                     continue
                 fval = float(val.real)
                 if not math.isfinite(fval):
-                    continue
-                samples.append({"vars": point, "value": fval})
+                    samples.append({"vars": point, "value": None, "non_finite": True})
+                else:
+                    samples.append({"vars": point, "value": fval})
             except Exception:
                 pass
         return samples

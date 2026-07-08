@@ -296,7 +296,148 @@ def test_non_numeric_value_none_skipped():
     assert compare(a, b) == TaskStatus.MATH_MISMATCH
 
 
-def test_mixed_numeric_and_non_numeric_values():
+# --- Non-finite sample handling (F12 fix) ---
+
+
+def test_both_nan_at_same_point_is_agreement():
+    """Both sides non-finite at same point → OK (agree on being non-finite)."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "log(x)",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "log(x)",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+            ],
+        }
+    )
+    assert compare(a, b) == TaskStatus.OK
+
+
+def test_one_nan_one_finite_is_mismatch():
+    """Same point: one non-finite, one finite → MATH_MISMATCH."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": 1.0},
+            ],
+        }
+    )
+    assert compare(a, b) == TaskStatus.MATH_MISMATCH
+
+
+def test_nan_on_one_side_other_side_missing_point():
+    """Non-finite on one side, no matching point on other side → MATH_MISMATCH."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [
+                {"vars": {"x": 1.0}, "value": 1.0},
+            ],
+        }
+    )
+    assert compare(a, b) == TaskStatus.MATH_MISMATCH
+
+
+def test_all_nan_both_sides_not_false_ok():
+    """All points non-finite on both sides → OK (they agree at every point)."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+                {"vars": {"x": 1.0}, "value": None, "non_finite": True},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+                {"vars": {"x": 1.0}, "value": None, "non_finite": True},
+            ],
+        }
+    )
+    assert compare(a, b) == TaskStatus.OK
+
+
+def test_mixed_nan_and_finite_matching():
+    """Some non-finite, some finite — all must agree."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+                {"vars": {"x": 1.0}, "value": 1.0},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+                {"vars": {"x": 1.0}, "value": 1.0},
+            ],
+        }
+    )
+    assert compare(a, b) == TaskStatus.OK
+
+
+def test_mixed_nan_finite_mismatch_at_finite_point():
+    """Non-finite matches, but finite point diverges → MATH_MISMATCH."""
+    compare = make_numeric_comparator(tol=1e-6, min_samples=1)
+    a = _token(
+        {
+            "repr": "f",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+                {"vars": {"x": 1.0}, "value": 1.0},
+            ],
+        }
+    )
+    b = _token(
+        {
+            "repr": "g",
+            "numeric_samples": [
+                {"vars": {"x": 0.0}, "value": None, "non_finite": True},
+                {"vars": {"x": 1.0}, "value": 2.0},
+            ],
+        }
+    )
+    assert compare(a, b) == TaskStatus.MATH_MISMATCH
+
+
+def test_mixed_non_numeric_and_numeric_values():
     """Only numeric samples participate in comparison."""
     compare = make_numeric_comparator(tol=1e-6, min_samples=1)
     a = _token(
