@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/socketserver.py
-# hypothesis_version: 6.151.9
-
-[0.5, 300, 8192, '-', '0.4', 'AF_UNIX', 'BaseRequestHandler', 'BaseServer', 'ForkingMixIn', 'ForkingTCPServer', 'ForkingUDPServer', 'PollSelector', 'SO_REUSEADDR', 'SO_REUSEPORT', 'StreamRequestHandler', 'TCPServer', 'ThreadingMixIn', 'ThreadingTCPServer', 'ThreadingUDPServer', 'UDPServer', 'UnixDatagramServer', 'UnixStreamServer', '_threads', 'fork', 'rb', 'wb']

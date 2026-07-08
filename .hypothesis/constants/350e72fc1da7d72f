@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/secrets.py
-# hypothesis_version: 6.151.9
-
-[b'=', 'SystemRandom', 'ascii', 'choice', 'compare_digest', 'randbelow', 'randbits', 'token_bytes', 'token_hex', 'token_urlsafe']

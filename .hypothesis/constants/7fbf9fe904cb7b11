@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/difflib.py
-# hypothesis_version: 6.151.9
-
-[b'\n', 0.0, 0.6, 0.74999, 1.0, 2.0, 100, 200, '\x00', '\x00+', '\x00-', '\x00^', '\x01', '\t{}', ' id="%s%s"', '! ', '#', '%d', '%s %s', '&', '&amp;', '&gt;', '&lt;', '&nbsp;', '(\\++|\\-+|\\^+)', '*** {} ****{}', '*** {}{}{}', '***************', '+', '+ ', '+++ {}{}{}', '+-', '+--', '-', '- ', '-+?', '--+', '--++', '--- {} ----{}', '--- {}{}{}', '--?+', '-?+', '-?+?', '<', '</span>', '>', '?', '@@ -{} +{} @@{}', 'Differ', 'HtmlDiff', 'IS_CHARACTER_JUNK', 'IS_LINE_JUNK', 'Match', 'SequenceMatcher', 'X', '^', 'a b size', 'ascii', 'context_diff', 'delete', 'diff_bytes', 'equal', 'from%d_', 'get_close_matches', 'insert', 'n must be > 0: %r', 'ndiff', 'replace', 'restore', 'surrogateescape', 'to%d_', 'unified_diff', 'unknown tag %r', 'utf-8', 'xmlcharrefreplace', '{}', '{},{}']

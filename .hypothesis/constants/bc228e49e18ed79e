@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/importlib/__init__.py
-# hypothesis_version: 6.151.9
-
-['.', '__import__', '__init__.py', '_bootstrap.py', 'import_module', 'importlib', 'importlib._bootstrap', 'invalidate_caches', 'reload']

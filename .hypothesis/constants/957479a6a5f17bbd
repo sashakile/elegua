@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/fnmatch.py
-# hypothesis_version: 6.151.9
-
-[512, 32768, '!', '(?!)', '(?>.*?', '([&~|])', ')', '*', '-', '.', '.*', '?', 'ISO-8859-1', '[', '\\', '\\-', '\\[', '\\\\', '\\\\\\1', ']', '^', 'filter', 'filterfalse', 'fnmatch', 'fnmatchcase', 'translate']

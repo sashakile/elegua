@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/asyncio/constants.py
-# hypothesis_version: 6.151.9
-
-[30.0, 60.0, 256, 300, 512, 1024]

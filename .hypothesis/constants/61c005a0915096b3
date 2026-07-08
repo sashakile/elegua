@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/pathlib/_os.py
-# hypothesis_version: 6.151.9
-
-[1024, 'CopyFile2', 'FICLONE', 'PosixPath', 'WindowsPath', '_access_time_ns', '_bsd_flags', '_entry', '_exists', '_fcopyfile', '_is_dir', '_is_file', '_is_symlink', '_lstat_result', '_mod_time_ns', '_path', '_posix_permissions', '_stat_result', '_xattrs', 'b', 'bt', 'chflags', 'copy_file_range', 'listxattr', 'nt', 'r', 'sendfile', 'setxattr', 'st_flags']

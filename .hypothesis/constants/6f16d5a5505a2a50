@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/selectors.py
-# hypothesis_version: 6.151.9
-
-[0.001, 1000.0, 'Invalid events: {!r}', 'Selector is closed', 'SelectorKey', 'data', 'devpoll', 'epoll', 'events', 'fd', 'fileobj', 'kqueue', 'poll', 'win32']

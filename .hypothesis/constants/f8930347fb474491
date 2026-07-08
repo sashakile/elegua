@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/cmd.py
-# hypothesis_version: 6.151.9
-
-['!', '%s\n', '(Cmd) ', '*** No help on %s', ', ', '<empty>\n', '=', '?', 'Cmd', 'EOF', 'bind ^I rl_complete', 'complete_', 'do_', 'do_shell', 'editline', 'help ', 'help_', 'shell ', 'tab']

@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/codeop.py
-# hypothesis_version: 6.151.9
-
-[512, 1024, 16384, '#', '<input>', 'CommandCompiler', 'Compile', 'compile_command', 'eval', 'ignore', 'incomplete_input', 'pass', 'single']

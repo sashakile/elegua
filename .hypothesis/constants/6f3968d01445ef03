@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/ctypes/__init__.py
-# hypothesis_version: 6.151.9
-
-[-2147221231, 65535, '%s(%s)', '%s(<NULL>)', ')', '*', '.', '.a(', '.fwork', '/', '1.1.0', '<uninitialized>', '?', 'B', 'CFUNCTYPE', 'D', 'F', 'G', 'H', 'I', 'L', 'LDLIBRARY', 'O', 'P', 'Q', 'WINFUNCTYPE', 'Z', '\\', '_', '__', '__pointer_type__', '_type_', 'aix', 'android', 'b', 'c', 'cygwin', 'd', 'darwin', 'f', 'g', 'h', 'i', 'l', 'nt', 'posix', 'python dll', 'q', 'u', 'use_errno', 'use_last_error', 'z']

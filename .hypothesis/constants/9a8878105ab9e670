@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/concurrent/futures/__init__.py
-# hypothesis_version: 6.151.9
-
-['ALL_COMPLETED', 'BrokenExecutor', 'CancelledError', 'Executor', 'FIRST_COMPLETED', 'FIRST_EXCEPTION', 'Future', 'InvalidStateError', 'ProcessPoolExecutor', 'ThreadPoolExecutor', 'TimeoutError', '__author__', '__doc__', 'as_completed', 'wait']

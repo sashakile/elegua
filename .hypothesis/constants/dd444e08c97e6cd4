@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/encodings/__init__.py
-# hypothesis_version: 6.151.9
-
-[500, '*', '--unknown--', '.', '_', 'ascii', 'cp', 'encodings.', 'win32', 'x']

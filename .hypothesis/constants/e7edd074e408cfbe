@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/string/__init__.py
-# hypothesis_version: 6.151.9
-
-['$', '01234567', '0123456789', 'ABCDEF', 'Formatter', 'Template', 'a', 'abcdef', 'ascii_letters', 'ascii_lowercase', 'ascii_uppercase', 'braced', 'capwords', 'digits', 'escaped', 'hexdigits', 'invalid', 'named', 'octdigits', 'pattern', 'printable', 'punctuation', 'r', 's', 'whitespace']

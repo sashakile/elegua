@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/multiprocessing/process.py
-# hypothesis_version: 6.151.9
-
-['-', '/mp', ':', '<%s>', 'BaseProcess', 'MainProcess', 'Process %s:\n', 'SIG', '_', 'active_children', 'authkey', 'closed', 'current_process', 'daemon', 'exitcode=%s', 'initial', 'name=%r', 'parent=%s', 'parent_process', 'pid=%s', 'process not started', 'semprefix', 'started', 'stopped', 'unknown']

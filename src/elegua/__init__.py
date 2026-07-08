@@ -31,7 +31,6 @@ from elegua.property import (
     PropertySpec,
     StrategyRegistry,
 )
-from elegua.runner import load_toml_tasks, run_tasks
 from elegua.snapshot import RecordingAdapter, ReplayAdapter, SnapshotStore
 from elegua.task import EleguaTask, InvalidTransition, TaskStatus
 from elegua.verdict import Verdict, evaluate_expected
@@ -80,6 +79,4 @@ __all__ = [
     "evaluate_expected",
     "load_sxact_toml",
     "load_test_file",
-    "load_toml_tasks",
-    "run_tasks",
 ]

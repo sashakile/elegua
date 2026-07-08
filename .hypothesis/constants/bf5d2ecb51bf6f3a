@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/linecache.py
-# hypothesis_version: 6.151.9
-
-['<', '<frozen ', '>', '__file__', '__loader__', '__name__', '__spec__', 'checkcache', 'clearcache', 'get_source', 'getline', 'lazycache', 'loader', 'name']

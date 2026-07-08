@@ -3,6 +3,9 @@
 .dolt/
 *.db
 
+# Hypothesis test artifacts
+.hypothesis/
+
 # Secrets / credentials
 .env
 .env.*

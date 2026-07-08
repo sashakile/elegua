@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/shlex.py
-# hypothesis_version: 6.151.9
-
-['"', '"%s", line %d: ', '#', "'", '\'"', '\'"\'"\'', "''", '();<>|&', 'No closing quotation', 'No escaped character', 'Token: ', '\\', '__main__', 'a', 'c', 'join', 'quote', 'r', 'shlex', 'shlex: raw token=', 'shlex: raw token=EOF', 'shlex: token=', 'shlex: token=EOF', 'split', '~-./*?=']

@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/ast.py
-# hypothesis_version: 6.151.9
-
-['%s(%s%s)', '%s(%s)', '%s=%s', ',\n', ', ', '-', '--feature-version', '--include-attributes', '--indent', '--mode', '--no-type-comments', '--optimize', '--show-empty', '-O', '-a', '-i', '-m', '.', '<stdin>', '<unknown>', '?', 'LEVEL', 'VERSION', '[%s%s]', '[]', '__main__', '__origin__', 'col_offset', 'dims', 'end_', 'end_col_offset', 'end_lineno', 'eval', 'exec', 'expected AST, got %r', 'func_type', 'infile', 'lineno', 'rb', 'set', 'single', 'store_false', 'store_true', 'visit_']

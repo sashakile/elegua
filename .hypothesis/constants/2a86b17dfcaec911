@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/asyncio/base_futures.py
-# hypothesis_version: 6.151.9
-
-['CANCELLED', 'FINISHED', 'PENDING', '{}, <{} more>, {}', '{}, {}']

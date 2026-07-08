@@ -1,4 +1,0 @@
-# file: /home/linuxbrew/.linuxbrew/lib/python3.14/asyncio/events.py
-# hypothesis_version: 6.151.9
-
-[100, '<{}>', 'AbstractEventLoop', 'AbstractServer', 'Handle', 'TimerHandle', '__weakref__', '_args', '_callback', '_cancelled', '_context', '_get_running_loop', '_lock', '_loop', '_repr', '_scheduled', '_set_running_loop', '_source_traceback', '_when', 'cancelled', 'exception', 'fork', 'get_event_loop', 'get_running_loop', 'handle', 'message', 'new_event_loop', 'set_event_loop', 'source_traceback', 'win32']
