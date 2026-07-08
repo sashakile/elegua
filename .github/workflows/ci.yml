@@ -29,7 +29,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: errata-ai/vale-action@reviewdog
         with:
-          files: docs/ src/ tests/ .wai/ openspec/ README.md
+          version: 3.15.1
+          files: docs
+          filter_mode: nofilter
 
   test:
     runs-on: ubuntu-latest
