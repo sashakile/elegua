@@ -84,3 +84,52 @@ def test_unparsable_mathematica_mode():
     """Invalid input in mathematica mode raises ValueError."""
     with pytest.raises(ValueError, match=r"(?i)parse"):
         parse_expression("<<<invalid>>>", parse_mode="mathematica")
+
+
+# --- Security: code injection via parse_expr (elegua-bee8) ---
+
+
+def test_parse_expr_rejects_code_injection():
+    """parse_expr with __import__ must raise ValueError, not execute code.
+
+    parse_expr() uses eval() internally. Without namespace restriction,
+    __import__('os').system('id') would execute a shell command.
+    """
+    # This should raise ValueError, NOT execute a shell command
+    with pytest.raises(ValueError, match=r"(?i)parse|injection|unsafe"):
+        parse_expression("__import__('os').system('id')")
+
+
+def test_parse_expr_rejects_os_call():
+    """os.system call via parse_expr should raise ValueError."""
+    with pytest.raises(ValueError, match=r"(?i)parse|injection|unsafe"):
+        parse_expression("__import__('os').popen('id')")
+
+
+def test_parse_expr_rejects_builtins_access():
+    """Access to __builtins__ via parse_expr should raise ValueError."""
+    with pytest.raises(ValueError, match=r"(?i)parse|injection|unsafe"):
+        parse_expression("__builtins__['eval']('1+1')")
+
+
+def test_parse_expr_injection_raises_in_python_mode():
+    """Code injection via __import__ in explicit python mode raises ValueError."""
+    with pytest.raises(ValueError, match=r"(?i)parse|injection|unsafe"):
+        parse_expression(
+            "__import__('os').system('id')",
+            parse_mode="python",
+        )
+
+
+def test_parse_expr_legitimate_expression_still_works():
+    """Normal expressions like sin(x) + cos(x) still parse correctly."""
+    x = sympy.Symbol("x")
+    result = parse_expression("sin(x) + cos(x)")
+    assert result == sympy.sin(x) + sympy.cos(x)
+
+
+def test_parse_expr_python_mode_still_works():
+    """Normal expressions in explicit python mode still parse correctly."""
+    x = sympy.Symbol("x")
+    result = parse_expression("x**2 + 1", parse_mode="python")
+    assert result == x**2 + 1

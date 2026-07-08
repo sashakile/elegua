@@ -66,9 +66,22 @@ def _parse_mathematica(text: str) -> sympy.Expr:
 
 
 def _parse_python(text: str) -> sympy.Expr:
-    """Parse Python/SymPy syntax."""
+    """Parse Python/SymPy syntax with a restricted namespace to prevent code injection.
+
+    ``parse_expr()`` uses ``eval()`` internally. Without namespace restriction,
+    arbitrary Python code can be executed (e.g. ``__import__('os').system('id')``).
+    We pass a restricted ``local_dict`` (only public sympy names) and an empty
+    ``global_dict`` to block builtins access.
+    """
+    # Build a restricted namespace: only public sympy names, no __builtins__
+    _SAFE_LOCALS = {
+        name: obj
+        for name, obj in vars(sympy).items()
+        if not name.startswith("_")
+    }
+    _SAFE_LOCALS.pop("__builtins__", None)
     try:
-        result = parse_expr(text)
+        result = parse_expr(text, local_dict=_SAFE_LOCALS, global_dict={})
     except Exception as exc:
         msg = f"Python parse failed for {text!r}: {exc}"
         raise ValueError(msg) from exc
