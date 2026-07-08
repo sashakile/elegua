@@ -1,0 +1,4 @@
+# file: /var/home/sasha/para/areas/dev/gh/sk/elegua/src/elegua/provenance.py
+# hypothesis_version: 6.151.9
+
+['adapter_id', 'adapter_version', 'duration', 'elegua_version', 'environment_hash', 'fixture_content_hash', 'fixture_id', 'git_sha', 'host', 'metadata', 'provenance', 'seed', 'timestamp']

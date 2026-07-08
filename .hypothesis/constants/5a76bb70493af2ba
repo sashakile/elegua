@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/ctypes/_endian.py
+# hypothesis_version: 6.151.9
+
+['Invalid byteorder', '__ctype_be__', '__ctype_le__', '_fields_', 'big', 'little']

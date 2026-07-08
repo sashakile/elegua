@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/asyncio/base_subprocess.py
+# hypothesis_version: 6.151.9
+
+['<{}>', 'closed', 'not started', 'running', 'subprocess', 'win32']

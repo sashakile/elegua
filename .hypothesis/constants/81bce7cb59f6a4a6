@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/concurrent/futures/thread.py
+# hypothesis_version: 6.151.9
+
+['%s_%d', 'Exception in worker', 'register_at_fork']

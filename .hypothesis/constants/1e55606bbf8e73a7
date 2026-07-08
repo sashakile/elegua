@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/importlib/resources/_common.py
+# hypothesis_version: 6.151.9
+
+['__name__', 'get_resource_reader', 'wrapper']

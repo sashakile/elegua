@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/_pyrepl/utils.py
+# hypothesis_version: 6.151.9
+
+[128, '\x01', '\x02', '\x1a', '(', '([{', ')]}', '*', '-', '...', ':', 'A', 'C', 'Cf', 'False', 'H', 'N', 'Na', 'None', 'True', '[', '\\u%04x', '\\x01.*?\\x02', '\\x1b\\[[ -@]*[A-~]', '_', 'await', 'builtin', 'case', 'class', 'comment', 'def', 'definition', 'keyword', 'keyword_constant', 'lambda', 'match', 'not', 'number', 'op', 'soft_keyword', 'string', 'type', '{', '}', '~', '\xad']

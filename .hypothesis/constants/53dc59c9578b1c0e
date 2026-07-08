@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/unittest/runner.py
+# hypothesis_version: 6.151.9
+
+[0.001, ' (%s)', ' ... ', '%-10s %s', '%.3fs', '%s', ', ', '-', '=', '__getstate__', 's', 'separator2', 'startTestRun', 'stopTestRun', 'stream', 'unexpectedSuccesses']

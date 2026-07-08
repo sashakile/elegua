@@ -1,0 +1,4 @@
+# file: /var/home/sasha/para/areas/dev/gh/sk/elegua/src/elegua/bridge.py
+# hypothesis_version: 6.151.9
+
+['^[a-zA-Z_]\\w*$', '_store_as', 'action', 'args', 'comparison_tier', 'dependencies', 'description', 'exempts', 'expect_error', 'expected', 'expr', 'id', 'is_zero', 'layer', 'meta', 'normalized', 'operations', 'oracle_is_axiom', 'prefers', 'properties', 'rb', 'requires', 'setup', 'skip', 'store_as', 'tags', 'tests', 'tier_overrides', 'value']

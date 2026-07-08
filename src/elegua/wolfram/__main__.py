@@ -15,7 +15,7 @@ def main() -> None:
     sub = parser.add_subparsers(dest="command")
 
     serve_cmd = sub.add_parser("serve", help="Start the oracle HTTP server.")
-    serve_cmd.add_argument("--host", default="0.0.0.0", help="Bind address (default: 0.0.0.0)")
+    serve_cmd.add_argument("--host", default="127.0.0.1", help="Bind address (default: 127.0.0.1)")
     serve_cmd.add_argument("--port", type=int, default=8765, help="Port (default: 8765)")
 
     args = parser.parse_args()

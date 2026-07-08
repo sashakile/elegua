@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/multiprocessing/reduction.py
+# hypothesis_version: 6.151.9
+
+[b'A', 256, 'CMSG_LEN', 'DupFd', 'DupHandle', 'ForkingPickler', 'SCM_RIGHTS', 'dump', 'duplicate', 'i', 'recv_handle', 'recvfds', 'register', 'send_handle', 'sendfds', 'sendmsg', 'steal_handle', 'win32']

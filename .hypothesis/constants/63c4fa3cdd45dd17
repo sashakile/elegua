@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/unittest/loader.py
+# hypothesis_version: 6.151.9
+
+['.', '..', 'ModuleSkipped', '[_a-z]\\w*\\.py$', '__file__', '__init__.py', '__path__', 'load_tests', 'runTest', 'test', 'test*.py']

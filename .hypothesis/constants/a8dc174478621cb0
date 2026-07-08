@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/urllib/response.py
+# hypothesis_version: 6.151.9
+
+['<urllib response>', 'addbase', 'addclosehook', 'addinfo', 'addinfourl']

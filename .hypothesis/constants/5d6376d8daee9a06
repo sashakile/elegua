@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/xml/dom/minicompat.py
+# hypothesis_version: 6.151.9
+
+['EmptyNodeList', 'NodeList', 'StringTypes', '_get_', '_set_', 'defproperty']

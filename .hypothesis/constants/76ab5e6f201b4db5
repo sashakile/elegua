@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/importlib/util.py
+# hypothesis_version: 6.151.9
+
+['.', 'LazyLoader', 'Loader', 'MAGIC_NUMBER', '__class__', '__dict__', '__path__', '__spec__', 'cache_from_source', 'decode_source', 'exec_module', 'find_spec', 'is_loading', 'lock', 'module_from_spec', 'resolve_name', 'source_from_cache', 'source_hash', 'spec_from_loader']

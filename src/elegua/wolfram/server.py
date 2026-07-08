@@ -14,6 +14,8 @@ Start with: ``python -m elegua.wolfram serve``
 from __future__ import annotations
 
 import atexit
+import os
+import secrets
 import time
 
 from flask import Flask, jsonify, request  # type: ignore[import-untyped]
@@ -22,6 +24,33 @@ from elegua.wolfram.kernel import KernelManager
 
 app = Flask(__name__)
 km = KernelManager()
+
+# --- Authentication ---
+# Accept token from env var; if unset, generate a random one and log it.
+_ORACLE_TOKEN: str | None = os.environ.get("ELEGUA_ORACLE_TOKEN")
+if _ORACLE_TOKEN is None:
+    _ORACLE_TOKEN = secrets.token_urlsafe(32)
+    import logging
+
+    logging.getLogger(__name__).warning(
+        "No ELEGUA_ORACLE_TOKEN set — generated ephemeral token: %s",
+        _ORACLE_TOKEN,
+    )
+else:
+    import logging
+
+    logging.getLogger(__name__).info("Using ELEGUA_ORACLE_TOKEN from environment")
+
+
+@app.before_request
+def _check_auth() -> tuple[tuple | None, int]:  # type: ignore[no-untyped-def]
+    """Require Authorization: Bearer <token> on all routes except /health."""
+    if request.endpoint == "health":
+        return  # type: ignore[return-value]
+    auth = request.headers.get("Authorization", "")
+    if auth.startswith("Bearer ") and auth[len("Bearer ") :] == _ORACLE_TOKEN:
+        return  # type: ignore[return-value]
+    return jsonify({"status": "error", "error": "Unauthorized"}), 401
 
 
 @app.route("/health", methods=["GET"])
@@ -97,7 +126,15 @@ def check_state():  # type: ignore[no-untyped-def]
     return jsonify({"clean": is_clean, "leaked": leaked})
 
 
-def serve(host: str = "0.0.0.0", port: int = 8765) -> None:
+def serve(host: str = "127.0.0.1", port: int = 8765) -> None:
     """Start the oracle HTTP server."""
     atexit.register(km.stop)
     app.run(host=host, port=port, threaded=True)
+
+
+def get_oracle_token() -> str:
+    """Return the current oracle authentication token.
+
+    This is used by OracleClient to authenticate requests.
+    """
+    return _ORACLE_TOKEN  # type: ignore[return-value]

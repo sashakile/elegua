@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/annotationlib.py
+# hypothesis_version: 6.151.9
+
+['*', ', is_class=True', '...', '<string>', 'Format', 'ForwardRef', 'ForwardRef._evaluate', 'Interpolation', 'Template', '__annotate__', '__annotate_func__', '__annotations__', '__arg__', '__ast_node__', '__cell__', '__classdict__', '__code__', '__dict__', '__extra_names__', '__forward_is_class__', '__forward_module__', '__globals__', '__module__', '__owner__', '__stringifier_dict__', '__type_params__', '__weakref__', '__wrapped__', 'builtins', 'eval', 'functools', 'get_annotations', 'type_repr']

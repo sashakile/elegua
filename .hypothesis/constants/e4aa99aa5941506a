@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/email/iterators.py
+# hypothesis_version: 6.151.9
+
+[' [%s]', 'body_line_iterator', 'text', 'walk']

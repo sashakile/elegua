@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/uuid.py
+# hypothesis_version: 6.151.9
+
+[b'.', b'0', b':', b'Address', b'address:', b'ether', b'hwaddr', b'lan0', b'link/ether', b'lladdr', 100, 128, 255, 4095, 8192, 16383, 16384, 32768, 49152, 61440, 65535, 1000000, 1073741823, 4294967295, 2199023255551, 4398046511103, 281474976710655, 122192928000000000, 4611686018427387903, 9223372036854775808, '%s(%r)', '(%s)', '-', '--count', '--name', '--namespace', '--uuid', '-C', '-N', '-a', '-ai', '-an', '-av', '-ian', '-n', '-u', '/sbin', '/usr/sbin', '@dns', '@oid', '@url', '@x500', 'AIX', 'Android', 'C', 'LC_ALL', 'Linux', 'NUM', 'PATH', 'UuidCreate', '__main__', '__weakref__', 'arp', 'darwin', 'emscripten', 'generate_time_safe', 'gethostbyname', 'ifconfig', 'int', 'ip', 'is_safe', 'lanscan', 'link', 'linux', 'netstat', 'nt', 'posix', 'urn:', 'urn:uuid:', 'utf-8', 'uuid1', 'uuid3', 'uuid4', 'uuid5', 'uuid6', 'uuid7', 'uuid8', 'uuid:', 'wasi', 'win32', '{}']

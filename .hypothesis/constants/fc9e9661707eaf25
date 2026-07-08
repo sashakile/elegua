@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/pkgutil.py
+# hypothesis_version: 6.151.9
+
+['#', '.', '.pkg', '/', "Can't open %s: %s\n", 'ModuleInfo', '__file__', '__init__', '__init__.py', '__path__', 'cln', 'extend_path', 'find_loader', 'find_spec', 'get_data', 'get_importer', 'iter_importers', 'iter_modules', 'obj', 'pkg', 'read_code', 'walk_packages']

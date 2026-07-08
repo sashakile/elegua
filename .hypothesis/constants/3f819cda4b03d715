@@ -1,0 +1,4 @@
+# file: /var/home/sasha/para/areas/dev/gh/sk/elegua/src/elegua/testing/echo_oracle.py
+# hypothesis_version: 6.151.9
+
+[200, 400, 404, '/check-state', '/cleanup', '/evaluate', '/evaluate-with-init', '/health', '/restart', '127.0.0.1', 'Content-Length', 'Content-Type', "Missing 'expr' field", 'Not found', 'application/json', 'clean', 'cleanup-ok', 'error', 'expr', 'leaked', 'ok', 'result', 'status', 'timing_ms']

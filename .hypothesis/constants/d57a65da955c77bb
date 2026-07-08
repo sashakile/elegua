@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/zoneinfo/_tzpath.py
+# hypothesis_version: 6.151.9
+
+[b'TZif', '/', 'PYTHONTZPATH', 'TZPATH', '_', 'posix', 'posixrules', 'r', 'rb', 'right', 'tzdata', 'utf-8', 'zones']

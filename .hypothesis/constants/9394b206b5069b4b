@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/getpass.py
+# hypothesis_version: 6.151.9
+
+['\x00', '\x03', '\x04', '\x08', '\x08 \x08', '/dev/tty', 'GetPassWarning', 'LNAME', 'LOGNAME', 'Password: ', 'TCSASOFT', 'USER', 'USERNAME', 'getpass', 'getuser', 'replace', 'w+', '\x7f']

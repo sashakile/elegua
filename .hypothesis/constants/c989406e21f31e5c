@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/textwrap.py
+# hypothesis_version: 6.151.9
+
+[' [...]', '(%s+)', '-', 'TextWrapper', '[%s]', '[\\w!"\\\'&.,?]', '[^', '[^\\d\\W]', '__main__', 'dedent', 'fill', 'indent', 'lt', 'nws', 'shorten', 'wp', 'wrap', 'ws']

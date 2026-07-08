@@ -146,3 +146,39 @@ class TestBaseUrl:
     def test_trailing_slash_stripped(self):
         client = OracleClient("http://fake:1234/")
         assert client.base_url == "http://fake:1234"
+
+
+class TestTokenAuth:
+    def test_no_token_by_default(self):
+        client = OracleClient("http://fake:1234")
+        headers = client._headers()
+        assert "Authorization" not in headers
+
+    def test_token_in_headers(self):
+        client = OracleClient("http://fake:1234", token="my-secret-token")
+        headers = client._headers()
+        assert headers["Authorization"] == "Bearer my-secret-token"
+
+    def test_token_sent_in_get_request(self):
+        client = OracleClient("http://fake:1234", token="t0k3n")
+        mock = _mock_response({"status": "ok"})
+        with patch("urllib.request.urlopen", return_value=mock) as m:
+            client._get("/health", timeout=5)
+            req = m.call_args[0][0]
+            assert req.headers["Authorization"] == "Bearer t0k3n"
+
+    def test_token_sent_in_post_request(self):
+        client = OracleClient("http://fake:1234", token="t0k3n")
+        mock = _mock_response({"status": "ok"})
+        with patch("urllib.request.urlopen", return_value=mock) as m:
+            client._post("/evaluate", {"expr": "1+1"}, timeout=5)
+            req = m.call_args[0][0]
+            assert req.headers["Authorization"] == "Bearer t0k3n"
+
+    def test_public_methods_pass_token(self):
+        client = OracleClient("http://fake:1234", token="t0k3n")
+        mock = _mock_response({"status": "ok"})
+        with patch("urllib.request.urlopen", return_value=mock) as m:
+            client.health()
+            req = m.call_args[0][0]
+            assert req.headers["Authorization"] == "Bearer t0k3n"

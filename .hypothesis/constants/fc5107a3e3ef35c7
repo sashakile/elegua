@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/weakref.py
+# hypothesis_version: 6.151.9
+
+['<%s at %#x>', 'CallableProxyType', 'ProxyType', 'ProxyTypes', 'ReferenceType', 'WeakKeyDictionary', 'WeakMethod', 'WeakSet', 'WeakValueDictionary', '__weakref__', '_alive', '_func_ref', '_meth_type', 'args', 'atexit', 'finalize', 'func', 'getweakrefcount', 'getweakrefs', 'index', 'items', 'key', 'kwargs', 'proxy', 'ref', 'weakref']

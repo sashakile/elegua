@@ -58,11 +58,12 @@ class OracleAdapter(Adapter):
         expr_builder: Callable[[str, dict[str, Any]], str] | None = None,
         adapter_id: str = "wolfram-oracle",
         result_mapper: ResultMapperFn | None = None,
+        token: str | None = None,
     ) -> None:
         if oracle is None:
             from elegua.oracle import OracleClient
 
-            oracle = OracleClient(base_url)
+            oracle = OracleClient(base_url, token=token)
         self._oracle = oracle
         self._timeout = timeout
         self._expr_builder = expr_builder or _default_expr_builder

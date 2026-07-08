@@ -12,7 +12,7 @@ services:
   wolfram-oracle:
     build: ./wolfram
     ports:
-      - "8765:8765"
+      - "127.0.0.1:8765:8765"
     volumes:
       - wolfram-config:/root/.WolframEngine
     environment:

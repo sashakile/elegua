@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/hmac.py
+# hypothesis_version: 6.151.9
+
+[b'\x00', 256, '_hmac', '_inner', '_outer', 'block_size', 'digest_size']

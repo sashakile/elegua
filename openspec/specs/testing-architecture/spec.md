@@ -8,9 +8,7 @@
 
 ## Purpose
 This specification defines the three-layer testing architecture for Eleguá. It ensures that symbolic systems are mathematically correct and performant by providing a language-agnostic framework for validation across multiple tiers.
-
 ## Requirements
-
 ### Requirement: Functional Validation
 The testing architecture SHALL validate the functional equivalence of an implementation against a high-fidelity oracle using a default numerical tolerance of `1e-12`.
 
@@ -33,7 +31,7 @@ The architecture SHALL support property-based tests that describe mathematical l
 - **THEN** it MUST hold for the specified number of random samples.
 
 ### Requirement: Verdict Evaluation
-The architecture SHALL evaluate test results against expected outcomes defined in the test file, producing a `Verdict` with status `pass`, `fail`, `skip`, or `error`.
+The architecture SHALL evaluate test results against expected outcomes defined in the test file, producing a `Verdict` with status `pass`, `fail`, `skip`, or `error`. Additionally, `Verdict` SHALL provide a `from_comparison()` class method to bridge `ComparisonResult` into the verdict system.
 
 #### Scenario: Expression match
 - **GIVEN** a test case with `expected.expr = "x^2"`
@@ -59,6 +57,16 @@ The architecture SHALL evaluate test results against expected outcomes defined i
 - **GIVEN** a caller-injected normalizer function
 - **WHEN** `expected.expr` or `expected.normalized` is checked
 - **THEN** both actual and expected values MUST be normalized before comparison.
+
+#### Scenario: Bridge from ComparisonResult (OK)
+- **GIVEN** a `ComparisonResult` with `status=TaskStatus.OK` and `layer=1`
+- **WHEN** `Verdict.from_comparison(result)` is called
+- **THEN** the returned `Verdict` MUST have `status="pass"`.
+
+#### Scenario: Bridge from ComparisonResult (MATH_MISMATCH)
+- **GIVEN** a `ComparisonResult` with `status=TaskStatus.MATH_MISMATCH` and `layer=2`
+- **WHEN** `Verdict.from_comparison(result)` is called
+- **THEN** the returned `Verdict` MUST have `status="fail"` and a message indicating the mismatch layer.
 
 ### Requirement: Performance Regression Tracking
 The architecture SHALL track execution time and memory usage, flagging regressions exceeding a defined threshold (default: 1.5x baseline).

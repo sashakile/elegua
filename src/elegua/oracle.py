@@ -14,8 +14,13 @@ from typing import Any
 class OracleClient:
     """Client for the Wolfram oracle HTTP server."""
 
-    def __init__(self, base_url: str = "http://localhost:8765") -> None:
+    def __init__(
+        self,
+        base_url: str = "http://localhost:8765",
+        token: str | None = None,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
+        self.token = token
 
     def health(self) -> bool:
         """Check if the oracle server is healthy."""
@@ -67,12 +72,19 @@ class OracleClient:
 
     def _get(self, path: str, timeout: int) -> dict[str, Any]:
         url = f"{self.base_url}{path}"
-        with urllib.request.urlopen(url, timeout=timeout) as resp:
+        req = urllib.request.Request(url, headers=self._headers())
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read())  # type: ignore[no-any-return]
 
     def _post(self, path: str, body: dict[str, Any], timeout: int) -> dict[str, Any]:
         url = f"{self.base_url}{path}"
         data = json.dumps(body).encode()
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(url, data=data, headers=self._headers())
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read())  # type: ignore[no-any-return]
+
+    def _headers(self) -> dict[str, str]:
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        if self.token is not None:
+            headers["Authorization"] = f"Bearer {self.token}"
+        return headers

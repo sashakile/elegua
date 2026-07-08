@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/heapq.py
+# hypothesis_version: 6.151.9
+
+['__main__', 'heapify', 'heapify_max', 'heappop', 'heappop_max', 'heappush', 'heappush_max', 'heappushpop', 'heappushpop_max', 'heapreplace', 'heapreplace_max', 'merge', 'nlargest', 'nsmallest']

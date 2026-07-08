@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/bdb.py
+# hypothesis_version: 6.151.9
+
+['\n\tstop only if %s', '%s(%r)', '()', ')', '+++', '+++ call', '+++ exception', '+++ return', '->', ':', ': ', '<', '<lambda>', '<string>', '>', '???', 'Bdb', 'BdbQuit', 'Breakpoint', '__name__', '__return__', 'bar returned', 'bar(', 'bdbtracer', 'c_call', 'c_exception', 'c_return', 'call', 'del  ', 'exception', 'exec', 'f_lineno', 'foo(', 'jump', 'keep ', 'line', 'monitoring', 'no   ', 'opcode', 'return', 's', 'self', 'settrace', 'tb_frame', 'unwind', 'yes  ']

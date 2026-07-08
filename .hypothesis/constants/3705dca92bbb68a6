@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/json/scanner.py
+# hypothesis_version: 6.151.9
+
+['"', '-', '-Infinity', 'I', 'Infinity', 'N', 'NaN', '[', 'f', 'false', 'make_scanner', 'n', 'null', 't', 'true', '{']

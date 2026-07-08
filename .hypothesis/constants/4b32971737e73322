@@ -1,0 +1,4 @@
+# file: /home/linuxbrew/.linuxbrew/lib/python3.14/concurrent/futures/_base.py
+# hypothesis_version: 6.151.9
+
+['<%s at %#x state=%s>', 'ALL_COMPLETED', 'CANCELLED', 'FINISHED', 'FIRST_COMPLETED', 'FIRST_EXCEPTION', 'PENDING', 'RUNNING', '_AS_COMPLETED', 'cancelled', 'concurrent.futures', 'done not_done', 'finished', 'pending', 'running', '{}: {!r}']
