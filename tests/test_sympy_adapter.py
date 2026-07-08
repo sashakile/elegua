@@ -181,9 +181,11 @@ def test_timeout_no_leaked_threads_after_return():
     # After the fix, no such thread should remain
     leaked = {n for n in names_after - names_before}
     # Filter out benign system threads
-    leaked = {n for n in leaked
-              if not any(ignore in n.lower()
-                        for ignore in ["pytest", "pydev", "asyncio", "mainthread"])}
+    leaked = {
+        n
+        for n in leaked
+        if not any(ignore in n.lower() for ignore in ["pytest", "pydev", "asyncio", "mainthread"])
+    }
     assert len(leaked) == 0, f"Leaked threads after timeout: {leaked}"
 
 
