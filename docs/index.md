@@ -39,6 +39,6 @@ If you want to connect Eleguá to your own symbolic engine:
 ### 3. Contribute
 If you want to help develop the Eleguá core harness:
 - [Development](development.md) — set up the local contributor environment
-- [API reference](reference/) — auto-generated from source
+- [API reference](reference/index.md) — auto-generated from source
 
 The remaining guide pages ([TOML format](guide/toml-format.md), [Property testing](guide/property-testing.md), [Blob store](guide/blob-store.md), [Oracle servers](guide/oracle-servers.md)) can be read in any order as needed.
