@@ -5,6 +5,18 @@ All notable changes to Eleguá are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] — 2026-07-09
+
+### Fixed
+
+- **F16: snapshot key now includes adapter identity** — `SnapshotStore.key()` includes
+  `adapter_id` in the canonical string. Two adapters with different `adapter_id` values
+  processing the same (action, payload) now produce distinct snapshot keys, preventing
+  silent cross-adapter result divergence. `RecordingAdapter` uses the inner adapter's
+  identity; `ReplayAdapter` supports an `original_adapter_id` parameter for lookups
+  against snapshots recorded by another adapter. This is a breaking change to stored
+  snapshot files (keys have changed).
+
 ## [0.1.0] — 2026-03-19
 
 Initial release of the Eleguá multi-tier test harness.

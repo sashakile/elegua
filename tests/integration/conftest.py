@@ -54,7 +54,7 @@ def oracle_adapter(echo_oracle, snapshot_store):  # type: ignore[no-untyped-def]
         inner = OracleAdapter(oracle=OracleClient(echo_oracle.url))
         adapter = RecordingAdapter(inner, snapshot_store)
     else:
-        adapter = ReplayAdapter(snapshot_store)
+        adapter = ReplayAdapter(snapshot_store, original_adapter_id="wolfram-oracle")
     adapter.initialize()
     yield adapter
     adapter.teardown()

@@ -47,7 +47,7 @@ class TestSnapshotRecordReplay:
 
         # Replay phase: no server needed
         replay_store = SnapshotStore.read(snap_path)
-        replayer = ReplayAdapter(replay_store)
+        replayer = ReplayAdapter(replay_store, original_adapter_id="wolfram-oracle")
         with replayer:
             replayed = [replayer.execute(t) for t in tasks]
 
@@ -78,8 +78,12 @@ class TestSnapshotRecordReplay:
             run_tasks(tasks, adapter=iut_adapter)
 
         # Replay phase
-        oracle_replay = ReplayAdapter(SnapshotStore.read(oracle_snap))
-        iut_replay = ReplayAdapter(SnapshotStore.read(iut_snap))
+        oracle_replay = ReplayAdapter(
+            SnapshotStore.read(oracle_snap), original_adapter_id="wolfram-oracle"
+        )
+        iut_replay = ReplayAdapter(
+            SnapshotStore.read(iut_snap), original_adapter_id="wolfram-oracle"
+        )
 
         replay_oracle = run_tasks(tasks, adapter=oracle_replay)
         replay_iut = run_tasks(tasks, adapter=iut_replay)

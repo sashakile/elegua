@@ -25,9 +25,10 @@ class SnapshotStore:
         self._data: dict[str, dict[str, Any]] = {}
 
     @staticmethod
-    def key(action: str, payload: dict[str, Any]) -> str:
-        """Compute deterministic key from action + payload."""
-        canonical = action + "|" + json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    def key(action: str, payload: dict[str, Any], adapter_id: str = "") -> str:
+        """Compute deterministic key from adapter_id + action + payload."""
+        payload_json = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+        canonical = adapter_id + "|" + action + "|" + payload_json
         return hashlib.sha256(canonical.encode()).hexdigest()
 
     def save(self, key: str, token: ValidationToken) -> None:
@@ -88,23 +89,33 @@ class RecordingAdapter(Adapter):
 
     def execute(self, task: EleguaTask) -> ValidationToken:
         token = self._inner.execute(task)
-        key = SnapshotStore.key(task.action, task.payload)
+        key = SnapshotStore.key(task.action, task.payload, self._inner.adapter_id)
         self._store.save(key, token)
         return token
 
 
 class ReplayAdapter(Adapter):
-    """Serves cached results from a SnapshotStore. No oracle needed."""
+    """Serves cached results from a SnapshotStore. No oracle needed.
 
-    def __init__(self, store: SnapshotStore) -> None:
+    The ``original_adapter_id`` parameter controls which adapter's snapshots
+    are looked up. This defaults to the replay adapter's own identity but
+    should be set to the adapter_id used during recording when replaying
+    snapshots recorded by a different adapter.
+    """
+
+    def __init__(self, store: SnapshotStore, original_adapter_id: str | None = None) -> None:
         self._store = store
+        self._original_adapter_id = original_adapter_id
 
     @property
     def adapter_id(self) -> str:
         return "replay"
 
     def execute(self, task: EleguaTask) -> ValidationToken:
-        key = SnapshotStore.key(task.action, task.payload)
+        key_adapter = (
+            self._original_adapter_id if self._original_adapter_id is not None else self.adapter_id
+        )
+        key = SnapshotStore.key(task.action, task.payload, key_adapter)
         token = self._store.load(key)
         if token is None:
             return ValidationToken(

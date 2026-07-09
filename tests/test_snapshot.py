@@ -39,6 +39,26 @@ def test_store_key_ignores_dict_order():
     assert k1 == k2
 
 
+def test_store_key_includes_adapter_id():
+    """Same action+payload with different adapter_ids must produce different keys."""
+    k1 = SnapshotStore.key("Eval", {"x": 1}, "wolfram")
+    k2 = SnapshotStore.key("Eval", {"x": 1}, "sympy")
+    assert k1 != k2
+
+
+def test_store_key_deterministic_with_adapter_id():
+    """Same adapter_id + action + payload produces the same key."""
+    k1 = SnapshotStore.key("Eval", {"x": 1}, "wolfram")
+    k2 = SnapshotStore.key("Eval", {"x": 1}, "wolfram")
+    assert k1 == k2
+
+
+def test_store_key_differs_by_adapter_id():
+    """Key changes when only adapter_id differs."""
+    k = SnapshotStore.key("Eval", {"x": 1}, "wolfram")
+    assert k != SnapshotStore.key("Eval", {"x": 1}, "sympy")
+
+
 def test_store_save_and_load(tmp_path: Path):
     store = SnapshotStore(tmp_path / "snap.json")
     token = ValidationToken(adapter_id="test", status=TaskStatus.OK, result={"repr": "42"})
@@ -105,7 +125,7 @@ def test_recording_adapter_captures_result():
     task = EleguaTask(action="Eval", payload={"expression": "1+1"})
     with adapter:
         adapter.execute(task)
-    key = SnapshotStore.key("Eval", {"expression": "1+1"})
+    key = SnapshotStore.key("Eval", {"expression": "1+1"}, "wolfram")
     assert store.load(key) is not None
 
 
@@ -132,7 +152,7 @@ def test_recording_adapter_preserves_adapter_id():
 def test_replay_returns_cached_token():
     store = SnapshotStore()
     token = ValidationToken(adapter_id="original", status=TaskStatus.OK, result={"repr": "42"})
-    key = SnapshotStore.key("Eval", {"expression": "1+1"})
+    key = SnapshotStore.key("Eval", {"expression": "1+1"}, "replay")
     store.save(key, token)
 
     adapter = ReplayAdapter(store)
@@ -174,9 +194,9 @@ def test_record_then_replay(tmp_path: Path):
     with recorder:
         recorded_tokens = [recorder.execute(t) for t in tasks]
 
-    # Replay phase (no oracle)
+    # Replay phase (no oracle) — pass original adapter_id for key matching
     replay_store = SnapshotStore.read(path)
-    replayer = ReplayAdapter(replay_store)
+    replayer = ReplayAdapter(replay_store, original_adapter_id="wolfram")
     with replayer:
         replayed_tokens = [replayer.execute(t) for t in tasks]
 
