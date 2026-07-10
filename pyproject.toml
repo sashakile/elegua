@@ -1,6 +1,6 @@
 [project]
 name = "elegua"
-version = "0.1.0"
+version = "0.2.0"
 description = "Domain-agnostic multi-tier test harness for validating mathematical equivalence"
 requires-python = ">=3.11"
 license = "MIT"
@@ -93,4 +93,7 @@ exclude = [
     "src/elegua/wolfram/kernel.py",
     "src/elegua/wolfram/server.py",
     "src/elegua/wolfram/__main__.py",
+    "src/elegua/sympy/__init__.py",
+    "src/elegua/sympy/adapter.py",
+    "src/elegua/sympy/parsing.py",
 ]

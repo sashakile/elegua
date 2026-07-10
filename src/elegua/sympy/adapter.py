@@ -173,8 +173,8 @@ class SympyAdapter(Adapter):
     ) -> sympy.Expr:
         """Run handler with timeout using a subprocess.
 
-        Uses ``multiprocessing.Process`` so the runaway computation can be
-        terminated (killed) on timeout, preventing leaked threads.
+        Uses a subprocess so the runaway computation can be terminated (killed)
+        on timeout, preventing leaked threads.
         """
         import multiprocessing as mp
 

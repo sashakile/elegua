@@ -69,7 +69,7 @@ def _parse_python(text: str) -> sympy.Expr:
     """Parse Python/SymPy syntax with a restricted namespace to prevent code injection.
 
     ``parse_expr()`` uses ``eval()`` internally. Without namespace restriction,
-    arbitrary Python code can be executed (e.g. ``__import__('os').system('id')``).
+    arbitrary Python code can be executed (for example, ``__import__('os').system('id')``).
     We pass a restricted ``local_dict`` (only public sympy names) and an empty
     ``global_dict`` to block builtins access.
     """

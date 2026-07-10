@@ -59,4 +59,5 @@ Initial release of the Eleguá multi-tier test harness.
   (pytest); GitHub Actions CI across Python 3.11–3.13.
 - **336 tests** with 100% line coverage.
 
+[0.2.0]: https://github.com/sashakile/elegua/releases/tag/v0.2.0
 [0.1.0]: https://github.com/sashakile/elegua/releases/tag/v0.1.0
