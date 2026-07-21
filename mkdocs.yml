@@ -68,6 +68,7 @@ nav:
       - Comparison Pipeline: guide/comparison.md
   - Core Features:
       - Capabilities: guide/capabilities.md
+      - Numeric Comparison: guide/numeric-comparison.md
       - Property Testing: guide/property-testing.md
       - Oracle Servers: guide/oracle-servers.md
       - Blob Store: guide/blob-store.md

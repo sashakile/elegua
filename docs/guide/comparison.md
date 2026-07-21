@@ -152,4 +152,4 @@ from elegua.comparison import ComparisonResult
 
 ## L4 numeric comparison vs property-based testing
 
-PCG64 cross-platform deterministic sampling is used for L4 numeric comparison (`compare_numeric.py`), not for property-based testing. These are separate concerns: Hypothesis owns property-test randomness and shrinking, while the L4 comparator owns cross-CAS sample-point agreement inside `ComparisonPipeline`. See [Property testing](property-testing.md) for the Hypothesis-based workflow.
+PCG64 cross-platform deterministic sampling is used for L4 numeric comparison (`compare_numeric.py`), not for property-based testing. These are separate concerns: Hypothesis owns property-test randomness and shrinking, while the L4 comparator owns cross-CAS sample-point agreement inside `ComparisonPipeline`. See [Numeric comparison](numeric-comparison.md) for configuration and strategy examples, and [Property testing](property-testing.md) for the Hypothesis-based workflow.
