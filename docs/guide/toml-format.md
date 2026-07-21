@@ -1,6 +1,6 @@
 # TOML test format
 
-**Define test cases and property specs in TOML so your validation suite is declarative and language-agnostic.**
+**Read this page when you're writing test fixtures or property specs — it covers the TOML structure for both task files and property files.**
 
 > **What it does** — Task files (`.toml`) define operations to execute through adapters. Property files define mathematical laws for Hypothesis-based sampling. Both are declarative and language-agnostic.  
 > **Use this when** — You're writing test fixtures or property specs for your validation suite.  
@@ -9,31 +9,41 @@
 
 ## Task files
 
-Task files define a sequence of actions to execute through an adapter.
+Task files define a sequence of operations to execute through an adapter. Each file can declare setup operations and one or more named tests.
 
 ```toml
 [meta]
-name = "DefTensor+Contract round-trip"
-description = "Define a rank-2 tensor and contract it"
+id          = "bridge/basic"
+description = "Bridge loader smoke test"
 
-[[tasks]]
-action = "DefTensor"
-[tasks.payload]
-name = "T"
-indices = ["a", "b"]
+[[setup]]
+action   = "DefManifold"
+store_as = "M"
+[setup.args]
+name      = "M"
+dimension = 4
+indices   = ["a", "b", "c", "d"]
 
-[[tasks]]
-action = "Contract"
-[tasks.payload]
-expr = "T[a, b] * g[-a, -b]"
+[[tests]]
+id          = "canon_symmetric"
+description = "Symmetric swap canonicalizes to zero"
+
+[[tests.operations]]
+action   = "Evaluate"
+store_as = "diff"
+[tests.operations.args]
+expression = "T[-a,-b] - T[-b,-a]"
 ```
 
 ### Structure
 
-- `[meta]` — optional metadata (name, description)
-- `[[tasks]]` — one or more task entries, each with:
-    - `action` (required) — the operation name
-    - `[tasks.payload]` (optional) — key-value pairs passed to the adapter
+- `[meta]` — required metadata (id, description)
+- `[[setup]]` — optional setup operations, run before any test
+- `[[tests]]` — one or more named test blocks, each with:
+    - `id` (required) — unique test identifier
+    - `[[tests.operations]]` — one or more operations, each with:
+        - `action` (required) — the operation name
+        - `[tests.operations.args]` (optional) — key-value pairs passed to the adapter
 
 ### Loading
 

@@ -1,6 +1,6 @@
 # Blob store
 
-**The blob store offloads large payloads to disk by SHA-256 hash so validation tokens stay lightweight.**
+**Read this page when your symbolic expressions exceed 1 MB and you need to keep validation tokens lightweight — the blob store offloads large payloads to disk by SHA-256 hash.**
 
 > **What it does** — Payloads over 1 MB are automatically stored on disk by SHA-256 hash. Use `maybe_store()` and `maybe_resolve()` for transparent handling.  
 > **Use this when** — You're working with large symbolic expressions that exceed the inline size threshold.  

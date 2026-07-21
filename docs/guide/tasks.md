@@ -1,13 +1,13 @@
 # Task lifecycle
 
-**`EleguaTask` carries an action through an enforced state machine so you can track execution from `PENDING` to a terminal verdict.**
+**Read this page when you're writing an adapter, debugging task execution, or interpreting comparison results — it explains the `EleguaTask` data model, state machine, and `ValidationToken`.**
 
 > **What it does** — Learn the `EleguaTask` data model, state machine transitions, and the `ValidationToken` that adapters return.  
 > **Use this when** — You're writing an adapter, debugging a task execution, or working with the comparison pipeline.  
 > **Prerequisites** — [Getting started](../getting-started.md).  
 > **Outcome** — Understand `EleguaTask`, `TaskStatus`, `ValidationToken`, and the lifecycle from creation to terminal verdict.
 
-`ValidationToken` is what adapters return after execution.
+Every adapter call starts with an `EleguaTask` and ends with a `ValidationToken`. This page covers both models and the state machine that governs task transitions.
 
 ## EleguaTask
 
@@ -47,9 +47,7 @@ task.transition(TaskStatus.OK)  # raises: cannot go from PENDING to OK
 
 ## ActionPayload and ValidationToken
 
-These are the spec-defined interchange models.
-
-`ActionPayload` is a spec-level type that describes the input to an adapter. In most workflows you won't construct one yourself — the runner builds `EleguaTask` objects from TOML and passes them directly to `Adapter.execute()`. `ActionPayload` exists for tooling and serialization scenarios where you need a standalone input envelope.
+`ActionPayload` describes the input to an adapter as a standalone envelope. In most workflows you won't construct one yourself — the runner builds `EleguaTask` objects from TOML and passes them directly to `Adapter.execute()`. `ActionPayload` exists for tooling and serialization scenarios where you need a portable input.
 
 ```python
 from elegua.models import ActionPayload
@@ -57,8 +55,8 @@ from elegua.models import ActionPayload
 payload = ActionPayload(
     action="DefTensor",
     payload={"name": "T"},
-    domain="tensor_calculus",
-    manifest="manifest.toml",
+    domain="tensor_calculus",       # optional domain hint
+    manifest="manifest.toml",       # optional reference to source file
 )
 ```
 
