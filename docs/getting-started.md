@@ -134,6 +134,7 @@ registry_check: ok
 - [Task lifecycle](guide/tasks.md) — understand `EleguaTask`, `ValidationToken`, and state transitions
 - [Writing an adapter](guide/adapters.md) — connect Eleguá to your own symbolic engine
 - [Comparison pipeline](guide/comparison.md) — how the 4-layer cascade works
+- [Oracle servers](guide/oracle-servers.md) — run a remote compute kernel and see a complete end-to-end example
 
 ## What you've learned
 

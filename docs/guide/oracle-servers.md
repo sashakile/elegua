@@ -152,6 +152,54 @@ cannot express. The `OracleClient` method names still reflect the Wolfram-first
 history of the module, so it is better treated as a lower-level implementation
 detail than as the main extension point for new integrations.
 
+## Whole game: EchoOracle end-to-end
+
+This self-contained example starts an `EchoOracle` server, connects via `OracleAdapter` as a context manager, executes two tasks, and compares the results through the pipeline — all without requiring a real kernel.
+
+```python
+from elegua.testing import EchoOracle
+from elegua.wolfram.adapter import OracleAdapter
+from elegua.comparison import compare_pipeline
+from elegua.task import EleguaTask
+
+# 1. Start an echo server on a free port
+with EchoOracle(port=0) as oracle:
+    # 2. Connect an OracleAdapter (context manager calls initialize/teardown)
+    with OracleAdapter(
+        base_url=oracle.url,
+        adapter_id="echo",
+        expr_builder=lambda action, payload: payload["expr"],
+    ) as adapter:
+
+        # 3. Create two tasks with different expressions
+        task_a = EleguaTask(action="Evaluate", payload={"expr": "1 + 1"})
+        task_b = EleguaTask(action="Evaluate", payload={"expr": "2 + 2"})
+
+        # 4. Execute both tasks through the adapter
+        token_a = adapter.execute(task_a)
+        token_b = adapter.execute(task_b)
+
+        # 5. Compare results — both succeed but differ at L1
+        result = compare_pipeline(token_a, token_b)
+        print(f"{token_a.result} vs {token_b.result}: {result.status.value}")
+        # => {'repr': '1 + 1', ...} vs {'repr': '2 + 2', ...}: math_mismatch
+
+        # 6. Run the same expression through a second adapter
+        with OracleAdapter(
+            base_url=oracle.url,
+            adapter_id="echo-2",
+            expr_builder=lambda action, payload: payload["expr"],
+        ) as adapter2:
+            token_1 = adapter.execute(task_a)
+            token_2 = adapter2.execute(task_a)
+
+            result = compare_pipeline(token_1, token_2)
+            print(f"Same input, two adapters: {result.status.value}")
+            # => Same input, two adapters: ok
+```
+
+This pattern works with any oracle server — replace `EchoOracle` with a real Wolfram, Julia, or Sage server and the same `OracleAdapter` + `compare_pipeline` code handles the rest.
+
 ## Error recovery
 
 If an evaluation times out or the kernel crashes, the server should automatically restart the kernel and return an error or timeout status. The Wolfram implementation does this: on timeout, it kills the kernel, starts a fresh one, and returns `{"status": "timeout"}`. The `/restart` endpoint provides manual recovery if automatic restart fails.
