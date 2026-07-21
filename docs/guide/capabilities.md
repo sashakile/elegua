@@ -19,7 +19,7 @@ The following capability names are predefined. All are optional — only declare
 | `symbolic` | Adapter works with symbolic (CAS) expressions |
 | `numerical` | Adapter works with numerical (floating-point) expressions |
 
-### Namespace guidance
+### Capability naming conventions
 
 The capability vocabulary is **open** — plugins and custom adapters can define their own capability names. Follow these conventions:
 
@@ -55,11 +55,11 @@ The default ``capabilities`` property returns an empty frozenset — adapters th
 
 | Adapter | Advertised capabilities | Notes |
 |---------|------------------------|-------|
-| ``WolframAdapter`` | (none) | Built-in stub for architecture testing |
-| ``OracleAdapter`` | (none) | Generic HTTP adapter — override to declare your engine's capabilities |
-| ``SympyAdapter`` | (none) | SymPy-based adapter — override to declare capabilities |
+| ``WolframAdapter`` | (none) | Built-in stub — subclass for real use |
+| ``OracleAdapter`` | (none) | Generic HTTP adapter — subclass to declare your engine's capabilities |
+| ``SympyAdapter`` | (none) | SymPy-based adapter — subclass to declare capabilities |
 
-All shipped adapters default to no declared capabilities. If your use of an adapter requires capabilities (for example, a ``gradient`` fixture run against a Wolfram kernel), create a subclass:
+All shipped adapters default to no declared capabilities. For real use, create a subclass that overrides ``capabilities``:
 
 ```python
 class MyWolframAdapter(OracleAdapter):

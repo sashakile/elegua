@@ -106,16 +106,18 @@ with EchoOracle(port=8765) as oracle:
 
 Once your server is running, prefer `OracleAdapter` over building a new
 transport adapter from scratch. It already handles health checks, cleanup,
-context IDs, timeout mapping, and `ValidationToken` creation.
+context IDs, timeout mapping, and `ValidationToken` creation. Use it as a
+context manager so `initialize()` and `teardown()` are called automatically:
 
 ```python
 from elegua.wolfram.adapter import OracleAdapter
 
-adapter = OracleAdapter(
+with OracleAdapter(
     base_url="http://localhost:8765",
     adapter_id="my-engine",
     expr_builder=lambda action, payload: payload["expression"],
-)
+) as adapter:
+    token = adapter.execute(task)
 ```
 
 If your server returns a different response shape, pass a `result_mapper` that
@@ -134,12 +136,13 @@ def result_mapper(action: str, payload: dict, data: dict) -> ValidationToken:
         metadata={"execution_time_ms": data.get("timing_ms", 0)},
     )
 
-adapter = OracleAdapter(
+with OracleAdapter(
     base_url="http://localhost:8765",
     adapter_id="my-engine",
     expr_builder=lambda action, payload: payload["expression"],
     result_mapper=result_mapper,
-)
+) as adapter:
+    token = adapter.execute(task)
 ```
 
 !!! note

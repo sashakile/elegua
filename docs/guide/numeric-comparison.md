@@ -2,7 +2,10 @@
 
 **Configure tolerance strategies for scalar, array, and sample-point comparisons, and register them as a pipeline layer.**
 
-> **What it does** — The numeric comparison layer lets you compare floating-point results using configurable tolerance strategies: absolute, relative, mixed, ULP, and stochastic. Array comparisons include top-K diagnostic reporting.  \n> **Use this when** — You need to compare numerical results (not symbolic) where exact structural equality is too strict.  \n> **Prerequisites** — [Comparison pipeline](comparison.md) for how layers work.  \n> **Outcome** — Know how to configure tolerance strategies, create a numeric layer, register it in the pipeline, and interpret diagnostic results.
+> **What it does** — The numeric comparison layer lets you compare floating-point results using configurable tolerance strategies: absolute, relative, mixed, ULP, and stochastic. Array comparisons include top-K diagnostic reporting.  
+> **Use this when** — You need to compare numerical results (not symbolic) where exact structural equality is too strict.  
+> **Prerequisites** — [Comparison pipeline](comparison.md) for how layers work.  
+> **Outcome** — Know how to configure tolerance strategies, create a numeric layer, register it in the pipeline, and interpret diagnostic results.
 
 ## Tolerance strategies
 
@@ -71,8 +74,8 @@ from elegua.numeric.tolerance import StochasticTolerance
 
 tol = StochasticTolerance(k=3.0)  # 3-sigma threshold
 # The standard_error values come from the token result payload
-assert tol.is_close(1.0, 1.05, se_a=0.01, se_b=0.01)
-# => True: |1.0 - 1.05| = 0.05 <= 3.0 * sqrt(0.01² + 0.01²) ≈ 0.042
+assert tol.is_close(1.0, 1.05, se_a=0.012, se_b=0.012)
+# => True: |1.0 - 1.05| = 0.05 <= 3.0 * sqrt(0.012² + 0.012²) ≈ 0.051
 ```
 
 ## Scalar comparison
