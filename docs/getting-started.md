@@ -129,12 +129,12 @@ registry_check: ok
 !!! note "The WolframAdapter is a stub"
     The built-in `WolframAdapter` echoes the input payload as its result. It exists to prove the architecture works end-to-end. Replace it with a real adapter that connects to your symbolic engine \u2014 see [Writing an adapter](guide/adapters.md).
 
-## Next steps
+## What to read next
 
 - [Task lifecycle](guide/tasks.md) — understand `EleguaTask`, `ValidationToken`, and state transitions
 - [Writing an adapter](guide/adapters.md) — connect Eleguá to your own symbolic engine
 - [Comparison pipeline](guide/comparison.md) — how the 4-layer cascade works
 
-## Summary
+## What you've learned
 
 You have installed Eleguá, loaded a TOML fixture, run it through an adapter, and compared two runs using the multi-tier runner. This is the core workflow: declare operations in TOML, execute them through adapters, and compare results.

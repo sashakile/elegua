@@ -57,7 +57,7 @@ min_value = 0
 max_value = 100
 ```
 
-### Settings
+### Hypothesis settings
 
 ```toml
 [settings]

@@ -35,7 +35,7 @@ store_as = "diff"
 expression = "T[-a,-b] - T[-b,-a]"
 ```
 
-### Structure
+### Task file structure
 
 - `[meta]` — required metadata (id, description)
 - `[[setup]]` — optional setup operations, run before any test
@@ -45,7 +45,7 @@ expression = "T[-a,-b] - T[-b,-a]"
         - `action` (required) — the operation name
         - `[tests.operations.args]` (optional) — key-value pairs passed to the adapter
 
-### Loading
+### Loading task files
 
 ```python
 from pathlib import Path
@@ -57,7 +57,7 @@ for test in test_file.tests:
         print(f"{op.action}: {op.args}")
 ```
 
-### Validation
+### Schema validation
 
 - Missing `meta` key raises `SchemaError`
 - Missing `id` or `description` in `[meta]` raises `SchemaError`

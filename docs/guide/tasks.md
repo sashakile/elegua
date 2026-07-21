@@ -80,7 +80,7 @@ token = ValidationToken(
 )
 ```
 
-## Next steps
+## Where to go next
 
 - [Writing an adapter](adapters.md) — connect Eleguá to your own symbolic engine
 - [Blob store](blob-store.md) — how large `result` payloads are offloaded to disk automatically
