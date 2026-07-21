@@ -9,6 +9,12 @@
 
 Every adapter call starts with an `EleguaTask` and ends with a `ValidationToken`. This page covers both models and the state machine that governs task transitions.
 
+| Model | Key fields | Notes |
+|-------|-----------|-------|
+| `EleguaTask` | `id`, `action`, `payload`, `status` | Start here — created from TOML or constructed directly |
+| `ValidationToken` | `adapter_id`, `status`, `result`, `metadata` | Returned by `Adapter.execute()` |
+| `TaskStatus` | `PENDING`, `RUNNING`, `OK`, `MATH_MISMATCH`, `EXECUTION_ERROR`, `TIMEOUT` | Terminal states: OK, MATH_MISMATCH, EXECUTION_ERROR, TIMEOUT |
+
 ## EleguaTask
 
 The `EleguaTask` is the atomic unit of validation. It carries an action name, a payload dict, and tracks its execution status.

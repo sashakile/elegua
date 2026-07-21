@@ -9,6 +9,14 @@
 
 Each adapter translates an `EleguaTask` into a call to its engine and returns a `ValidationToken` with the result.
 
+| What | How |
+|------|-----|
+| Interface | Subclass `Adapter`, implement `adapter_id` + `execute()` |
+| Input | `EleguaTask(action, payload)` — from TOML or constructed directly |
+| Output | `ValidationToken(adapter_id, status, result)` |
+| Errors | Return `ValidationToken(status=EXECUTION_ERROR)` — don't raise |
+| Lifecycle | Use `with MyAdapter() as adapter:` for adapters with setup/teardown |
+
 ## The Adapter interface
 
 Subclass `Adapter` and implement two members:

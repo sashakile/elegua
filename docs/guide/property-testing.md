@@ -9,6 +9,12 @@
 
 Property-based testing is a companion workflow to the [comparison pipeline](comparison.md), not one of the default built-in layers. It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
 
+| Component | What it does | Required fields |
+|-----------|-------------|----------------|
+| `PropertySpec` | Defines a mathematical law + variable generators in TOML | `name`, `layer`, `law` |
+| `StrategyRegistry` | Maps TOML type names to Hypothesis strategies | Register strategy types before running properties |
+| `PropertyRunner` | Generates inputs, evaluates the law, shrinks failures | `registry` + `evaluator` |
+
 ## Property spec format
 
 Properties are defined in TOML:
