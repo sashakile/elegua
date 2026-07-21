@@ -37,7 +37,16 @@ expression = "T[-a,-b] - T[-b,-a]"
 
 ### Task file structure
 
-- `[meta]` — required metadata (id, description)
+- `[meta]` — required metadata, with these fields:
+    - `id` (required) — unique fixture identifier
+    - `description` (required) — human-readable summary
+    - `tags` (optional) — list of tags for filtering (``["gradient", "slow"]``)
+    - `layer` (optional) — comparison layer number (default: 1)
+    - `oracle_is_axiom` (optional) — whether the oracle result is ground truth (default: ``true``)
+    - `requires` (optional) — list of required [capabilities](capabilities.md) (``["gradient", "deterministic"]``)
+    - `prefers` (optional) — list of preferred capabilities (``["symbolic"]``)
+    - `tier_overrides` (optional) — per-tier capability exemptions (see [Capabilities](capabilities.md))
+    - `skip` (optional) — skip reason string; when present, all tests are skipped
 - `[[setup]]` — optional setup operations, run before any test
 - `[[tests]]` — one or more named test blocks, each with:
     - `id` (required) — unique test identifier
