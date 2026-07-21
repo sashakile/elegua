@@ -2,6 +2,11 @@
 
 **The comparison pipeline cascades through up to 4 layers so you can confirm mathematical equivalence at the cheapest level possible.**
 
+> **What it does** — The pipeline compares two `ValidationToken` results through up to 4 layers (identity → structural → canonical → invariant), stopping at the first match. Register domain-specific layers for deeper checks.  
+> **Use this when** — You need to understand how comparison verdicts are produced, register custom layers, or interpret comparison results.  
+> **Prerequisites** — [Writing an adapter](adapters.md) and [Task lifecycle](tasks.md).  
+> **Outcome** — Know how the pipeline works, how to register custom layers, and how to read a `ComparisonResult`.
+
 The pipeline determines whether two `ValidationToken` results are mathematically equivalent, stopping at the first layer that confirms a match.
 
 **Prerequisite:** you need two `ValidationToken` objects — one from the Oracle adapter and one from the IUT adapter. See [Writing an adapter](adapters.md) for how to produce them, or [Task lifecycle](tasks.md) for the data model.

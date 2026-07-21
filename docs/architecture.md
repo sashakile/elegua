@@ -2,6 +2,11 @@
 
 **Eleguá's three-tier model and 4-layer pipeline prove that two symbolic math implementations produce equivalent results.**
 
+> **What it does** — Three tiers (Oracle, literal port, idiomatic target) run the same operations. A 4-layer comparison pipeline (identity → structural → canonical → invariant) finds the cheapest match.  
+> **Use this when** — You want to understand how Eleguá works before writing adapters or fixtures.  
+> **Prerequisites** — [Getting started](getting-started.md).  
+> **Outcome** — Understand the execution model, pipeline layers, and design principles.
+
 Eleguá's architecture solves a specific problem: when porting a symbolic math library across languages, you need to prove that the port produces equivalent results to the original — not just for simple cases, but for the full space of symbolic expressions.
 
 ## Three-tier execution model

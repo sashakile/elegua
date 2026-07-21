@@ -2,7 +2,10 @@
 
 **Define test cases and property specs in TOML so your validation suite is declarative and language-agnostic.**
 
-Task files describe actions to execute; property files describe mathematical laws to validate by sampling.
+> **What it does** — Task files (`.toml`) define operations to execute through adapters. Property files define mathematical laws for Hypothesis-based sampling. Both are declarative and language-agnostic.  
+> **Use this when** — You're writing test fixtures or property specs for your validation suite.  
+> **Prerequisites** — [Getting started](../getting-started.md) for the overall workflow.  
+> **Outcome** — Know the TOML task file structure, property file structure, and loading/validation mechanics.
 
 ## Task files
 

@@ -2,6 +2,11 @@
 
 **`EleguaTask` carries an action through an enforced state machine so you can track execution from `PENDING` to a terminal verdict.**
 
+> **What it does** — Learn the `EleguaTask` data model, state machine transitions, and the `ValidationToken` that adapters return.  
+> **Use this when** — You're writing an adapter, debugging a task execution, or working with the comparison pipeline.  
+> **Prerequisites** — [Getting started](../getting-started.md).  
+> **Outcome** — Understand `EleguaTask`, `TaskStatus`, `ValidationToken`, and the lifecycle from creation to terminal verdict.
+
 `ValidationToken` is what adapters return after execution.
 
 ## EleguaTask

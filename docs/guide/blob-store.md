@@ -2,7 +2,10 @@
 
 **The blob store offloads large payloads to disk by SHA-256 hash so validation tokens stay lightweight.**
 
-Payloads over 1 MB are automatically stored on disk, keeping tokens lightweight. Use `maybe_store()` and `maybe_resolve()` for transparent handling.
+> **What it does** — Payloads over 1 MB are automatically stored on disk by SHA-256 hash. Use `maybe_store()` and `maybe_resolve()` for transparent handling.  
+> **Use this when** — You're working with large symbolic expressions that exceed the inline size threshold.  
+> **Prerequisites** — [Task lifecycle](tasks.md) for understanding how tokens reference blobs.  
+> **Outcome** — Know how to create a `BlobStore`, store/retrieve payloads, and use the transparent helpers.
 
 ## When blob storage is used
 

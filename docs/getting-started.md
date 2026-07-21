@@ -2,6 +2,11 @@
 
 **Install Eleguá and run your first comparison in under five minutes.**
 
+> **What it does** — Install Eleguá, load a TOML fixture, run it through an adapter, and compare two results in under five minutes.  
+> **Use this when** — You're new to Eleguá and want to see it work end-to-end.  
+> **Prerequisites** — Python 3.11+, `uv`.  
+> **Outcome** — A working installation and a passing comparison verdict.
+
 This guide walks you through installing Eleguá and running a complete validation — from TOML fixture to comparison verdict.
 
 ## Prerequisites

@@ -2,6 +2,10 @@
 
 **Domain-agnostic, multi-tier test harness for validating mathematical equivalence.**
 
+> **What it does** — Prove that two implementations of the same mathematical system produce equivalent results. Define test cases in TOML, write an Adapter for each implementation, and let Eleguá tell you whether they agree — and at what level of analysis.  
+> **Use this when** — You need to validate a port, rewrite, or alternative implementation of a symbolic math library.  
+> **Outcome** — Understand the architecture, choose your entry path, and find the right guide for your role.
+
 Eleguá proves that two implementations of the same mathematical system produce equivalent results. It runs identical symbolic actions on a high-fidelity Oracle and one or more Implementations Under Test (IUT), then compares outputs through a 4-layer pipeline — from fast structural equality to deeper semantic and invariant-based checks — stopping at the first layer that confirms a match.
 
 In short, define test cases in TOML, write an Adapter for each implementation, and let Eleguá tell you whether they agree — and at what level of analysis.

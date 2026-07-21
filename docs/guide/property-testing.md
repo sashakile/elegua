@@ -2,6 +2,11 @@
 
 **Define mathematical laws in TOML and let Hypothesis generate random inputs so you can validate properties with automatic counterexample shrinking.**
 
+> **What it does** — Define mathematical laws in TOML, register Hypothesis strategies, and let the runner generate random inputs and shrink counterexamples automatically.  
+> **Use this when** — You want to validate mathematical properties (laws, invariants) by sampling, complementary to the comparison pipeline.  
+> **Prerequisites** — [TOML format](toml-format.md) for property file syntax.  
+> **Outcome** — Know how to define a property spec, register strategies, run properties, and interpret shrinking results.
+
 Property-based testing is a companion workflow to the [comparison pipeline](comparison.md), not one of the default built-in layers. It validates mathematical laws by generating random inputs via [Hypothesis](https://hypothesis.readthedocs.io/) and checking that properties hold, with automatic shrinking of counterexamples.
 
 ## Property spec format

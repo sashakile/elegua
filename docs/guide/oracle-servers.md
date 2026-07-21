@@ -2,6 +2,11 @@
 
 **An oracle server exposes a compute kernel over HTTP so Eleguá can execute symbolic actions remotely.**
 
+> **What it does** — Run a Wolfram, Julia, or other compute kernel behind an HTTP server. Connect via `OracleAdapter` and let the pipeline handle lifecycle, context isolation, and error recovery.  
+> **Use this when** — You're deploying a remote symbolic engine for Eleguá to use as an adapter backend.  
+> **Prerequisites** — [Writing an adapter](adapters.md) for the adapter pattern.  
+> **Outcome** — Know the oracle protocol, how to run a Wolfram server, how to build a custom server, and how to connect it via `OracleAdapter`.
+
 An oracle server wraps a compute kernel (Wolfram, Julia, Sage) in an HTTP server that implements the oracle protocol.
 
 For new integrations, use `OracleAdapter` — point it at a compatible server, provide any domain-specific expression mapping, and the adapter handles lifecycle and token mapping. See [Architecture](../architecture.md) for how oracle servers fit into the three-tier execution model.

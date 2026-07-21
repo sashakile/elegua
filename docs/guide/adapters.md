@@ -2,6 +2,11 @@
 
 **Subclass `Adapter` and implement `execute()` so Eleguá can talk to your symbolic engine.**
 
+> **What it does** — Implement `Adapter.execute()` to translate an `EleguaTask` into a call to your engine and return a `ValidationToken`.  
+> **Use this when** — You're connecting Eleguá to a new symbolic engine (Wolfram, SymPy, Julia, etc.).  
+> **Prerequisites** — [Task lifecycle](tasks.md). [Getting started](../getting-started.md) for the overall workflow.  
+> **Outcome** — A working adapter that produces `ValidationToken` results compatible with the comparison pipeline.
+
 Each adapter translates an `EleguaTask` into a call to its engine and returns a `ValidationToken` with the result.
 
 ## The Adapter interface
